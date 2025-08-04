@@ -2,7 +2,7 @@ import * as React from "react";
 import { NavMain } from "@/components/navigation/nav-main";
 import { Navigation } from "@/components/navigation/navigation";
 import { NavUser } from "@/components/navigation/nav-user";
-import { dataSidebarAnalyst } from "@/data/sidebarAnalystData";
+import { dataAdmin} from "@/data/sidebarAdminNavData";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useSidebar } from "@/components/ui/sidebar";
 
@@ -26,7 +26,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </h2>
       </SidebarHeader>
       <SidebarContent>
-        <Navigation navigation={dataSidebarAnalyst.navigation} />
+        <Navigation navigation={dataAdmin.navigation} />
       </SidebarContent>
       <SidebarFooter className="flex flex-col gap-2">
         <div className="flex justify-center">
@@ -37,7 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="flex justify-center">
           <ThemeToggle />
         </div>
-        <NavUser user={dataSidebarAnalyst.user} />
+        <NavUser user={dataAdmin.user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

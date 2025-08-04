@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import Link from "next/link"
 
 export function Navigation({
   navigation,
@@ -22,24 +23,28 @@ export function Navigation({
     icon: LucideIcon
   }[]
 }) {
-  const { isMobile } = useSidebar()
-
+  const { isMobile } = useSidebar();
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Navegación</SidebarGroupLabel>
       <SidebarMenu>
-        {navigation.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <a href={item.url}>
-                <item.icon />
-                <span>{item.name}</span>
-              </a>
-            </SidebarMenuButton>
-            
-          </SidebarMenuItem>
-        ))}
+        {navigation.map((item) => {
+          // For Dashboard and Request, use absolute paths
+          let url = item.url;
+          if (item.url.toLowerCase() === 'dashboard') url = '/dashboard';
+          if (item.url.toLowerCase() === 'requests') url = '/requests';
+          return (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton asChild>
+                <Link href={url}>
+                  <item.icon />
+                  <span>{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          );
+        })}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }
