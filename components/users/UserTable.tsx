@@ -240,7 +240,7 @@ export default function UserTable() {
 
   return (
     <div className="container mx-auto py-1">
-      {showNotification && <Notification message="User updated" />}
+      {showNotification && <Notification message="Usuario actualizado" />}
       <Table>
         <TableHeader>
           <TableRow>
@@ -248,14 +248,14 @@ export default function UserTable() {
               <TableHead
                 key={col.field}
                 onClick={() => sortUsers(col.field as keyof User)}
-                className="cursor-pointer bg-primary text-white p-2"
+                className="cursor-pointer text-white p-2"
               >
                 {col.label}
                 {renderSortIcon(col.field as keyof User)}
               </TableHead>
             ))}
-            <TableHead className='bg-primary text-white p-2'>Actions</TableHead>
-            <TableHead className="bg-primary text-white p-2"></TableHead>
+            <TableHead className=' text-white p-2'>Actions</TableHead>
+            <TableHead className=" text-white p-2"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
