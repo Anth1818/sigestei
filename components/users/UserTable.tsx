@@ -248,14 +248,14 @@ export default function UserTable() {
               <TableHead
                 key={col.field}
                 onClick={() => sortUsers(col.field as keyof User)}
-                className="cursor-pointer text-white p-2"
+                className="cursor-pointer  p-2"
               >
                 {col.label}
                 {renderSortIcon(col.field as keyof User)}
               </TableHead>
             ))}
-            <TableHead className=' text-white p-2'>Actions</TableHead>
-            <TableHead className=" text-white p-2"></TableHead>
+            <TableHead className='p-2'>Actions</TableHead>
+            <TableHead className="p-2"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
