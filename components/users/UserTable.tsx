@@ -27,7 +27,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Notification } from "../shared/Notification";
 import { User, SortColumnUser } from "@/lib/types";
-import { ExpandableRow } from "./ExpandableRow";
+import { ExpandableRow } from "../shared/ExpandableRow";
 import { mockUsers } from "@/data/mockUsers";
 
 export default function UserTable() {

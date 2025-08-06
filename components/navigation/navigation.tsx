@@ -13,6 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
+import {usePathname} from "next/navigation"
 
 export function Navigation({
   navigation,
@@ -24,21 +25,18 @@ export function Navigation({
   }[]
 }) {
   const { isMobile } = useSidebar();
+  const pathname = usePathname();
+
+  console.log(pathname);
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Navegación</SidebarGroupLabel>
       <SidebarMenu>
         {navigation.map((item) => {
-          // For Dashboard and Request, use absolute paths
-          // let url = item.url;
-          // if (item.url.toLowerCase() === 'dashboard') url = '/dashboard';
-          // if (item.url.toLowerCase() === 'requests') url = '/requests';
-          // if (item.url.toLowerCase() === 'users') url = '/users';
-          // if (item.url.toLowerCase() === 'addUser') url = '/addUser';
           return (
-            <SidebarMenuItem key={item.name}>
+            <SidebarMenuItem key={item.name} className={`${pathname === "/" + item.url ? 'bg-blue-200 dark:bg-gray-700 rounded-sm' : ''}`}>
               <SidebarMenuButton asChild>
-                <Link href={item.url}>
+                <Link href={item.url} >
                   <item.icon />
                   <span>{item.name}</span>
                 </Link>
