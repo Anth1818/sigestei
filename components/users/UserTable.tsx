@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {  useMemo, useState } from "react";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -24,111 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 
 import { Notification } from "../shared/Notification";
 import { User, SortColumnUser } from "@/lib/types";
-
-// Mock data for users
-const mockUsers: User[] = [
-  {
-    id: 1,
-    worker_id: 101,
-    username: "jdoe",
-    password: "password123",
-    role_id: 1,
-    is_active: true,
-    created: "2025-08-01T10:00:00Z",
-    role: "Admin",
-    identity_card: 12345678,
-    full_name: "John Doe",
-    status: true,
-    gender: "M",
-    position: "Manager",
-    position_id: 1,
-    gender_id: 1,
-    department: "IT",
-    department_id: 1,
-  },
-  {
-    id: 2,
-    worker_id: 102,
-    username: "asmith",
-    password: "password456",
-    role_id: 2,
-    is_active: false,
-    created: "2025-08-02T11:00:00Z",
-    role: "User",
-    identity_card: 87654321,
-    full_name: "Alice Smith",
-    status: false,
-    gender: "F",
-    position: "Technician",
-    position_id: 2,
-    gender_id: 2,
-    department: "Support",
-    department_id: 2,
-  },
-];
-
-const ExpandableRow = ({
-  user,
-  expanded,
-  onToggle,
-  onToggleActive,
-}: {
-  user: User;
-  expanded: boolean;
-  onToggle: () => void;
-  onToggleActive: () => void;
-}) => {
-  return (
-    <>
-      <TableRow className="cursor-pointer" onClick={onToggle}>
-        <TableCell>{user.identity_card}</TableCell>
-        <TableCell>{user.username}</TableCell>
-        <TableCell>{user.full_name}</TableCell>
-        <TableCell>{user.role}</TableCell>
-        <TableCell>{user.is_active ? "Active" : "Inactive"}</TableCell>
-        <TableCell>
-          <Button size="sm" onClick={(e) => { e.stopPropagation(); onToggleActive(); }}>
-            {user.is_active ? 'Deactivate' : 'Activate'}
-          </Button>
-        </TableCell>
-        <TableCell>
-          {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </TableCell>
-      </TableRow>
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <TableRow>
-            <TableCell colSpan={7} className="p-0">
-              <motion.div
-                initial="collapsed"
-                animate="open"
-                exit="collapsed"
-                variants={{
-                  open: { opacity: 1, height: "auto" },
-                  collapsed: { opacity: 0, height: 0 },
-                }}
-                transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
-              >
-                <div className="p-4 bg-muted">
-                  <h3 className="font-semibold mb-2">Additional Info:</h3>
-                  <p>{user.position}</p>
-                </div>
-              </motion.div>
-            </TableCell>
-          </TableRow>
-        )}
-      </AnimatePresence>
-    </>
-  );
-};
-
+import { ExpandableRow } from "./ExpandableRow";
+import { mockUsers } from "@/data/mockUsers";
 
 export default function UserTable() {
+  const [searchId, setSearchId] = useState("");
   // const { data } = useQuery({
   //   queryKey: ["users"],
   //   queryFn: () => api.get("/user").then((res) => res.data.data),
@@ -142,23 +45,23 @@ export default function UserTable() {
 
   const columns = [
     {
-      label: "ID Card",
+      label: "Cédula",
       field: "identity_card",
     },
     {
-      label: "Username",
-      field: "username",
+      label: "Correo",
+      field: "email",
     },
     {
-      label: "Full Name",
+      label: "Nombre completo",
       field: "full_name",
     },
     {
-      label: "Access Level",
+      label: "Nivel de acceso",
       field: "role",
     },
     {
-      label: 'Status',
+      label: 'Estatus',
       field: 'is_active'
     }
   ];
@@ -226,13 +129,22 @@ export default function UserTable() {
     );
   };
 
+
+  // Filtrar por ID antes de paginar
+  const filteredUsers = useMemo(() => {
+    if (!searchId.trim()) return users;
+    return users.filter((user) =>
+      user.identity_card.toString().includes(searchId.trim())
+    );
+  }, [users, searchId]);
+
   const paginatedUsers = useMemo(() => {
     const startIdx = (currentPage - 1) * rowsPerPage;
     const endIdx = startIdx + rowsPerPage;
-    return users.slice(startIdx, endIdx);
-  }, [users, currentPage, rowsPerPage]);
+    return filteredUsers.slice(startIdx, endIdx);
+  }, [filteredUsers, currentPage, rowsPerPage]);
 
-  const totalPages = Math.ceil(users.length / rowsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / rowsPerPage));
 
   const changePage = (newPage: number) => {
     setCurrentPage(newPage);
@@ -240,6 +152,23 @@ export default function UserTable() {
 
   return (
     <div className="container mx-auto py-1">
+      {/* Search by ID */}
+      <div className="mb-4 flex items-center gap-2">
+        <label htmlFor="search-id" className="text-sm font-medium">
+          Buscar por cédula:
+        </label>
+        <input
+          id="search-id"
+          type="text"
+          value={searchId}
+          onChange={(e) => {
+            setSearchId(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="border rounded px-2 py-1 text-sm w-48"
+          placeholder="Ingrese número de cédula"
+        />
+      </div>
       {showNotification && <Notification message="Usuario actualizado" />}
       <Table>
         <TableHeader>
@@ -254,7 +183,7 @@ export default function UserTable() {
                 {renderSortIcon(col.field as keyof User)}
               </TableHead>
             ))}
-            <TableHead className='p-2'>Actions</TableHead>
+            <TableHead className='p-2'>Acciones</TableHead>
             <TableHead className="p-2"></TableHead>
           </TableRow>
         </TableHeader>
@@ -272,7 +201,7 @@ export default function UserTable() {
       </Table>
       <div className="flex items-center justify-between mt-4">
         <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
+          <p className="text-sm font-medium">Filas por página</p>
           <Select
             value={rowsPerPage.toString()}
             onValueChange={(value) => {
@@ -300,10 +229,10 @@ export default function UserTable() {
             disabled={currentPage === 1}
           >
             <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous page</span>
+            <span className="sr-only">Página anterior</span>
           </Button>
           <div className="text-sm font-medium">
-            Page {currentPage} of {totalPages}
+            Página {currentPage} de {totalPages}
           </div>
           <Button
             variant="outline"
@@ -312,7 +241,7 @@ export default function UserTable() {
             disabled={currentPage === totalPages}
           >
             <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next page</span>
+            <span className="sr-only">Página siguiente</span>
           </Button>
         </div>
       </div>

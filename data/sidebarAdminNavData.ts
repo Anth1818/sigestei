@@ -41,7 +41,7 @@ export const dataAdmin = {
     // },
     {
       name: "Usuarios",
-      url: "admin/users",
+      url: "viewUsers",
       icon: Users,
     },
   ],

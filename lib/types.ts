@@ -7,7 +7,7 @@ export type SortColumnUser = {
 export type User = {
   id: number;
   worker_id: number;
-  username: string;
+  email: string;
   password: string;
   role_id: number;
   is_active: boolean;

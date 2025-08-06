@@ -30,13 +30,15 @@ export function Navigation({
       <SidebarMenu>
         {navigation.map((item) => {
           // For Dashboard and Request, use absolute paths
-          let url = item.url;
-          if (item.url.toLowerCase() === 'dashboard') url = '/dashboard';
-          if (item.url.toLowerCase() === 'requests') url = '/requests';
+          // let url = item.url;
+          // if (item.url.toLowerCase() === 'dashboard') url = '/dashboard';
+          // if (item.url.toLowerCase() === 'requests') url = '/requests';
+          // if (item.url.toLowerCase() === 'users') url = '/users';
+          // if (item.url.toLowerCase() === 'addUser') url = '/addUser';
           return (
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild>
-                <Link href={url}>
+                <Link href={item.url}>
                   <item.icon />
                   <span>{item.name}</span>
                 </Link>
