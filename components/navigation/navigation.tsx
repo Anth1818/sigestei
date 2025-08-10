@@ -34,8 +34,8 @@ export function Navigation({
       <SidebarMenu>
         {navigation.map((item) => {
           return (
-            <SidebarMenuItem key={item.name} className={`${pathname === "/" + item.url ? 'bg-blue-200 dark:bg-gray-700 rounded-sm' : ''}`}>
-              <SidebarMenuButton asChild>
+            <SidebarMenuItem key={item.name} >
+              <SidebarMenuButton asChild className={`${pathname === "/" + item.url ? 'bg-blue-200 dark:bg-gray-700 rounded-sm' : ''} hover:bg-blue-200 dark:hover:bg-gray-700`}>
                 <Link href={item.url} >
                   <item.icon />
                   <span>{item.name}</span>

@@ -78,6 +78,7 @@ export default function RequestTable() {
     setExpanded(expanded === id ? null : id);
   };
 
+
   const updateRequestStatus = async (id: number, newStatus: string) => {
     setShowNotification(true);
     const updatedRequests = requests.map((request) => {
@@ -87,7 +88,21 @@ export default function RequestTable() {
       return request;
     });
     setRequests(updatedRequests);
-    
+    const timer = setTimeout(() => {
+      setShowNotification(false);
+      clearTimeout(timer);
+    }, 2000);
+  };
+
+  const updateRequestPriority = async (id: number, newPriority: string) => {
+    setShowNotification(true);
+    const updatedRequests = requests.map((request) => {
+      if (request.id === id) {
+        return { ...request, priority: newPriority as any };
+      }
+      return request;
+    });
+    setRequests(updatedRequests);
     const timer = setTimeout(() => {
       setShowNotification(false);
       clearTimeout(timer);
@@ -229,7 +244,7 @@ export default function RequestTable() {
             setStatusFilter(value);
             setCurrentPage(1);
           }}>
-            <SelectTrigger className="h-8">
+            <SelectTrigger className="h-8 w-full">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
@@ -247,7 +262,7 @@ export default function RequestTable() {
             setPriorityFilter(value);
             setCurrentPage(1);
           }}>
-            <SelectTrigger className="h-8">
+            <SelectTrigger className="h-8 w-full">
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
@@ -264,7 +279,7 @@ export default function RequestTable() {
             setTypeFilter(value);
             setCurrentPage(1);
           }}>
-            <SelectTrigger className="h-8">
+            <SelectTrigger className="h-8 w-full">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
@@ -311,6 +326,7 @@ export default function RequestTable() {
               expanded={expanded === request.id}
               onToggle={() => toggleExpansion(request.id)}
               onUpdateStatus={updateRequestStatus}
+              onUpdatePriority={updateRequestPriority}
               getPriorityColor={getPriorityColor}
               getStatusColor={getStatusColor}
             />

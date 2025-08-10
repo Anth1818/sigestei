@@ -2,29 +2,19 @@
 
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  ChevronDown,
-  ChevronRight,
-  User,
-  Computer,
-  Calendar,
-  FileText,
-} from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Request } from "@/lib/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
+import ContentRequestRow from "./ContentRequestRow";
 
 interface ExpandableRequestRowProps {
   request: Request;
   expanded: boolean;
   onToggle: () => void;
   onUpdateStatus: (id: number, status: string) => void;
+  onUpdatePriority: (id: number, priority: string) => void;
   getPriorityColor: (priority: string) => string;
   getStatusColor: (status: string) => string;
 }
@@ -34,6 +24,7 @@ export function ExpandableRequestRow({
   expanded,
   onToggle,
   onUpdateStatus,
+  onUpdatePriority,
   getPriorityColor,
   getStatusColor,
 }: ExpandableRequestRowProps) {
@@ -78,23 +69,56 @@ export function ExpandableRequestRow({
         <TableCell className="p-2">
           {formatDate(request.request_date)}
         </TableCell>
-        <TableCell className="p-2">
-          <Select
-            value={request.status}
-            onValueChange={(value) => onUpdateStatus(request.id, value)
-                
-            }
-          >
-            <SelectTrigger className="h-8 w-32" >
-              <SelectValue  />
-            </SelectTrigger>
-            <SelectContent >
-              <SelectItem value="Pendiente" >Pendiente</SelectItem>
-              <SelectItem value="En progreso">En progreso</SelectItem>
-              <SelectItem value="Completada">Completada</SelectItem>
-              <SelectItem value="Cancelada">Cancelada</SelectItem>
-            </SelectContent>
-          </Select>
+        <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Select
+                    value={request.status}
+                    onValueChange={(value) => onUpdateStatus(request.id, value)}
+                  >
+                    <SelectTrigger className="h-8 w-full mb-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pendiente">Pendiente</SelectItem>
+                      <SelectItem value="En progreso">En progreso</SelectItem>
+                      <SelectItem value="Completada">Completada</SelectItem>
+                      <SelectItem value="Cancelada">Cancelada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                Cambiar estado de la solicitud
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Select
+                    value={request.priority}
+                    onValueChange={(value) => onUpdatePriority(request.id, value)}
+                  >
+                    <SelectTrigger className="h-8 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Alta">Alta</SelectItem>
+                      <SelectItem value="Media">Media</SelectItem>
+                      <SelectItem value="Baja">Baja</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                Cambiar prioridad de la solicitud
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </TableCell>
         <TableCell className="p-2">
           <Button variant="ghost" size="sm" onClick={onToggle}>
@@ -121,230 +145,8 @@ export function ExpandableRequestRow({
                 }}
                 transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
               >
-                <div className="grid grid-cols-2 gap-6">
-                  {/* Información de la Solicitud */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      <h4 className="font-semibold text-lg">
-                        Detalles de la Solicitud
-                      </h4>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div>
-                        <span className="font-medium text-sm text-gray-600">
-                          Descripción:
-                        </span>
-                        <div className="w-full">
-                          <textarea className="text-sm mt-1 p-2 bg-white dark:text-black rounded border h-48 w-sm md:w-md scroll-auto resize-none" >
-                            {request.description}
-                          </textarea>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            Asignado a:
-                          </span>
-                          <p className="text-sm">{request.assigned_to}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            ID Equipo:
-                          </span>
-                          <p className="text-sm">
-                            {request.computer_equipment_id}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Información del Solicitante */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <User className="h-5 w-5 text-green-600" />
-                      <h4 className="font-semibold text-lg">Solicitante</h4>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            Nombre:
-                          </span>
-                          <p className="text-sm">{request.user.full_name}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            Cédula:
-                          </span>
-                          <p className="text-sm">
-                            {request.user.identity_card}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            Email:
-                          </span>
-                          <p className="text-sm">{request.user.email}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            Cargo:
-                          </span>
-                          <p className="text-sm">{request.user.position}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="font-medium text-sm text-gray-600">
-                          Departamento:
-                        </span>
-                        <p className="text-sm">{request.user.department}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Información del Equipo Principal */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Computer className="h-5 w-5 text-purple-600" />
-                      <h4 className="font-semibold text-lg">
-                        Equipo Principal
-                      </h4>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            Nombre:
-                          </span>
-                          <p className="text-sm">
-                            {request.computer_equipment.name}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            Modelo:
-                          </span>
-                          <p className="text-sm">
-                            {request.computer_equipment.model}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="font-medium text-sm text-gray-600">
-                          N° Serie:
-                        </span>
-                        <p className="text-sm">
-                          {request.computer_equipment.serial_number}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Información del Beneficiario (si es tercero) */}
-                  {request.third_party && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <User className="h-5 w-5 text-orange-600" />
-                        <h4 className="font-semibold text-lg">
-                          Beneficiario Final
-                        </h4>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="font-medium text-sm text-gray-600">
-                              Nombre:
-                            </span>
-                            <p className="text-sm">
-                              {request.third_party.full_name}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="font-medium text-sm text-gray-600">
-                              Cédula:
-                            </span>
-                            <p className="text-sm">
-                              {request.third_party.identity_card}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="font-medium text-sm text-gray-600">
-                              Email:
-                            </span>
-                            <p className="text-sm">
-                              {request.third_party.email}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="font-medium text-sm text-gray-600">
-                              Cargo:
-                            </span>
-                            <p className="text-sm">
-                              {request.third_party.position}
-                            </p>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-sm text-gray-600">
-                            Departamento:
-                          </span>
-                          <p className="text-sm">
-                            {request.third_party.department}
-                          </p>
-                        </div>
-
-                        {/* Equipo del Beneficiario */}
-                        <div className="mt-4 p-3 bg-white dark:text-black rounded border">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Computer className="h-4 w-4 text-orange-600" />
-                            <span className="font-medium text-sm">
-                              Equipo del Beneficiario
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                              <span className="text-gray-600">Nombre:</span>
-                              <p>
-                                {request.third_party.computer_equipment.name}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Modelo:</span>
-                              <p>
-                                {request.third_party.computer_equipment.model}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">N° Serie:</span>
-                              <p>
-                                {
-                                  request.third_party.computer_equipment
-                                    .serial_number
-                                }
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Ubicación:</span>
-                              <p>
-                                {
-                                  request.third_party.computer_equipment
-                                    .location
-                                }
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <ContentRequestRow request={request} />
+                
               </motion.div>
             </TableCell>
           </TableRow>

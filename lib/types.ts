@@ -22,6 +22,7 @@ export type User = {
   gender_id: number;
   department: string;
   department_id: number;
+  idEquipmentAssigned: number;
 };
 
 // ...existing code...
