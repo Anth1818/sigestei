@@ -8,16 +8,16 @@ export const dataAdmin = {
       icon: Home,
     },
     ,
-    // {
-    //   name: "Solicitudes",
-    //   url: "requests",
-    //   icon: FileText,
-    // },
-    // {
-    //   name: "inventario",
-    //   url: "inventory",
-    //   icon: ComputerIcon,
-    // },
+    {
+      name: "Solicitudes",
+      url: "viewRequests",
+      icon: FileText,
+    },
+    {
+      name: "Inventario",
+      url: "viewInventory",
+      icon: ComputerIcon,
+    },
     {
       name: "Usuarios",
       url: "viewUsers",

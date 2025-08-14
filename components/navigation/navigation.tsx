@@ -27,7 +27,6 @@ export function Navigation({
   const { isMobile } = useSidebar();
   const pathname = usePathname();
 
-  console.log(pathname);
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Navegación</SidebarGroupLabel>
