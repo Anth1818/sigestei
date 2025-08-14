@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -21,42 +22,62 @@ const requestTypes = [
   "Soporte"
 ];
 
+const requestSchema = z.object({
+  request_type: z.string().min(1, "El tipo de solicitud es requerido"),
+  description: z.string().min(10, "La descripción debe tener al menos 10 caracteres").max(500, "La descripción no puede exceder 500 caracteres"),
+  isForThirdParty: z.boolean(),
+  selectedThirdPartyId: z.string().optional(),
+}).refine((data) => {
+  if (data.isForThirdParty && !data.selectedThirdPartyId) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Debes seleccionar un usuario beneficiario",
+  path: ["selectedThirdPartyId"]
+});
+
+type RequestFormData = z.infer<typeof requestSchema>;
+
 export default function AddRequestForm() {
-  const [isForThirdParty, setIsForThirdParty] = useState(false);
-  const [selectedThirdPartyId, setSelectedThirdPartyId] = useState<string>("");
-  const [form, setForm] = useState({
-    request_type: "",
-    description: "",
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting }
+  } = useForm<RequestFormData>({
+    resolver: zodResolver(requestSchema),
+    defaultValues: {
+      request_type: "",
+      description: "",
+      isForThirdParty: false,
+      selectedThirdPartyId: "",
+    }
   });
 
-  const disabled = form.request_type === "" || form.description.trim() === "" || (isForThirdParty && selectedThirdPartyId === "");
+  const isForThirdParty = watch("isForThirdParty");
+  const selectedThirdPartyId = watch("selectedThirdPartyId");
 
   // Usuarios del mismo departamento (excluye al usuario actual)
   const departmentUsers = mockUsers.filter(
     (u) => u.department === currentUser.department && u.id !== currentUser.id
   );
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const onSubmit = async (data: RequestFormData) => {
+    try {
+      const beneficiary = data.isForThirdParty
+        ? departmentUsers.find((u) => u.id === Number(data.selectedThirdPartyId))
+        : currentUser;
 
-  const handleSelectChange = (name: string, value: string) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+      if (data.isForThirdParty && !beneficiary) {
+        alert("Debes seleccionar un usuario beneficiario válido.");
+        return;
+      }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const beneficiary = isForThirdParty
-      ? departmentUsers.find((u) => u.id === Number(selectedThirdPartyId))
-      : currentUser;
-        if (isForThirdParty && !beneficiary) {
-          alert("Debes seleccionar un usuario beneficiario válido.");
-          return;
-        }
-        if (!beneficiary) return;
+      if (!beneficiary) return;
 
-  const alertMsg = `
+      const alertMsg = `
 Solicitud creada:
 
 Solicitante:
@@ -64,14 +85,15 @@ Solicitante:
  - Email: ${currentUser.email}
  - Departamento: ${currentUser.department}
 
-Tipo de solicitud: ${form.request_type}
-Descripción: ${form.description}
-Beneficiario: ${beneficiary.full_name}${isForThirdParty ? ` (Tercero)\n- Email: ${beneficiary.email}\n- Cargo: ${beneficiary.position}` : " (Yo mismo)"}
+Tipo de solicitud: ${data.request_type}
+Descripción: ${data.description}
+Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Email: ${beneficiary.email}\n- Cargo: ${beneficiary.position}` : " (Yo mismo)"}
 `;
-        alert(alertMsg);
-        setForm({ request_type: "", description: "" });
-        setSelectedThirdPartyId("");
-        setIsForThirdParty(false);
+      alert(alertMsg);
+      reset();
+    } catch (error) {
+      console.error("Error al crear solicitud:", error);
+    }
   };
 
   return (
@@ -87,20 +109,32 @@ Beneficiario: ${beneficiary.full_name}${isForThirdParty ? ` (Tercero)\n- Email: 
             <Label className="font-medium mb-2 block">¿Para quién es la solicitud?</Label>
             <div className="flex gap-6 items-center">
               <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="beneficiary"
-                  checked={!isForThirdParty}
-                  onChange={() => setIsForThirdParty(false)}
+                <Controller
+                  name="isForThirdParty"
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <input
+                      type="radio"
+                      name="beneficiary"
+                      checked={!value}
+                      onChange={() => onChange(false)}
+                    />
+                  )}
                 />
                 Para mí
               </label>
               <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="beneficiary"
-                  checked={isForThirdParty}
-                  onChange={() => setIsForThirdParty(true)}
+                <Controller
+                  name="isForThirdParty"
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <input
+                      type="radio"
+                      name="beneficiary"
+                      checked={value}
+                      onChange={() => onChange(true)}
+                    />
+                  )}
                 />
                 Para un tercero de mi departamento
               </label>
@@ -111,68 +145,85 @@ Beneficiario: ${beneficiary.full_name}${isForThirdParty ? ` (Tercero)\n- Email: 
           {isForThirdParty && (
             <div className="mb-6">
               <Label htmlFor="third-party-select" className="block mb-1">Selecciona el usuario beneficiario</Label>
-              <Select
-                value={selectedThirdPartyId}
-                onValueChange={(value) => setSelectedThirdPartyId(value)}
-              >
-                <SelectTrigger id="third-party-select" className="w-full">
-                  <SelectValue placeholder="Selecciona un usuario" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departmentUsers.length === 0 ? (
-                    <SelectItem value="not-fount" disabled>No hay usuarios en tu departamento</SelectItem>
-                  ) : (
-                    departmentUsers.map((u) => (
-                      <SelectItem key={u.id} value={u.id.toString()}>
-                        {u.full_name} - {u.position}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="selectedThirdPartyId"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="third-party-select" className="w-full">
+                      <SelectValue placeholder="Selecciona un usuario" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departmentUsers.length === 0 ? (
+                        <SelectItem value="not-found" disabled>No hay usuarios en tu departamento</SelectItem>
+                      ) : (
+                        departmentUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id.toString()}>
+                            {u.full_name} - {u.position}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.selectedThirdPartyId && (
+                <span className="text-red-500 text-xs">{errors.selectedThirdPartyId.message}</span>
+              )}
             </div>
           )}
 
           {/* Formulario de solicitud */}
-          <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <Label htmlFor="request_type" className="pb-2">Tipo de solicitud</Label>
-              <Select
-                value={form.request_type}
-                onValueChange={(value) => handleSelectChange("request_type", value)}
-                required
-              >
-                <SelectTrigger id="request_type" className="w-full">
-                  <SelectValue placeholder="Selecciona tipo de solicitud" />
-                </SelectTrigger>
-                <SelectContent>
-                  {requestTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="request_type"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange} required>
+                    <SelectTrigger id="request_type" className="w-full">
+                      <SelectValue placeholder="Selecciona tipo de solicitud" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {requestTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.request_type && (
+                <span className="text-red-500 text-xs">{errors.request_type.message}</span>
+              )}
             </div>
             <div>
               <Label htmlFor="description" className="pb-2">Descripción</Label>
-              <textarea
-                id="description"
+              <Controller
                 name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder="Describe el problema o requerimiento"
-                maxLength={500}
-                required
-                className="min-h-[160px] border rounded px-2 py-1 w-full resize-none"
+                control={control}
+                render={({ field }) => (
+                  <textarea
+                    {...field}
+                    id="description"
+                    placeholder="Describe el problema o requerimiento"
+                    maxLength={500}
+                    className="min-h-[160px] border rounded px-2 py-1 w-full resize-none"
+                  />
+                )}
               />
+              {errors.description && (
+                <span className="text-red-500 text-xs">{errors.description.message}</span>
+              )}
             </div>
             <CardFooter className="flex justify-end px-0">
-                <Button
+              <Button
                 type="submit"
-                disabled={disabled}
-                className={`w-full md:w-auto ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
-                >
-                Enviar solicitud
-                </Button>
+                disabled={isSubmitting}
+                className={`w-full md:w-auto ${isSubmitting ? "cursor-not-allowed" : "cursor-pointer"}`}
+              >
+                {isSubmitting ? "Enviando..." : "Enviar solicitud"}
+              </Button>
             </CardFooter>
           </form>
         </CardContent>
