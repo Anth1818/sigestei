@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import Image from "next/image"
 import sigestei from "@/public/sigestei.png"
 import { ThemeToggle } from "../ui/theme-toggle"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function LoginForm({
   className,
@@ -36,12 +37,21 @@ export function LoginForm({
               <div className="grid gap-3">
                 <div className="flex items-center">
                   <Label htmlFor="password">Contraseña</Label>
-                  <a
-                    href="#"
+                   <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+               <p
                     className="ml-auto text-sm underline-offset-2 hover:underline"
                   >
                     Olvidaste tu contraseña?
-                  </a>
+                  </p>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                Contacta con el administrador del sistema para recuperar tu contraseña.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+                  
                 </div>
                 <Input id="password" type="password" required />
               </div>
