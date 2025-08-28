@@ -15,10 +15,10 @@ const computerSchema = z.object({
   serial_number: z.string().min(5, "El número de serie es requerido"),
   model: z.string().min(2, "El modelo es requerido"),
   brand: z.string().min(1, "La marca es requerida"),
+  type: z.enum(["Laptop", "PC"], { message: "El tipo de equipo es requerido" }),
   location: z.string().min(3, "La ubicación es requerida"),
   status: z.string().min(1, "El estado es requerido"),
-  purchase_date: z.string().min(1, "La fecha de compra es requerida"),
-  warranty_expiration: z.string().min(1, "La fecha de expiración de garantía es requerida"),
+  asset_number: z.string().min(1, "El número de bien es requerido"),
   assigned_to: z.string().min(3, "La asignación es requerida"),
   // Hardware specs
   cpu: z.string().min(3, "El procesador es requerido"),
@@ -48,9 +48,9 @@ export const AddComputerForm = () => {
       model: "",
       brand: "",
       location: "",
+      type: "PC",
       status: "",
-      purchase_date: "",
-      warranty_expiration: "",
+  asset_number: "",
       assigned_to: "",
       cpu: "",
       ram: "",
@@ -67,7 +67,7 @@ export const AddComputerForm = () => {
     try {
       // Simulación de envío exitoso
       alert(`✅ Equipo informático registrado exitosamente!\n\nDatos:\n- Nombre: ${data.name}\n- Modelo: ${data.model}\n- Serie: ${data.serial_number}\n- Marca: ${data.brand}\n- Estado: ${data.status}`);
-      
+
       // Limpiar formulario después del envío exitoso
       reset();
     } catch (error) {
@@ -88,6 +88,25 @@ export const AddComputerForm = () => {
             <div>
               <h3 className="text-lg font-semibold mb-3">Información General</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="type" className="pb-2">Tipo de equipo</Label>
+                  <Controller
+                    name="type"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="type" className="w-full">
+                          <SelectValue placeholder="Seleccione tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PC">PC</SelectItem>
+                          <SelectItem value="Laptop">Laptop</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.type && <span className="text-red-500 text-xs">{errors.type.message}</span>}
+                </div>
                 <div>
                   <Label htmlFor="name" className="pb-2">Nombre del Equipo</Label>
                   <Controller
@@ -198,36 +217,20 @@ export const AddComputerForm = () => {
                   {errors.status && <span className="text-red-500 text-xs">{errors.status.message}</span>}
                 </div>
                 <div>
-                  <Label htmlFor="purchase_date" className="pb-2">Fecha de Compra</Label>
+                  <Label htmlFor="asset_number" className="pb-2">Número de Bien</Label>
                   <Controller
-                    name="purchase_date"
+                    name="asset_number"
                     control={control}
                     render={({ field }) => (
                       <Input
                         {...field}
-                        id="purchase_date"
-                        type="date"
+                        id="asset_number"
+                        placeholder="Ej: 123456"
                         required
                       />
                     )}
                   />
-                  {errors.purchase_date && <span className="text-red-500 text-xs">{errors.purchase_date.message}</span>}
-                </div>
-                <div>
-                  <Label htmlFor="warranty_expiration" className="pb-2">Vencimiento de Garantía</Label>
-                  <Controller
-                    name="warranty_expiration"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        id="warranty_expiration"
-                        type="date"
-                        required
-                      />
-                    )}
-                  />
-                  {errors.warranty_expiration && <span className="text-red-500 text-xs">{errors.warranty_expiration.message}</span>}
+                  {errors.asset_number && <span className="text-red-500 text-xs">{errors.asset_number.message}</span>}
                 </div>
                 <div>
                   <Label htmlFor="assigned_to" className="pb-2">Asignado a</Label>
@@ -417,9 +420,9 @@ export const AddComputerForm = () => {
           </form>
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button 
-            type="submit" 
-            onClick={handleSubmit(onSubmit)} 
+          <Button
+            type="submit"
+            onClick={handleSubmit(onSubmit)}
             className="w-full md:w-auto"
             disabled={isSubmitting}
           >

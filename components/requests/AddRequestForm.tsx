@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -22,19 +23,41 @@ const requestTypes = [
   "Soporte"
 ];
 
+const maintenanceSubtypes = [
+  "Preventivo",
+  "Correctivo"
+];
+
+
 const requestSchema = z.object({
   request_type: z.string().min(1, "El tipo de solicitud es requerido"),
+  maintenance_subtype: z.string().optional(),
+  repair_update_subtype: z.string().optional(),
   description: z.string().min(10, "La descripción debe tener al menos 10 caracteres").max(500, "La descripción no puede exceder 500 caracteres"),
   isForThirdParty: z.boolean(),
   selectedThirdPartyId: z.string().optional(),
-}).refine((data) => {
+}).superRefine((data, ctx) => {
   if (data.isForThirdParty && !data.selectedThirdPartyId) {
-    return false;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Debes seleccionar un usuario beneficiario",
+      path: ["selectedThirdPartyId"]
+    });
   }
-  return true;
-}, {
-  message: "Debes seleccionar un usuario beneficiario",
-  path: ["selectedThirdPartyId"]
+  if (data.request_type === "Mantenimiento" && !data.maintenance_subtype) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Debes seleccionar el subtipo de mantenimiento",
+      path: ["maintenance_subtype"]
+    });
+  }
+  if ((data.request_type === "Reparación" || data.request_type === "Actualización") && !data.repair_update_subtype) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Debes seleccionar si es hardware o software",
+      path: ["repair_update_subtype"]
+    });
+  }
 });
 
 type RequestFormData = z.infer<typeof requestSchema>;
@@ -50,6 +73,8 @@ export default function AddRequestForm() {
     resolver: zodResolver(requestSchema),
     defaultValues: {
       request_type: "",
+      maintenance_subtype: "",
+      repair_update_subtype: "",
       description: "",
       isForThirdParty: false,
       selectedThirdPartyId: "",
@@ -58,6 +83,9 @@ export default function AddRequestForm() {
 
   const isForThirdParty = watch("isForThirdParty");
   const selectedThirdPartyId = watch("selectedThirdPartyId");
+  const requestType = watch("request_type");
+  const maintenanceSubtype = watch("maintenance_subtype");
+  const repairUpdateSubtype = watch("repair_update_subtype");
 
   // Usuarios del mismo departamento (excluye al usuario actual)
   const departmentUsers = mockUsers.filter(
@@ -197,6 +225,66 @@ Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Em
                 <span className="text-red-500 text-xs">{errors.request_type.message}</span>
               )}
             </div>
+            {requestType === "Mantenimiento" && (
+              <div>
+                <Label htmlFor="maintenance_subtype" className="pb-2">Subtipo de mantenimiento</Label>
+                <Controller
+                  name="maintenance_subtype"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange} required>
+                      <SelectTrigger id="maintenance_subtype" className="w-full">
+                        <SelectValue placeholder="Selecciona subtipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {maintenanceSubtypes.map((sub) => (
+                          <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.maintenance_subtype && (
+                  <span className="text-red-500 text-xs">{errors.maintenance_subtype.message}</span>
+                )}
+              </div>
+            )}
+            {(requestType != "Mantenimiento") && (
+              <div>
+                <div className="flex items-center gap-1 pb-2">
+                  <Label htmlFor="repair_update_subtype">¿La solicitud es sobre hardware o software?</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span tabIndex={0} className="cursor-pointer text-primary" aria-label="¿Qué es hardware o software?">🛈</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <span>
+                        <b>Hardware:</b> Se refiere a componentes físicos del equipo, como disco duro, memoria RAM, teclado, etc.<br/>
+                        <b>Software:</b> Se refiere a programas o sistemas instalados, como el sistema operativo o aplicaciones.
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Controller
+                  name="repair_update_subtype"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange} required>
+                      <SelectTrigger id="repair_update_subtype" className="w-full">
+                        <SelectValue placeholder="Selecciona una opción" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hardware">Hardware</SelectItem>
+                        <SelectItem value="Software">Software</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.repair_update_subtype && (
+                  <span className="text-red-500 text-xs">{errors.repair_update_subtype.message}</span>
+                )}
+              </div>
+            )}
             <div>
               <Label htmlFor="description" className="pb-2">Descripción</Label>
               <Controller

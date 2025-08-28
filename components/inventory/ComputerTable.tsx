@@ -33,7 +33,8 @@ export default function ComputerTable() {
   const [statusFilter, setStatusFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
-  
+  const [typeFilter, setTypeFilter] = useState("");
+
   const [computers, setComputers] = useState(mockComputerEquipment);
 
   const columns = [
@@ -143,15 +144,20 @@ export default function ComputerTable() {
       filtered = filtered.filter((computer) => computer.brand === brandFilter);
     }
 
+    // Filtro por tipo de equipo
+    if (typeFilter) {
+      filtered = filtered.filter((computer) => computer.type === typeFilter);
+    }
+
     // Filtro por ubicación
     if (locationFilter) {
-      filtered = filtered.filter((computer) => 
+      filtered = filtered.filter((computer) =>
         computer.location.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
 
     return filtered;
-  }, [computers, searchId, statusFilter, brandFilter, locationFilter]);
+  }, [computers, searchId, statusFilter, brandFilter, typeFilter, locationFilter]);
 
   const paginatedComputers = useMemo(() => {
     const startIdx = (currentPage - 1) * rowsPerPage;
@@ -169,6 +175,7 @@ export default function ComputerTable() {
     setSearchId("");
     setStatusFilter("");
     setBrandFilter("");
+    setTypeFilter("");
     setLocationFilter("");
     setCurrentPage(1);
   };
@@ -186,7 +193,7 @@ export default function ComputerTable() {
   return (
     <div className="container mx-auto py-1">
       {/* Filtros */}
-      <div className="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
         <div>
           <label htmlFor="search-id" className="text-sm font-medium block mb-1">
             Buscar por ID:
@@ -202,6 +209,22 @@ export default function ComputerTable() {
             className="border rounded px-2 py-1 text-sm w-full"
             placeholder="ID de equipo"
           />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Tipo de equipo:</label>
+          <Select value={typeFilter} onValueChange={(value) => {
+            setTypeFilter(value);
+            setCurrentPage(1);
+          }}>
+            <SelectTrigger className="h-8 w-full">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Laptop">Laptop</SelectItem>
+              <SelectItem value="PC">PC</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
@@ -264,7 +287,7 @@ export default function ComputerTable() {
       </div>
 
       {showNotification && <Notification message="Equipo actualizado" />}
-      
+
       <Table>
         <TableHeader>
           <TableRow>

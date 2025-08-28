@@ -76,15 +76,9 @@ const ContentComputerRow = ({ computer }: ContentComputerRowProps) => {
             </div>
             <div>
               <span className="font-medium text-sm text-gray-600">
-                Fecha de Compra:
+                Número de Bien:
               </span>
-              <p className="text-sm">{computer.purchase_date}</p>
-            </div>
-            <div>
-              <span className="font-medium text-sm text-gray-600">
-                Garantía vence:
-              </span>
-              <p className="text-sm">{computer.warranty_expiration}</p>
+              <p className="text-sm">{computer.asset_number}</p>
             </div>
           </div>
         </div>

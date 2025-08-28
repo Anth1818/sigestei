@@ -1,4 +1,4 @@
-import { Home, FileText, Users, Settings, Folder, ComputerIcon } from "lucide-react";
+import { Home, FileText, Users, Folder, ComputerIcon } from "lucide-react";
 
 export const dataAdmin = {
   navigation: [
@@ -17,6 +17,11 @@ export const dataAdmin = {
       name: "Inventario",
       url: "viewInventory",
       icon: ComputerIcon,
+    },
+    {
+      name:"Reportes",
+      url:"reports",
+      icon: Folder
     },
     {
       name: "Usuarios",
