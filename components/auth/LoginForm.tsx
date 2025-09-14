@@ -43,7 +43,6 @@ export function LoginForm({
         // Guarda el usuario en localStorage
         localStorage.setItem("user", JSON.stringify(user));
         setUser(user); // Guarda el usuario globalmente
-
         redirectBasedUserType(user.role_id);
       }
     } catch (err: any) {

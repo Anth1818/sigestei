@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+// No se pueden usar hooks en el middleware
 
 // Rutas protegidas
 const protectedRoutes = [
@@ -14,7 +15,7 @@ const protectedRoutes = [
   "/editComputerEquipment",
 ];
 
-export function middleware(request: NextRequest) {
+export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Si la ruta es pública, permite el acceso
@@ -23,15 +24,43 @@ export function middleware(request: NextRequest) {
   }
 
   // Verifica si existe la cookie de sesión (ejemplo: 'auth-token')
-  const token = request.cookies.get("auth-token");
+  const token = request.cookies.get("auth-token")?.value;
+  let roleId: number | undefined = undefined;
 
-  if (!token) {
-    // Si no hay token, redirige a login
+  if (token) {
+    try {
+      const base64Payload = token.split('.')[1];
+      // Edge runtime: usa atob, no Buffer
+      const payload = JSON.parse(globalThis.atob(base64Payload));
+      roleId = Number(payload.role_id);
+      // Opcional: console.log("Role ID from JWT:", roleId);
+    } catch (err) {
+      // Opcional: console.error("Error decoding JWT:", err);
+    }
+  }
+
+  if (!token || !roleId) {
+    // Si no hay token o no se pudo extraer el rol, redirige a login
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Si hay token, permite el acceso
+  // Mapa de acceso por rol
+  const roleAccessMap: Record<number, string[]> = {
+    1: ["/dashboard", "/reports", "/viewInventory", "/viewRequests", "/viewUsers", "/addUser", "/addRequest", "/editUser", "/editComputerEquipment"], // admin
+    2: ["/dashboard", "/reports", "/viewInventory", "/viewRequests", "/viewUsers"], // analista
+    3: ["/viewInventory", "/viewRequests"], // técnico
+    4: ["/viewRequests"], // usuario final
+  };
+
+  const allowedRoutes = roleAccessMap[roleId] || [];
+  // Si la ruta no está permitida para el rol, redirige a la primera permitida
+  if (!allowedRoutes.some(route => pathname.startsWith(route))) {
+    const redirectUrl = new URL(allowedRoutes[0] || "/login", request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Si hay token y la ruta está permitida, permite el acceso
   return NextResponse.next();
 }
 

@@ -22,12 +22,12 @@ export const dataNav = {
       url: "viewInventory",
       icon: ComputerIcon,
     },
-    {
-      role_access: [1, 2,],
-      name:"Reportes",
-      url:"reports",
-      icon: Folder
-    },
+    // {
+    //   role_access: [1, 2,],
+    //   name:"Reportes",
+    //   url:"reports",
+    //   icon: Folder
+    // },
     {role_access: [1],
       name: "Usuarios",
       url: "viewUsers",
