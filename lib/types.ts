@@ -115,3 +115,13 @@ export type SortColumnRequest = {
   column: keyof Request | "requestor_name" | "beneficiary_name";
   direction: "asc" | "desc";
 } | null;
+
+export type UserData = {
+  id: number;
+  full_name: string;
+  email: string;
+  role_id: number;
+  user: string;
+  role: string;
+  identity_card: number;
+  status: boolean;}

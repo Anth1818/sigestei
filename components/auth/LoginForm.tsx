@@ -1,38 +1,54 @@
-"use client"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Image from "next/image"
-import sigestei from "@/public/sigestei.png"
-import { ThemeToggle } from "../ui/theme-toggle"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+"use client";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import sigestei from "@/public/sigestei.png";
+import { ThemeToggle } from "../ui/theme-toggle";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { login} from "@/api/api";
-import { useRouter } from "next/navigation"
+import { login } from "@/api/api";
+import { useRedirectBasedType } from "@/hooks/useRedirect";
+import type { UserData } from "@/lib/types";
+import { useUserStore } from "@/hooks/useUserStore";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm();
   const [error, setError] = useState("");
+  const setUser = useUserStore((state) => state.setUser);
 
-  const router = useRouter();
+  const redirectBasedUserType = useRedirectBasedType();
   const onSubmit = async (data: any) => {
     setError("");
     try {
-     let responseLogin = await login(data.email, data.password);
-      // Obtener datos del usuario autenticado
-      if (responseLogin.user.role_id === 1) {
-        router.push("/dashboard");
-      } else {
-       console.log("No es admin")
+      let responseLogin = await login(data.email, data.password);
+      const user: UserData = responseLogin.user;
+      const message = responseLogin.message;
+      if (user) {
+        // Guarda el usuario en localStorage
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user); // Guarda el usuario globalmente
+
+        redirectBasedUserType(user.role_id);
       }
     } catch (err: any) {
-      setError(err?.message || "Credenciales inválidas");
+      setError(err?.message);
+      console.log(err);
     }
   };
 
@@ -47,7 +63,10 @@ export function LoginForm({
                 <p className="text-muted-foreground text-balance">
                   Inicia sesión en tu cuenta de SIGESTEI
                 </p>
-                <span className="pt-4"> <ThemeToggle /></span>  
+                <span className="pt-4">
+                  {" "}
+                  <ThemeToggle />
+                </span>
               </div>
               <div className="grid gap-3">
                 <Label htmlFor="email">Correo electrónico</Label>
@@ -58,35 +77,46 @@ export function LoginForm({
                   {...register("email", { required: "El correo es requerido" })}
                   disabled={isSubmitting}
                 />
-                {errors.email && <span className="text-red-500 text-xs">{errors.email.message as string}</span>}
+                {errors.email && (
+                  <span className="text-red-500 text-xs">
+                    {errors.email.message as string}
+                  </span>
+                )}
               </div>
               <div className="grid gap-3">
                 <div className="flex items-center">
                   <Label htmlFor="password">Contraseña</Label>
-                   <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-               <p
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Olvidaste tu contraseña?
-                  </p>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                Contacta con el administrador del sistema para recuperar tu contraseña.
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="ml-auto text-sm underline-offset-2 hover:underline">
+                          Olvidaste tu contraseña?
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        Contacta con el administrador del sistema para recuperar
+                        tu contraseña.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 <Input
                   id="password"
                   type="password"
-                  {...register("password", { required: "La contraseña es requerida" })}
+                  {...register("password", {
+                    required: "La contraseña es requerida",
+                  })}
                   disabled={isSubmitting}
                 />
-                {errors.password && <span className="text-red-500 text-xs">{errors.password.message as string}</span>}
+                {errors.password && (
+                  <span className="text-red-500 text-xs">
+                    {errors.password.message as string}
+                  </span>
+                )}
               </div>
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+              {error && (
+                <p className="text-red-500 text-sm text-center">{error}</p>
+              )}
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
               </Button>
@@ -105,5 +135,5 @@ export function LoginForm({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
