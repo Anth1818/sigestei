@@ -1,6 +1,7 @@
-import { Computer, FileText, User } from "lucide-react"
+import { Computer, FileText, User, MessageSquare } from "lucide-react"
 import { Request } from "@/lib/types";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 interface ContentRequestRowProps {
@@ -16,6 +17,16 @@ const technicians = [
 
 const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
   const [assignedTo, setAssignedTo] = useState(request.assigned_to);
+  const [technicianComments, setTechnicianComments] = useState("");
+  
+  const isCompletedOrCancelled = request.status === "Completada" || request.status === "Cancelada";
+  
+  const handleSaveComments = () => {
+    // Aquí podrías hacer una llamada a la API para guardar los comentarios
+    console.log("Guardando comentarios:", technicianComments);
+    // Ejemplo: updateRequestComments(request.id, technicianComments);
+  };
+
   return <div className="grid grid-cols-2 gap-6">
     {/* Información de la Solicitud */}
     <div className="space-y-4">
@@ -28,7 +39,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
 
       <div className="space-y-2">
         <div>
-          <span className="font-medium text-sm text-gray-600">
+          <span className="font-medium text-sm text-gray-400">
             Descripción:
           </span>
           <div className="w-full">
@@ -40,7 +51,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
 
         <div className="grid grid-cols-2 gap-4 items-center">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm text-gray-600">
+            <span className="font-medium text-sm text-gray-400">
               Asignado a:
             </span>
             <Select
@@ -71,13 +82,13 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
       <div className="space-y-2">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <span className="font-medium text-sm text-gray-600">
+            <span className="font-medium text-sm text-gray-400">
               Nombre:
             </span>
             <p className="text-sm">{request.user.full_name}</p>
           </div>
           <div>
-            <span className="font-medium text-sm text-gray-600">
+            <span className="font-medium text-sm text-gray-400">
               Cédula:
             </span>
             <p className="text-sm">
@@ -85,20 +96,20 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             </p>
           </div>
           <div>
-            <span className="font-medium text-sm text-gray-600">
+            <span className="font-medium text-sm text-gray-400">
               Email:
             </span>
             <p className="text-sm">{request.user.email}</p>
           </div>
           <div>
-            <span className="font-medium text-sm text-gray-600">
+            <span className="font-medium text-sm text-gray-400">
               Cargo:
             </span>
             <p className="text-sm">{request.user.position}</p>
           </div>
         </div>
         <div>
-          <span className="font-medium text-sm text-gray-600">
+          <span className="font-medium text-sm text-gray-400">
             Departamento:
           </span>
           <p className="text-sm">{request.user.department}</p>
@@ -118,7 +129,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
       <div className="space-y-2">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <span className="font-medium text-sm text-gray-600">
+            <span className="font-medium text-sm text-gray-400">
               Nombre:
             </span>
             <p className="text-sm">
@@ -126,7 +137,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             </p>
           </div>
           <div>
-            <span className="font-medium text-sm text-gray-600">
+            <span className="font-medium text-sm text-gray-400">
               Modelo:
             </span>
             <p className="text-sm">
@@ -135,7 +146,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
           </div>
         </div>
         <div>
-          <span className="font-medium text-sm text-gray-600">
+          <span className="font-medium text-sm text-gray-400">
             N° Serie:
           </span>
           <p className="text-sm">
@@ -144,7 +155,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
         </div>
       </div>
       <div>
-        <span className="font-medium text-sm text-gray-600">
+        <span className="font-medium text-sm text-gray-400">
           N° de Bien:
         </span>
         <p className="text-sm">
@@ -166,7 +177,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="font-medium text-sm text-gray-600">
+              <span className="font-medium text-sm text-gray-400">
                 Nombre:
               </span>
               <p className="text-sm">
@@ -174,7 +185,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               </p>
             </div>
             <div>
-              <span className="font-medium text-sm text-gray-600">
+              <span className="font-medium text-sm text-gray-400">
                 Cédula:
               </span>
               <p className="text-sm">
@@ -182,7 +193,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               </p>
             </div>
             <div>
-              <span className="font-medium text-sm text-gray-600">
+              <span className="font-medium text-sm text-gray-400">
                 Email:
               </span>
               <p className="text-sm">
@@ -190,7 +201,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               </p>
             </div>
             <div>
-              <span className="font-medium text-sm text-gray-600">
+              <span className="font-medium text-sm text-gray-400">
                 Cargo:
               </span>
               <p className="text-sm">
@@ -199,7 +210,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             </div>
           </div>
           <div>
-            <span className="font-medium text-sm text-gray-600">
+            <span className="font-medium text-sm text-gray-400">
               Departamento:
             </span>
             <p className="text-sm">
@@ -217,19 +228,19 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-gray-600">Nombre:</span>
+                <span className="text-gray-700">Nombre:</span>
                 <p>
                   {request.third_party.computer_equipment.name}
                 </p>
               </div>
               <div>
-                <span className="text-gray-600">Modelo:</span>
+                <span className="text-gray-700">Modelo:</span>
                 <p>
                   {request.third_party.computer_equipment.model}
                 </p>
               </div>
               <div>
-                <span className="text-gray-600">N° Serie:</span>
+                <span className="text-gray-700">N° Serie:</span>
                 <p>
                   {
                     request.third_party.computer_equipment
@@ -238,7 +249,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                 </p>
               </div>
               <div>
-                <span className="font-medium text-sm text-gray-600">
+                <span className="font-medium text-sm text-gray-700">
                   N° de Bien:
                 </span>
                 <p className="text-sm">
@@ -246,7 +257,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                 </p>
               </div>
               <div>
-                <span className="text-gray-600">Ubicación:</span>
+                <span className="text-gray-700">Ubicación:</span>
                 <p>
                   {
                     request.third_party.computer_equipment
@@ -259,6 +270,45 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
         </div>
       </div>
     )}
+
+    {/* Comentarios del Técnico */}
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-3">
+        <MessageSquare className="h-5 w-5 text-indigo-600" />
+        <h4 className="font-semibold text-lg">Comentarios del Técnico</h4>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <span className="font-medium text-sm text-gray-400 mb-2 block">
+            Observaciones y comentarios:
+          </span>
+          <textarea 
+            className={`w-full h-32 p-3 border rounded-md text-sm resize-none ${
+              isCompletedOrCancelled 
+                ? 'bg-white border-gray-300 dark:border-gray-600 text-black' 
+                : 'bg-gray-100 border-gray-200 cursor-not-allowed text-black'
+            }`}
+            placeholder={isCompletedOrCancelled ? "Escriba los comentarios del técnico..." : "Los comentarios solo pueden editarse cuando el estado sea 'Completada' o 'Cancelada'"}
+            value={technicianComments}
+            onChange={(e) => setTechnicianComments(e.target.value)}
+            disabled={!isCompletedOrCancelled}
+          />
+        </div>
+        
+        {isCompletedOrCancelled && (
+          <div className="flex justify-end">
+            <Button 
+              onClick={handleSaveComments}
+              size="sm"
+              
+            >
+              Guardar Comentarios
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   </div>
 }
 export default ContentRequestRow;
