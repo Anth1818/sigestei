@@ -125,3 +125,75 @@ export type UserData = {
   role: string;
   identity_card: number;
   status: boolean;}
+
+  
+export interface SelectUserStatusProps {
+    role: string;
+    onChange: (newStatus: string) => void;
+}
+
+export interface SelectComputerByStatusProps {
+  status: string;
+  onChange: (newStatus: string) => void;
+}
+
+export type DashboardData = {
+  requestByStatusCurrentMonth: {
+    pending?: number;
+    resolved?: number;
+    closed?: number;
+    [key: string]: number | undefined;
+  };
+  requestsCreatedAndResolvedByMonth: {
+    created: {
+      january: number;
+      february: number;
+      march: number;
+      april: number;
+      may: number;
+      june: number;
+      july: number;
+      august: number;
+      september: number;
+      october: number;
+      november: number;
+      december: number;
+      [key: string]: number;
+    };
+    resolved: {
+      january: number;
+      february: number;
+      march: number;
+      april: number;
+      may: number;
+      june: number;
+      july: number;
+      august: number;
+      september: number;
+      october: number;
+      november: number;
+      december: number;
+      [key: string]: number;
+    };
+  };
+  equipment: {
+    total: number;
+    byStatus: {
+      operational?: number;
+      under_review?: number;
+      damaged?: number;
+      withdrawn?: number;
+      [key: string]: number | undefined;
+    };
+  };
+  users: {
+    totalUsers: number;
+    byRoles: {
+      admin?: number;
+      technician?: number;
+      user?: number;
+      manager?: number;
+      [key: string]: number | undefined;
+    };
+  };
+};

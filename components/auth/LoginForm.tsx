@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
 import { login } from "@/api/api";
 import { useRedirectBasedType } from "@/hooks/useRedirect";
 import type { UserData } from "@/lib/types";
@@ -24,31 +25,37 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  type LoginFormInputs = { email: string; password: string };
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm();
+  } = useForm<LoginFormInputs>();
   const [error, setError] = useState("");
   const setUser = useUserStore((state) => state.setUser);
 
   const redirectBasedUserType = useRedirectBasedType();
-  const onSubmit = async (data: any) => {
-    setError("");
-    try {
-      let responseLogin = await login(data.email, data.password);
+  // React Query mutation for login
+  const mutation = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      login(email, password),
+    onSuccess: (responseLogin) => {
       const user: UserData = responseLogin.user;
-      const message = responseLogin.message;
       if (user) {
-        // Guarda el usuario en localStorage
         localStorage.setItem("user", JSON.stringify(user));
-        setUser(user); // Guarda el usuario globalmente
+        setUser(user);
         redirectBasedUserType(user.role_id);
       }
-    } catch (err: any) {
-      setError(err?.message);
-      console.log(err);
-    }
+    },
+    onError: (err: any) => {
+      setError(err?.response.data.message || "Error al iniciar sesión");
+    },
+  });
+
+  const onSubmit = (data: {email:string, password:string}) => {
+    setError("");
+    mutation.mutate({ email: data.email, password: data.password });
   };
 
   return (
@@ -113,11 +120,11 @@ export function LoginForm({
                   </span>
                 )}
               </div>
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
+              {(error || mutation.isError) && (
+                <p className="text-red-500 text-sm text-center">{error || "Error al iniciar sesión"}</p>
               )}
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
+              <Button type="submit" className="w-full" disabled={isSubmitting || mutation.isPending}>
+                {isSubmitting || mutation.isPending ? "Ingresando..." : "Iniciar sesión"}
               </Button>
             </div>
           </form>

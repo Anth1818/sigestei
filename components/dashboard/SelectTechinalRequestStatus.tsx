@@ -5,18 +5,21 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { SelectComputerByStatusProps } from "@/lib/types"
 
-export default function SelectTechinalRequestStatus() {
+interface SelectTechinalRequestStatusProps extends SelectComputerByStatusProps {}
+
+export default function SelectTechinalRequestStatus( { onChange, status }: SelectTechinalRequestStatusProps) {
     return (
-        <Select>
+        <Select value={status} onValueChange={onChange}>
             <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="Estatus" />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="Pending">Pendientes</SelectItem>
-                <SelectItem value="In_process">En proceso</SelectItem>
-                <SelectItem value="Resolved">Resueltas</SelectItem>
-                <SelectItem value="Closed">Cerradas</SelectItem>
+                <SelectItem value="pending">Pendientes</SelectItem>
+                <SelectItem value="in_process">En proceso</SelectItem>
+                <SelectItem value="resolved">Resueltas</SelectItem>
+                <SelectItem value="closed">Cerradas</SelectItem>
             </SelectContent>
         </Select>
     )
