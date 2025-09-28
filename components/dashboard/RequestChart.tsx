@@ -11,110 +11,86 @@ import {
 } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { getDataForDashboard } from "@/api/api"
 
-const chartData = [
-  {
-    mes: "Enero",
-    solicitudesHechas: 145,
-    solicitudesResueltas: 132,
-    esActual: false,
-  },
-  {
-    mes: "Febrero",
-    solicitudesHechas: 167,
-    solicitudesResueltas: 158,
-    esActual: false,
-  },
-  {
-    mes: "Marzo",
-    solicitudesHechas: 189,
-    solicitudesResueltas: 175,
-    esActual: false,
-  },
-  {
-    mes: "Abril",
-    solicitudesHechas: 156,
-    solicitudesResueltas: 149,
-    esActual: false,
-  },
-  {
-    mes: "Mayo",
-    solicitudesHechas: 178,
-    solicitudesResueltas: 165,
-    esActual: false,
-  },
-  {
-    mes: "Junio",
-    solicitudesHechas: 203,
-    solicitudesResueltas: 187,
-    esActual: false,
-  },
-  {
-    mes: "Julio",
-    solicitudesHechas: 195,
-    solicitudesResueltas: 182,
-    esActual: false,
-  },
-  {
-    mes: "Agosto",
-    solicitudesHechas: 212,
-    solicitudesResueltas: 198,
-    esActual: false,
-  },
-  {
-    mes: "Septiembre",
-    solicitudesHechas: 187,
-    solicitudesResueltas: 174,
-    esActual: false,
-  },
-  {
-    mes: "Octubre",
-    solicitudesHechas: 234,
-    solicitudesResueltas: 215,
-    esActual: false,
-  },
-  {
-    mes: "Noviembre",
-    solicitudesHechas: 198,
-    solicitudesResueltas: 189,
-    esActual: false,
-  },
-  {
-    mes: "Diciembre",
-    solicitudesHechas: 156,
-    solicitudesResueltas: 98,
-    esActual: true,
-  },
-]
+// Mapeo de meses en inglés a español
+const MONTH_NAMES = {
+  january: "Enero",
+  february: "Febrero", 
+  march: "Marzo",
+  april: "Abril",
+  may: "Mayo",
+  june: "Junio",
+  july: "Julio",
+  august: "Agosto",
+  september: "Septiembre",
+  october: "Octubre",
+  november: "Noviembre",
+  december: "Diciembre",
+};
 
 const chartConfig = {
-  solicitudesHechas: {
+  createdRequests: {
     label: " Solicitudes Hechas",
     color: "var(--chart-2)",
   },
-  solicitudesResueltas: {
+  resolvedRequests: {
     label: " Solicitudes Resueltas",
     color: "var(--chart-1)",
   },
 }
 
-export default function SolicitudesChart() {
-  const [mesSeleccionado, setMesSeleccionado] = useState("Octubre")
+export default function RequestChart() {
+  // Get current month dynamically
+  const currentDate = new Date();
+  const currentMonthIndex = currentDate.getMonth(); // 0-11
+  const currentMonthKey = Object.keys(MONTH_NAMES)[currentMonthIndex];
+  
+  // Default to previous month for comparison
+  const previousMonthIndex = currentMonthIndex === 0 ? 11 : currentMonthIndex - 1;
+  const previousMonthKey = Object.keys(MONTH_NAMES)[previousMonthIndex];
+  
+  const [selectedMonth, setSelectedMonth] = useState(previousMonthKey)
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["dashboard-metrics"],
+    queryFn: async () => {
+      const res = await getDataForDashboard();
+      return res.data;
+    },
+  });
 
-  // Encontrar el mes seleccionado para comparar
-  const mesActual = chartData.find((item) => item.esActual)
-  const mesComparacion = chartData.find((item) => item.mes === mesSeleccionado && !item.esActual)
+  if (isLoading) return <div>Cargando gráfica...</div>;
+  if (error) return <div>Error al cargar datos de la gráfica</div>;
 
-  // Datos para mostrar en el gráfico (solo 2 meses)
-  const datosParaGrafico = [...(mesComparacion ? [mesComparacion] : []), ...(mesActual ? [mesActual] : [])]
+  // Create array of chart data based on API response
+  const chartData = Object.keys(MONTH_NAMES).map((monthKey) => ({
+    month: MONTH_NAMES[monthKey as keyof typeof MONTH_NAMES],
+    monthKey,
+    createdRequests: data?.requestsCreatedAndResolvedByMonth.created[monthKey as keyof typeof data.requestsCreatedAndResolvedByMonth.created] || 0,
+    resolvedRequests: data?.requestsCreatedAndResolvedByMonth.resolved[monthKey as keyof typeof data.requestsCreatedAndResolvedByMonth.resolved] || 0,
+    isCurrent: monthKey === currentMonthKey,
+  }));
 
-  const eficienciaComparacion = mesComparacion
-    ? Math.round((mesComparacion.solicitudesResueltas / mesComparacion.solicitudesHechas) * 100)
-    : 0
+  // Get available months (from current month backwards)
+  const monthKeys = Object.keys(MONTH_NAMES);
+  const availableMonths = monthKeys.slice(0, currentMonthIndex + 1);
 
-  const eficienciaActual = mesActual
-    ? Math.round((mesActual.solicitudesResueltas / mesActual.solicitudesHechas) * 100)
-    : 0
+  // Find current month and selected month for comparison
+  const currentMonth = chartData.find((item) => item.isCurrent);
+  const comparisonMonth = chartData.find((item) => item.monthKey === selectedMonth);
+
+  // Data to show in chart: selected month first, then current month
+  const chartDataForGraph = [...(comparisonMonth ? [comparisonMonth] : []), ...(currentMonth ? [currentMonth] : [])];
+
+  const comparisonEfficiency = comparisonMonth && comparisonMonth.createdRequests > 0
+    ? Math.round((comparisonMonth.resolvedRequests / comparisonMonth.createdRequests) * 100)
+    : 0;
+
+  const currentEfficiency = currentMonth && currentMonth.createdRequests > 0
+    ? Math.round((currentMonth.resolvedRequests / currentMonth.createdRequests) * 100)
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -122,31 +98,25 @@ export default function SolicitudesChart() {
         <CardHeader>
           <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
-              <CardTitle>Comparación de Solicitudes: {mesSeleccionado} vs Mes Actual</CardTitle>
+              <CardTitle>Comparación de Solicitudes: {MONTH_NAMES[selectedMonth as keyof typeof MONTH_NAMES]} vs Mes Actual</CardTitle>
               <CardDescription>
-                Comparación directa entre {mesSeleccionado} y {mesActual?.mes} (mes actual)
+                Comparación directa entre {comparisonMonth?.month} y {currentMonth?.month} (mes actual)
               </CardDescription>
             </div>
             <div className="flex items-center space-x-2">
               <label htmlFor="periodo-select" className="text-sm font-medium">
                 Mes para comparar:
               </label>
-              <Select value={mesSeleccionado} onValueChange={setMesSeleccionado}>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger className="w-[140px]" id="periodo-select">
                   <SelectValue placeholder="Seleccionar período" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Enero">Enero</SelectItem>
-                  <SelectItem value="Febrero">Febrero</SelectItem>
-                  <SelectItem value="Marzo">Marzo</SelectItem>
-                  <SelectItem value="Abril">Abril</SelectItem>
-                  <SelectItem value="Mayo">Mayo</SelectItem>
-                  <SelectItem value="Junio">Junio</SelectItem>
-                  <SelectItem value="Julio">Julio</SelectItem>
-                  <SelectItem value="Agosto">Agosto</SelectItem>
-                  <SelectItem value="Septiembre">Septiembre</SelectItem>
-                  <SelectItem value="Octubre">Octubre</SelectItem>
-                  <SelectItem value="Noviembre">Noviembre</SelectItem>
+                  {availableMonths.map((monthKey) => (
+                    <SelectItem key={monthKey} value={monthKey}>
+                      {MONTH_NAMES[monthKey as keyof typeof MONTH_NAMES]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -156,7 +126,7 @@ export default function SolicitudesChart() {
           <ChartContainer config={chartConfig} className="min-h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={datosParaGrafico}
+                data={chartDataForGraph}
                 margin={{
                   top: 20,
                   right: 30,
@@ -165,19 +135,19 @@ export default function SolicitudesChart() {
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="mes" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
                 <YAxis />
                 <ChartTooltip
                   content={<ChartTooltipContent />}
                   formatter={(value, name, props) => [
                     value,
                     chartConfig[name as keyof typeof chartConfig]?.label || name,
-                    props.payload.esActual ? " (Mes Actual)" : "",
+                    props.payload.isCurrent ? " (Mes Actual)" : "",
                   ]}
                 />
-                <ChartLegend content={<ChartLegendContent payload={undefined} />} />
-                <Bar dataKey="solicitudesHechas" fill="var(--color-solicitudesHechas)" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="solicitudesResueltas" fill="var(--color-solicitudesResueltas)" radius={[2, 2, 0, 0]} />
+                <ChartLegend content={<ChartLegendContent payload={undefined}  />} />
+                <Bar dataKey="createdRequests" fill="var(--color-createdRequests)" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="resolvedRequests" fill="var(--color-resolvedRequests)" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
@@ -188,35 +158,35 @@ export default function SolicitudesChart() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>{mesSeleccionado} - Hechas</CardDescription>
-            <CardTitle className="text-2xl">{mesComparacion?.solicitudesHechas || 0}</CardTitle>
+            <CardDescription>{MONTH_NAMES[selectedMonth as keyof typeof MONTH_NAMES]} - Hechas</CardDescription>
+            <CardTitle className="text-2xl">{comparisonMonth?.createdRequests || 0}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">Mes de comparación seleccionado</p>
+            <p className="text-xs text-muted-foreground">Mes seleccionado</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>{mesSeleccionado} - Resueltas</CardDescription>
-            <CardTitle className="text-2xl">{mesComparacion?.solicitudesResueltas || 0}</CardTitle>
+            <CardDescription>{MONTH_NAMES[selectedMonth as keyof typeof MONTH_NAMES]} - Resueltas</CardDescription>
+            <CardTitle className="text-2xl">{comparisonMonth?.resolvedRequests || 0}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">Mes de comparación seleccionado</p>
+            <p className="text-xs text-muted-foreground">Mes seleccionado</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Mes Actual - Hechas</CardDescription>
-            <CardTitle className="text-2xl text-blue-600">{mesActual?.solicitudesHechas || 0}</CardTitle>
+            <CardTitle className="text-2xl text-blue-600">{currentMonth?.createdRequests || 0}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">
-              {mesActual && mesComparacion && mesActual.solicitudesHechas > mesComparacion.solicitudesHechas
+              {currentMonth && comparisonMonth && currentMonth.createdRequests > comparisonMonth.createdRequests
                 ? "↗"
                 : "↘"}{" "}
-              vs {mesSeleccionado}
+              vs {MONTH_NAMES[selectedMonth as keyof typeof MONTH_NAMES]}
             </p>
           </CardContent>
         </Card>
@@ -224,14 +194,14 @@ export default function SolicitudesChart() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Mes Actual - Resueltas</CardDescription>
-            <CardTitle className="text-2xl text-green-600">{mesActual?.solicitudesResueltas || 0}</CardTitle>
+            <CardTitle className="text-2xl text-green-600">{currentMonth?.resolvedRequests || 0}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">
-              {mesActual && mesComparacion && mesActual.solicitudesHechas > mesComparacion.solicitudesHechas
+              {currentMonth && comparisonMonth && currentMonth.resolvedRequests > comparisonMonth.resolvedRequests
                 ? "↗"
                 : "↘"}{" "}
-              vs {mesSeleccionado}
+              vs {MONTH_NAMES[selectedMonth as keyof typeof MONTH_NAMES]}
             </p>
           </CardContent>
         </Card>
@@ -242,27 +212,27 @@ export default function SolicitudesChart() {
         <CardHeader>
           <CardTitle>Análisis de Eficiencia</CardTitle>
           <CardDescription>
-            Porcentaje de solicitudes resueltas: {mesSeleccionado} vs {mesActual?.mes} (actual)
+            Porcentaje de solicitudes resueltas: {MONTH_NAMES[selectedMonth as keyof typeof MONTH_NAMES]} vs {currentMonth?.month} (actual)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <p className="text-sm font-medium">Eficiencia {mesSeleccionado}</p>
-              <p className="text-3xl font-bold">{eficienciaComparacion}%</p>
+              <p className="text-sm font-medium">Eficiencia {MONTH_NAMES[selectedMonth as keyof typeof MONTH_NAMES]}</p>
+              <p className="text-3xl font-bold">{comparisonEfficiency}%</p>
               <p className="text-xs text-muted-foreground">
-                {mesComparacion?.solicitudesResueltas} de {mesComparacion?.solicitudesHechas} solicitudes resueltas
+                {comparisonMonth?.resolvedRequests} de {comparisonMonth?.createdRequests} solicitudes resueltas
               </p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Eficiencia Mes Actual</p>
               <p
-                className={`text-3xl font-bold ${eficienciaActual >= eficienciaComparacion ? "text-green-600" : "text-red-600"}`}
+                className={`text-3xl font-bold ${currentEfficiency >= comparisonEfficiency ? "text-green-600" : "text-red-600"}`}
               >
-                {eficienciaActual}%
+                {currentEfficiency}%
               </p>
               <p className="text-xs text-muted-foreground">
-                {mesActual?.solicitudesResueltas} de {mesActual?.solicitudesHechas} solicitudes resueltas
+                {currentMonth?.resolvedRequests} de {currentMonth?.createdRequests} solicitudes resueltas
               </p>
             </div>
           </div>

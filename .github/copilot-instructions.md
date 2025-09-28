@@ -16,6 +16,8 @@
 
 - **Name of functions and variables:** Use descriptive names that reflect their purpose. For example, use `DashboardPage` for the page component that renders the dashboard, and `UserPage` for the user management page, it would be named in english.
 
+- **Conventional Commits:** Follow conventional commit messages for clarity (e.g., `feat: add user profile page`, `fix: correct sidebar link`).
+
 ## Developer Workflows
 - **Start Dev Server:** `pnpm dev` (or `npm run dev`, `yarn dev`)
 - **Build:** `pnpm build`

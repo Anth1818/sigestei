@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-// No se pueden usar hooks en el middleware
 
 // Rutas protegidas
 const protectedRoutes = [
@@ -29,13 +28,19 @@ export default function middleware(request: NextRequest) {
 
   if (token) {
     try {
-      const base64Payload = token.split('.')[1];
+      const base64Payload = token.split(".")[1];
       // Edge runtime: usa atob, no Buffer
       const payload = JSON.parse(globalThis.atob(base64Payload));
       roleId = Number(payload.role_id);
-      // Opcional: console.log("Role ID from JWT:", roleId);
+      // Verifica si el token ha expirado
+      if (payload.exp && Date.now() / 1000 > payload.exp) {
+        // Token expirado, redirige a login
+        const loginUrl = new URL("/login", request.url);
+        return NextResponse.redirect(loginUrl);
+      }
     } catch (err) {
       // Opcional: console.error("Error decoding JWT:", err);
+      roleId = undefined;
     }
   }
 
@@ -47,15 +52,31 @@ export default function middleware(request: NextRequest) {
 
   // Mapa de acceso por rol
   const roleAccessMap: Record<number, string[]> = {
-    1: ["/dashboard", "/reports", "/viewInventory", "/viewRequests", "/viewUsers", "/addUser", "/addRequest", "/editUser", "/editComputerEquipment"], // admin
-    2: ["/dashboard", "/reports", "/viewInventory", "/viewRequests", "/viewUsers"], // analista
+    1: [
+      "/dashboard",
+      "/reports",
+      "/viewInventory",
+      "/viewRequests",
+      "/viewUsers",
+      "/addUser",
+      "/addRequest",
+      "/editUser",
+      "/editComputerEquipment",
+    ], // admin
+    2: [
+      "/dashboard",
+      "/reports",
+      "/viewInventory",
+      "/viewRequests",
+      "/viewUsers",
+    ], // analista
     3: ["/viewInventory", "/viewRequests"], // técnico
     4: ["/viewRequests"], // usuario final
   };
 
   const allowedRoutes = roleAccessMap[roleId] || [];
   // Si la ruta no está permitida para el rol, redirige a la primera permitida
-  if (!allowedRoutes.some(route => pathname.startsWith(route))) {
+  if (!allowedRoutes.some((route) => pathname.startsWith(route))) {
     const redirectUrl = new URL(allowedRoutes[0] || "/login", request.url);
     return NextResponse.redirect(redirectUrl);
   }

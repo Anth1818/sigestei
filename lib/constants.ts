@@ -1,15 +1,15 @@
 export const TEXTREQUESTBYSTATUS: Record<string, string> = {
-  pending: "Pendientes",
-  in_progress: "En progreso",
-  resolved: "Resueltas",
-  closed: "Cerradas",
+  pending: "Solicitudes Pendientes",
+  in_progress: "Solicitudes En progreso",
+  resolved: "Solicitudes Resueltas",
+  closed: "Solicitudes Cerradas",
 };
 
 export const TEXTCOMPUTERBYSTATUS: Record<string, string> = {
-  operational: "Operativos",
-  under_review: "En revisión",
-  damaged: "Averiados",
-  withdrawn: "Retirados",
+  operational: "Equipos Operativos",
+  under_review: "Equipos En revisión",
+  damaged: "Equipos Averiados",
+  withdrawn: "Equipos Retirados",
 };
 
 export const TEXTUSERBYROLE: Record<string, string> = {
