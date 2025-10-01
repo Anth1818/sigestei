@@ -3,29 +3,88 @@ import { Request } from "@/lib/types";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchCatalogs, updateRequest } from "@/api/api";
+import { toast } from "sonner";
 
 interface ContentRequestRowProps {
   request: Request;
 }
 
-const technicians = [
-  "Carlos Rodríguez",
-  "Ana García",
-  "Luis Martínez",
-  "Pedro Fernández",
-];
-
 const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
+  console.log(request)
   const [assignedTo, setAssignedTo] = useState(request.assigned_to);
-  const [technicianComments, setTechnicianComments] = useState("");
+  const [comments_technician, setCommentsTechnician] = useState(request.comments_technician || "");
+  
+  // Obtener catálogos que incluyen técnicos
+  const { data: catalogs, isLoading: catalogsLoading } = useQuery({
+    queryKey: ['catalogs'],
+    queryFn: fetchCatalogs,
+  });
+
+  // Filtrar técnicos del catálogo
+  const technicians = catalogs?.technicians || [];
+  
+  const queryClient = useQueryClient();
+
+  // Mutation para actualizar el técnico asignado
+  const updateTechnicianMutation = useMutation({
+    mutationFn: ({ id, technicianId }: { id: number; technicianId: number }) =>
+      updateRequest(id, { technician_id: technicianId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
+      toast.success("Técnico asignado correctamente");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Error al asignar técnico");
+    },
+  });
+
+  // Mutation para guardar comentarios del técnico
+  const updateCommentsMutation = useMutation({
+    mutationFn: ({ id, comments }: { id: number; comments: string }) =>
+      updateRequest(id, { comments_technician: comments }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
+      toast.success("Comentarios guardados correctamente");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Error al guardar comentarios");
+    },
+  });
+
+  // Función para obtener el ID del técnico por nombre
+  const getTechnicianIdByName = (technicianName: string): number => {
+    const technician = technicians.find((tech: any) => tech.full_name === technicianName);
+    return technician?.id || 0;
+  };
+
+  // Handler para cambio de técnico
+  const handleTechnicianChange = (technicianName: string) => {
+    const technicianId = getTechnicianIdByName(technicianName);
+    if (technicianId) {
+      updateTechnicianMutation.mutate({ id: request.id, technicianId });
+      setAssignedTo(technicianName);
+    }
+  };
   
   const isCompletedOrCancelled = request.status === "Completada" || request.status === "Cancelada";
   
   const handleSaveComments = () => {
-    // Aquí podrías hacer una llamada a la API para guardar los comentarios
-    console.log("Guardando comentarios:", technicianComments);
-    // Ejemplo: updateRequestComments(request.id, technicianComments);
+    // Solo permitir guardar si el estado es completado (3) o cancelado (4)
+    if (isCompletedOrCancelled) {
+      updateCommentsMutation.mutate({ 
+        id: request.id, 
+        comments: comments_technician 
+      });
+    } else {
+      toast.warning("Los comentarios solo pueden guardarse cuando el estado sea 'Completada' o 'Cancelada'");
+    }
   };
+
+  const restoreComments = () => {
+    setCommentsTechnician(request.comments_technician || "");
+  }
 
   return <div className="grid grid-cols-2 gap-6">
     {/* Información de la Solicitud */}
@@ -43,11 +102,17 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             Descripción:
           </span>
           <div className="w-full">
-            <textarea className="text-sm mt-1 p-2 bg-white dark:text-black rounded border h-48 w-sm md:w-md scroll-auto resize-none" disabled>
-              {request.description}
+            <textarea defaultValue={request.description}  className="text-sm mt-1 p-2 bg-white dark:text-black rounded border h-48 w-sm md:w-md scroll-auto resize-none" disabled>
             </textarea>
           </div>
         </div>
+
+         <div className="flex items-center gap-2">
+            <span className="font-medium text-sm text-gray-400">
+              Fecha de cierre:
+            </span>
+            <p className="text-sm">{request.resolution_date ? (typeof request.resolution_date === "string" ? request.resolution_date : request.resolution_date.toLocaleString()) : "N/A"}</p>
+          </div>
 
         <div className="grid grid-cols-2 gap-4 items-center">
           <div className="flex items-center gap-2">
@@ -56,18 +121,24 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             </span>
             <Select
               value={assignedTo}
-              onValueChange={setAssignedTo}
+              onValueChange={handleTechnicianChange}
+              disabled={updateTechnicianMutation.isPending}
             >
               <SelectTrigger className="h-7 min-w-[180px] w-auto">
                 <SelectValue placeholder="Asignar técnico" />
               </SelectTrigger>
               <SelectContent>
-                {technicians.map((tech) => (
-                  <SelectItem key={tech} value={tech}>{tech}</SelectItem>
-                ))}
+                {catalogsLoading ? (
+                  <SelectItem value="loading" disabled>Cargando técnicos...</SelectItem>
+                ) : (
+                  technicians.map((tech: any) => (
+                    <SelectItem key={tech.id} value={tech.full_name}>{tech.full_name}</SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
+         
         </div>
       </div>
     </div>
@@ -290,23 +361,33 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                 : 'bg-gray-100 border-gray-200 cursor-not-allowed text-black'
             }`}
             placeholder={isCompletedOrCancelled ? "Escriba los comentarios del técnico..." : "Los comentarios solo pueden editarse cuando el estado sea 'Completada' o 'Cancelada'"}
-            value={technicianComments}
-            onChange={(e) => setTechnicianComments(e.target.value)}
+            value={comments_technician}
+            onChange={(e) => setCommentsTechnician(e.target.value)}
             disabled={!isCompletedOrCancelled}
           />
         </div>
         
         {isCompletedOrCancelled && (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
             <Button 
-              onClick={handleSaveComments}
+              onClick={restoreComments}
               size="sm"
               
             >
-              Guardar Comentarios
+              Reestablecer Comentarios
             </Button>
+
+            <Button 
+              onClick={handleSaveComments}
+              size="sm"
+              disabled={updateCommentsMutation.isPending}
+            >
+              {updateCommentsMutation.isPending ? "Guardando..." : "Guardar Comentarios"}
+            </Button>
+            
           </div>
         )}
+
       </div>
     </div>
   </div>

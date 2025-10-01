@@ -3,10 +3,24 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { Request } from "@/lib/types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Request, RequestResponse } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateRequest } from "@/api/api";
+import { toast } from "sonner";
 import ContentRequestRow from "./ContentRequestRow";
 
 interface ExpandableRequestRowProps {
@@ -17,6 +31,9 @@ interface ExpandableRequestRowProps {
   onUpdatePriority: (id: number, priority: string) => void;
   getPriorityColor: (priority: string) => string;
   getStatusColor: (status: string) => string;
+  itemsToSelectStatuses: string[];
+  itemsToSelectPriorities: string[];
+  itemsToSelectTechinicians: string[];
 }
 
 export function ExpandableRequestRow({
@@ -27,7 +44,77 @@ export function ExpandableRequestRow({
   onUpdatePriority,
   getPriorityColor,
   getStatusColor,
+  
 }: ExpandableRequestRowProps) {
+  const queryClient = useQueryClient();
+
+
+  // Mutation para actualizar el estado
+const updateStatusMutation = useMutation({
+  mutationFn: ({ id, status }: { id: number; status: string }) => {
+    const statusId = getStatusId(status);
+    // Si el status es 3 (Completada) o 4 (Cancelada), agrega resolution_date
+    const needsResolutionDate = statusId === 3 || statusId === 4;
+    const updateData: { status_id: number; resolution_date?: string } = { status_id: statusId };
+    if (needsResolutionDate) {
+      updateData.resolution_date = new Date().toISOString();
+    }
+    return updateRequest(id, updateData);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["requests"] });
+    toast.success("Estado actualizado correctamente");
+  },
+  onError: (error: any) => {
+    toast.error(error?.message || "Error al actualizar el estado");
+  },
+});
+
+  // Mutation para actualizar la prioridad 
+  const updatePriorityMutation = useMutation({
+    mutationFn: ({ id, priority }: { id: number; priority: string }) =>
+      updateRequest(id, { priority_id: getPriorityId(priority) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
+      toast.success("Prioridad actualizada correctamente");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Error al actualizar la prioridad");
+    },
+  });
+
+  // Funciones auxiliares para mapear nombres a IDs
+  const getStatusId = (statusName: string): number => {
+    const statusMap: Record<string, number> = {
+      "Pendiente": 1,
+      "En proceso": 2,
+      "Completada": 3,
+      "Cancelada": 4,
+      
+    };
+    return statusMap[statusName] || 1;
+  };
+
+  const getPriorityId = (priorityName: string): number => {
+    const priorityMap: Record<string, number> = {
+      "Alta": 1,
+      "Media": 2,
+      "Baja": 3,
+    };
+    return priorityMap[priorityName] || 2;
+  };
+
+  // Handlers que usan las mutations
+  const handleStatusChange = (newStatus: string) => {
+    updateStatusMutation.mutate({ id: request.id, status: newStatus });
+    onUpdateStatus(request.id, newStatus);
+  };
+
+  const handlePriorityChange = (newPriority: string) => {
+    updatePriorityMutation.mutate({ id: request.id, priority: newPriority });
+    onUpdatePriority(request.id, newPriority);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-ES", {
       year: "numeric",
@@ -76,15 +163,16 @@ export function ExpandableRequestRow({
                 <div>
                   <Select
                     value={request.status}
-                    onValueChange={(value) => onUpdateStatus(request.id, value)}
+                    onValueChange={handleStatusChange}
+                    disabled={updateStatusMutation.isPending}
                   >
                     <SelectTrigger className="h-8 w-full mb-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Pendiente">Pendiente</SelectItem>
-                      <SelectItem value="En progreso">En progreso</SelectItem>
-                      <SelectItem value="Completada">Completada</SelectItem>
+                     <SelectItem value="Pendiente">Pendiente</SelectItem>
+                     <SelectItem value="En proceso">En proceso</SelectItem>
+                     <SelectItem value="Completada">Completada</SelectItem>
                       <SelectItem value="Cancelada">Cancelada</SelectItem>
                     </SelectContent>
                   </Select>
@@ -101,7 +189,8 @@ export function ExpandableRequestRow({
                 <div>
                   <Select
                     value={request.priority}
-                    onValueChange={(value) => onUpdatePriority(request.id, value)}
+                    onValueChange={handlePriorityChange}
+                    disabled={updatePriorityMutation.isPending}
                   >
                     <SelectTrigger className="h-8 w-full">
                       <SelectValue />
@@ -146,7 +235,6 @@ export function ExpandableRequestRow({
                 transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
               >
                 <ContentRequestRow request={request} />
-                
               </motion.div>
             </TableCell>
           </TableRow>
