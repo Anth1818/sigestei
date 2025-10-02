@@ -7,7 +7,7 @@ import SelectComputerStatus from "@/components/dashboard/SelectComputerStatus"
 import SelectUserStatus from "@/components/dashboard/SelectUserStatus"
 import RequestChart from "@/components/dashboard/RequestChart"
 import { useQuery } from "@tanstack/react-query"
-import { getDataForDashboard } from "@/api/api"
+import { fetchDataForDashboard } from "@/api/api"
 import { useState } from "react"
 import type { DashboardData } from "@/lib/types"
 import { TEXTREQUESTBYSTATUS, TEXTCOMPUTERBYSTATUS, TEXTUSERBYROLE } from "@/lib/constants"
@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const { data, isLoading, error } = useQuery<DashboardData>({
     queryKey: ["dashboard-metrics"],
     queryFn: async () => {
-      const res = await getDataForDashboard();
+      const res = await fetchDataForDashboard();
       return res.data;
     },
   });

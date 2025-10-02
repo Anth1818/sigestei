@@ -8,7 +8,7 @@ export const useRedirectBasedType = () => {
         } else if (role_id === 3) {
             router.push("/viewInventory");
         } else if (role_id === 4) {
-            router.push("/viewRequest");
+            router.push("/viewRequests");
         }
     };
 };

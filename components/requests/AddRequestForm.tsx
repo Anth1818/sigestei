@@ -9,32 +9,17 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { mockUsers } from "@/data/mockUsers";
-import { User } from "@/lib/types";
-
-// Simula el usuario autenticado (puedes cambiar el id para pruebas)
-const currentUser: User = mockUsers[2];
-
-const requestTypes = [
-  "Mantenimiento",
-  "Instalación",
-  "Reparación",
-  "Actualización",
-  "Soporte"
-];
-
-const maintenanceSubtypes = [
-  "Preventivo",
-  "Correctivo"
-];
-
+import { useQuery } from "@tanstack/react-query";
+import { fetchCatalogs, fetchAllUsersByDepartment } from "@/api/api";
+import { useUserStore } from "@/hooks/useUserStore";
+import { useEffect } from "react";
+import { UserData } from "@/lib/types";
 
 const requestSchema = z.object({
-  request_type: z.string().min(1, "El tipo de solicitud es requerido"),
-  maintenance_subtype: z.string().optional(),
-  repair_update_subtype: z.string().optional(),
+  request_category: z.string().min(1, "La categoría de solicitud es requerida"),
   description: z.string().min(10, "La descripción debe tener al menos 10 caracteres").max(500, "La descripción no puede exceder 500 caracteres"),
   isForThirdParty: z.boolean(),
+  selectedDepartmentId: z.string().optional(),
   selectedThirdPartyId: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.isForThirdParty && !data.selectedThirdPartyId) {
@@ -44,80 +29,88 @@ const requestSchema = z.object({
       path: ["selectedThirdPartyId"]
     });
   }
-  if (data.request_type === "Mantenimiento" && !data.maintenance_subtype) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Debes seleccionar el subtipo de mantenimiento",
-      path: ["maintenance_subtype"]
-    });
-  }
-  if ((data.request_type === "Reparación" || data.request_type === "Actualización") && !data.repair_update_subtype) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Debes seleccionar si es hardware o software",
-      path: ["repair_update_subtype"]
-    });
-  }
 });
 
 type RequestFormData = z.infer<typeof requestSchema>;
 
 export default function AddRequestForm() {
+  const user = useUserStore((state) => state.user);
+  
   const {
     control,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting }
   } = useForm<RequestFormData>({
     resolver: zodResolver(requestSchema),
     defaultValues: {
-      request_type: "",
-      maintenance_subtype: "",
-      repair_update_subtype: "",
+      request_category: "",
       description: "",
       isForThirdParty: false,
+      selectedDepartmentId: "",
       selectedThirdPartyId: "",
     }
   });
 
   const isForThirdParty = watch("isForThirdParty");
   const selectedThirdPartyId = watch("selectedThirdPartyId");
-  const requestType = watch("request_type");
-  const maintenanceSubtype = watch("maintenance_subtype");
-  const repairUpdateSubtype = watch("repair_update_subtype");
+  const selectedDepartmentId = watch("selectedDepartmentId");
 
-  // Usuarios del mismo departamento (excluye al usuario actual)
-  const departmentUsers = mockUsers.filter(
-    (u) => u.department === currentUser.department && u.id !== currentUser.id
-  );
+  // Obtener catálogos (incluye categorías)
+  const { data: catalogs, isLoading: catalogsLoading } = useQuery({
+    queryKey: ['catalogs'],
+    queryFn: fetchCatalogs,
+  });
+
+  const departments = catalogs?.departments || [];
+  const categories = catalogs?.request_types || [];
+
+  // This variable will hold the definitive department ID for the query.
+  // For a regular user, it's their own department.
+  // For an admin/manager, it's the one they select from the dropdown.
+  const departmentIdToFetch = user?.role_id === 4
+    ? user.department_id
+    : selectedDepartmentId ? Number(selectedDepartmentId) : null;
+
+  const { data: departmentUsers, isLoading: departmentUsersLoading } = useQuery({
+    // The query key is now simpler and directly tied to the ID we want to fetch.
+    // React Query will automatically cache and refetch when this ID changes.
+    queryKey: ['departmentUsers', departmentIdToFetch],
+    
+    queryFn: async () => {
+      // We only proceed if there's a valid department ID.
+      if (!departmentIdToFetch) {
+        return [];
+      }
+      return await fetchAllUsersByDepartment(departmentIdToFetch);
+    },
+
+    // The query is enabled only if it's for a third party AND we have a valid department ID to fetch.
+    // This covers both user roles correctly.
+    enabled: isForThirdParty && !!departmentIdToFetch,
+  });
+  
+  const filteredDepartmentUsers = departmentUsers?.filter((u: UserData) => u.id.toString() !== user?.id.toString()) || [];
+
+  // Reset selectedThirdPartyId cuando cambia el departamento
+  useEffect(() => {
+    if (selectedDepartmentId) {
+      setValue("selectedThirdPartyId", "");
+    }
+  }, [selectedDepartmentId, setValue]);
 
   const onSubmit = async (data: RequestFormData) => {
     try {
-      const beneficiary = data.isForThirdParty
-        ? departmentUsers.find((u) => u.id === Number(data.selectedThirdPartyId))
-        : currentUser;
-
-      if (data.isForThirdParty && !beneficiary) {
-        alert("Debes seleccionar un usuario beneficiario válido.");
+      if (!user) {
+        alert("Usuario no autenticado");
         return;
       }
 
-      if (!beneficiary) return;
-
-      const alertMsg = `
-Solicitud creada:
-
-Solicitante:
- - Nombre: ${currentUser.full_name}
- - Email: ${currentUser.email}
- - Departamento: ${currentUser.department}
-
-Tipo de solicitud: ${data.request_type}
-Descripción: ${data.description}
-Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Email: ${beneficiary.email}\n- Cargo: ${beneficiary.position}` : " (Yo mismo)"}
-`;
-      alert(alertMsg);
+      // Aquí harías la llamada a la API para crear la solicitud
+      console.log("Datos del formulario:", data);
+      
       reset();
     } catch (error) {
       console.error("Error al crear solicitud:", error);
@@ -132,11 +125,11 @@ Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Em
         </CardHeader>
         <Separator />
         <CardContent>
-          {/* Selección de beneficiario */}
+          {/* Selección: Para mí o para tercero */}
           <div className="mb-6">
-            <Label className="font-medium mb-2 block">¿Para quién es la solicitud?</Label>
-            <div className="flex gap-6 items-center">
-              <label className="flex items-center gap-2">
+            <Label className="block mb-2">¿La solicitud es para ti o para un tercero?</Label>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <Controller
                   name="isForThirdParty"
                   control={control}
@@ -151,7 +144,7 @@ Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Em
                 />
                 Para mí
               </label>
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <Controller
                   name="isForThirdParty"
                   control={control}
@@ -164,13 +157,47 @@ Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Em
                     />
                   )}
                 />
-                Para un tercero de mi departamento
+                Para un tercero
               </label>
             </div>
           </div>
 
-          {/* Si es para tercero, mostrar select de usuarios del departamento */}
-          {isForThirdParty && (
+          {/* Si es para tercero y NO es role_id 4, mostrar select de departamentos */}
+          {isForThirdParty && user?.role_id !== 4 && (
+            <div className="mb-6">
+              <Label htmlFor="department-select" className="block mb-1">Selecciona el departamento</Label>
+              <Controller
+                name="selectedDepartmentId"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="department-select" className="w-full">
+                      <SelectValue placeholder="Selecciona un departamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catalogsLoading ? (
+                        <SelectItem value="loading" disabled>Cargando departamentos...</SelectItem>
+                      ) : departments.length === 0 ? (
+                        <SelectItem value="not-found" disabled>No hay departamentos disponibles</SelectItem>
+                      ) : (
+                        departments.map((dept: any) => (
+                          <SelectItem key={dept.id} value={dept.id.toString()}>
+                            {dept.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.selectedDepartmentId && (
+                <span className="text-red-500 text-xs">{errors.selectedDepartmentId.message}</span>
+              )}
+            </div>
+          )}
+
+          {/* Si es para tercero, mostrar select de usuarios */}
+          {isForThirdParty && (user?.role_id === 4 || selectedDepartmentId) && (
             <div className="mb-6">
               <Label htmlFor="third-party-select" className="block mb-1">Selecciona el usuario beneficiario</Label>
               <Controller
@@ -182,15 +209,21 @@ Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Em
                       <SelectValue placeholder="Selecciona un usuario" />
                     </SelectTrigger>
                     <SelectContent>
-                      {departmentUsers.length === 0 ? (
-                        <SelectItem value="not-found" disabled>No hay usuarios en tu departamento</SelectItem>
-                      ) : (
-                        departmentUsers.map((u) => (
-                          <SelectItem key={u.id} value={u.id.toString()}>
-                            {u.full_name} - {u.position}
-                          </SelectItem>
-                        ))
-                      )}
+                      {departmentUsersLoading ? (
+                        <SelectItem value="loading" disabled>Cargando usuarios...</SelectItem>
+                      ) : (() => {
+                        const users = filteredDepartmentUsers || [];
+                        
+                        return users.length === 0 ? (
+                          <SelectItem value="not-found" disabled>No hay usuarios disponibles</SelectItem>
+                        ) : (
+                          users.map((u: any) => (
+                            <SelectItem key={u.id} value={u.id.toString()}>
+                              {u.full_name}
+                            </SelectItem>
+                          ))
+                        );
+                      })()}
                     </SelectContent>
                   </Select>
                 )}
@@ -203,90 +236,48 @@ Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Em
 
           {/* Formulario de solicitud */}
           <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
+            {/* Select de categoría */}
             <div>
-              <Label htmlFor="request_type" className="pb-2">Tipo de solicitud</Label>
+              <Label htmlFor="request_category" className="pb-2">Categoría de solicitud</Label>
               <Controller
-                name="request_type"
+                name="request_category"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange} required>
-                    <SelectTrigger id="request_type" className="w-full">
-                      <SelectValue placeholder="Selecciona tipo de solicitud" />
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="request_category" className="w-full">
+                      <SelectValue placeholder="Selecciona una categoría" />
                     </SelectTrigger>
                     <SelectContent>
-                      {requestTypes.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
+                      {catalogsLoading ? (
+                        <SelectItem value="loading" disabled>Cargando categorías...</SelectItem>
+                      ) : categories.length === 0 ? (
+                        <SelectItem value="not-found" disabled>No hay categorías disponibles</SelectItem>
+                      ) : (
+                        categories.map((category: any) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {errors.request_type && (
-                <span className="text-red-500 text-xs">{errors.request_type.message}</span>
+              {errors.request_category && (
+                <span className="text-red-500 text-xs">{errors.request_category.message}</span>
               )}
             </div>
-            {requestType === "Mantenimiento" && (
-              <div>
-                <Label htmlFor="maintenance_subtype" className="pb-2">Subtipo de mantenimiento</Label>
-                <Controller
-                  name="maintenance_subtype"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange} required>
-                      <SelectTrigger id="maintenance_subtype" className="w-full">
-                        <SelectValue placeholder="Selecciona subtipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {maintenanceSubtypes.map((sub) => (
-                          <SelectItem key={sub} value={sub}>{sub}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.maintenance_subtype && (
-                  <span className="text-red-500 text-xs">{errors.maintenance_subtype.message}</span>
-                )}
-              </div>
-            )}
-            {(requestType != "Mantenimiento") && (
-              <div>
-                <div className="flex items-center gap-1 pb-2">
-                  <Label htmlFor="repair_update_subtype">¿La solicitud es sobre hardware o software?</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span tabIndex={0} className="cursor-pointer text-primary" aria-label="¿Qué es hardware o software?">🛈</span>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <span>
-                        <b>Hardware:</b> Se refiere a componentes físicos del equipo, como disco duro, memoria RAM, teclado, etc.<br/>
-                        <b>Software:</b> Se refiere a programas o sistemas instalados, como el sistema operativo o aplicaciones.
-                      </span>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Controller
-                  name="repair_update_subtype"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange} required>
-                      <SelectTrigger id="repair_update_subtype" className="w-full">
-                        <SelectValue placeholder="Selecciona una opción" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Hardware">Hardware</SelectItem>
-                        <SelectItem value="Software">Software</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.repair_update_subtype && (
-                  <span className="text-red-500 text-xs">{errors.repair_update_subtype.message}</span>
-                )}
-              </div>
-            )}
+
+            {/* Campo de descripción */}
             <div>
-              <Label htmlFor="description" className="pb-2">Descripción</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Label htmlFor="description" className="pb-2">Descripción del problema</Label>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Describe detalladamente el problema o solicitud (min 10 caracteres, máx 500)</p>
+                </TooltipContent>
+              </Tooltip>
               <Controller
                 name="description"
                 control={control}
@@ -294,9 +285,8 @@ Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Em
                   <textarea
                     {...field}
                     id="description"
-                    placeholder="Describe el problema o requerimiento"
-                    maxLength={500}
-                    className="min-h-[160px] border rounded px-2 py-1 w-full resize-none"
+                    className="w-full p-2 border rounded-md min-h-[100px] resize-y"
+                    placeholder="Describe el problema o solicitud..."
                   />
                 )}
               />
@@ -304,12 +294,12 @@ Beneficiario: ${beneficiary.full_name}${data.isForThirdParty ? ` (Tercero)\n- Em
                 <span className="text-red-500 text-xs">{errors.description.message}</span>
               )}
             </div>
-            <CardFooter className="flex justify-end px-0">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full md:w-auto ${isSubmitting ? "cursor-not-allowed" : "cursor-pointer"}`}
-              >
+
+            <CardFooter className="flex justify-end gap-3 px-0 pb-0">
+              <Button type="button" variant="outline" onClick={() => reset()}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Enviando..." : "Enviar solicitud"}
               </Button>
             </CardFooter>

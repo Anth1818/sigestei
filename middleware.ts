@@ -54,7 +54,6 @@ export default function middleware(request: NextRequest) {
   const roleAccessMap: Record<number, string[]> = {
     1: [
       "/dashboard",
-      "/reports",
       "/viewInventory",
       "/viewRequests",
       "/viewUsers",
@@ -65,13 +64,13 @@ export default function middleware(request: NextRequest) {
     ], // admin
     2: [
       "/dashboard",
-      "/reports",
       "/viewInventory",
+      "/editComputerEquipment",
       "/viewRequests",
-      "/viewUsers",
-    ], // analista
-    3: ["/viewInventory", "/viewRequests"], // técnico
-    4: ["/viewRequests"], // usuario final
+      "/addRequest",
+    ], // coordinador
+    3: ["/viewInventory", "/viewRequests", "/addRequest", "/editComputerEquipment"], // técnico
+    4: ["/viewRequests", "/addRequest"], // usuario final
   };
 
   const allowedRoutes = roleAccessMap[roleId] || [];

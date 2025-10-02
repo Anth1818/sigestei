@@ -13,7 +13,7 @@ export const login = async (email: string, password: string) => {
 };
 
 
-export const getDataForDashboard = async () => {
+export const fetchDataForDashboard = async () => {
   const response = await axios.get(`${API_BASE_URL}/dashboard/metrics`, {
     withCredentials: true,
   });
@@ -29,6 +29,20 @@ export const fetchRequests = async () => {
 
 export const fetchCatalogs = async () => {
   const response = await axios.get(`${API_BASE_URL}/catalogs`, {
+    withCredentials: true,
+  });
+  return response.data;
+}
+
+export const fetchAllUsersByAllDepartments = async () => {
+  const response = await axios.get(`${API_BASE_URL}/users/allUsersByAllDepartments`, {
+    withCredentials: true,
+  });
+  return response.data;
+}
+
+export const fetchAllUsersByDepartment = async (departmentId: number) => {
+  const response = await axios.get(`${API_BASE_URL}/users/allUsersByDepartment/${departmentId}`, {
     withCredentials: true,
   });
   return response.data;

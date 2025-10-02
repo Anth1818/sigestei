@@ -125,7 +125,9 @@ export type UserData = {
   user: string;
   role: string;
   identity_card: number;
+  department_id: number;
   status: boolean;}
+  
 
   
 

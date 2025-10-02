@@ -12,7 +12,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { getDataForDashboard } from "@/api/api"
+import { fetchDataForDashboard } from "@/api/api"
 
 // Mapeo de meses en inglés a español
 const MONTH_NAMES = {
@@ -56,7 +56,7 @@ export default function RequestChart() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard-metrics"],
     queryFn: async () => {
-      const res = await getDataForDashboard();
+      const res = await fetchDataForDashboard();
       return res.data;
     },
   });
