@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Notification } from "../shared/Notification";
 import { ExpandableRequestRow } from "./ExpandableRequestRow";
 import { DateRangePicker } from "./DateRangePicker";
 import { fetchRequests } from "@/api/api";
@@ -33,8 +32,11 @@ import { useRequestActions } from "@/hooks/useRequestActions";
 import { useRequestSorting } from "@/hooks/useRequestSorting";
 import { adaptRequestData, getPriorityColor, getStatusColor } from "@/lib/requestUtils";
 import { RequestResponse } from "@/lib/types";
+import {useUserStore} from "@/hooks/useUserStore";
 
 export default function RequestTable() {
+
+  const user = useUserStore((state) => state.user);
   // React Query para obtener las requests
   const { data: requestsData, isLoading, error } = useQuery({
     queryKey: ['requests'],
@@ -207,7 +209,7 @@ export default function RequestTable() {
                     {renderSortIcon(col.field)}
                   </TableHead>
                 ))}
-                <TableHead className="p-2">Acciones</TableHead>
+                {user?.role_id != 4 && <TableHead className="p-2">Acciones</TableHead>}
                 <TableHead className="p-2"></TableHead>
               </TableRow>
             </TableHeader>

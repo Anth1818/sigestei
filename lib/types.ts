@@ -3,29 +3,6 @@ export type SortColumnUser = {
   direccion: "asc" | "desc";
 } | null;
 
-// export type User = {
-//   id: number;
-//   worker_id: number;
-//   email: string;
-//   password: string;
-//   role_id: number;
-//   is_active: boolean;
-//   created: string;
-//   role: string;
-//   identity_card: number;
-//   full_name: string;
-//   status: boolean;
-//   gender: string;
-//   position: string;
-//   position_id: number;
-//   gender_id: number;
-//   department: string;
-//   department_id: number;
-//   idEquipmentAssigned: number;
-// };
-
-// ...existing code...
-
 export type Request = {
   id: number;
   user_id: number; // ID del usuario que crea la solicitud
@@ -50,7 +27,8 @@ export type Request = {
   
   // Equipo principal de la solicitud
   computer_equipment: {
-    name: string;
+    asset_number: number | string;
+    location: string;
     serial_number: string;
     model: string;
   };
@@ -66,7 +44,7 @@ export type Request = {
     // Equipo del beneficiario final (para historial de incidencias)
     computer_equipment: {
       id: number;
-      name: string;
+      asset_number: number | string;
       serial_number: string;
       model: string;
       brand?: string;
@@ -240,6 +218,7 @@ export type User = {
   department: string
   position: string
   role: string
+  computer_equipment?: ComputerEquipment[];
 };
 
 export type HardwareSpecs = {

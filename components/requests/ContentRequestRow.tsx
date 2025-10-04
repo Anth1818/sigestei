@@ -201,14 +201,6 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <span className="font-medium text-sm text-gray-400">
-              Nombre:
-            </span>
-            <p className="text-sm">
-              {request.computer_equipment.name}
-            </p>
-          </div>
-          <div>
-            <span className="font-medium text-sm text-gray-400">
               Modelo:
             </span>
             <p className="text-sm">
@@ -230,7 +222,15 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
           N° de Bien:
         </span>
         <p className="text-sm">
-          {request.computer_equipment_id}
+          {request.computer_equipment.asset_number || "N/A"}
+        </p>
+      </div>
+      <div>
+        <span className="font-medium text-sm text-gray-400">
+          Ubicación:
+        </span>
+        <p className="text-sm">
+          {request.computer_equipment.location || "N/A"}
         </p>
       </div>
     </div>
@@ -299,12 +299,6 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-gray-700">Nombre:</span>
-                <p>
-                  {request.third_party.computer_equipment.name}
-                </p>
-              </div>
-              <div>
                 <span className="text-gray-700">Modelo:</span>
                 <p>
                   {request.third_party.computer_equipment.model}
@@ -324,7 +318,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                   N° de Bien:
                 </span>
                 <p className="text-sm">
-                  {request.computer_equipment_id}
+                  {request.third_party.computer_equipment.asset_number}
                 </p>
               </div>
               <div>

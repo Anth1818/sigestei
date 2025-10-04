@@ -3,7 +3,7 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { Request, RequestResponse } from "@/lib/types";
+import { Request} from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateRequest } from "@/api/api";
 import { toast } from "sonner";
 import ContentRequestRow from "./ContentRequestRow";
+import {useUserStore} from "@/hooks/useUserStore";
 
 interface ExpandableRequestRowProps {
   request: Request;
@@ -47,7 +48,7 @@ export function ExpandableRequestRow({
   
 }: ExpandableRequestRowProps) {
   const queryClient = useQueryClient();
-
+  const user = useUserStore((state) => state.user);
 
   // Mutation para actualizar el estado
 const updateStatusMutation = useMutation({
@@ -156,6 +157,7 @@ const updateStatusMutation = useMutation({
         <TableCell className="p-2">
           {formatDate(request.request_date)}
         </TableCell>
+        { user?.role_id != 4 &&
         <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
           <TooltipProvider>
             <Tooltip>
@@ -209,6 +211,7 @@ const updateStatusMutation = useMutation({
             </Tooltip>
           </TooltipProvider>
         </TableCell>
+        }
         <TableCell className="p-2">
           <Button variant="ghost" size="sm" onClick={onToggle}>
             {expanded ? (

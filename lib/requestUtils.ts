@@ -38,29 +38,39 @@ export const adaptRequestData = (apiRequest: RequestResponse): Request => {
       position: apiRequest.users_requests_requester_idTousers?.position || "N/A",
     },
     computer_equipment: {
-      name: apiRequest.computer_equipment?.model || "N/A",
+      asset_number: apiRequest.computer_equipment?.asset_number || 0,
+      location: apiRequest.computer_equipment?.location || "N/A",
       serial_number: apiRequest.computer_equipment?.serial_number || "N/A",
       model: apiRequest.computer_equipment?.model || "N/A",
     },
     // Si el beneficiario es diferente al solicitante, se considera tercero
     third_party: apiRequest.beneficiary_id !== apiRequest.requester_id &&
-      apiRequest.users_requests_beneficiary_idTousers
-      ? {
-          full_name: apiRequest.users_requests_beneficiary_idTousers.full_name,
-          email: apiRequest.users_requests_beneficiary_idTousers.email,
-          identity_card: apiRequest.users_requests_beneficiary_idTousers.identity_card,
-          department: "N/A",
-          position: "N/A",
-          computer_equipment: {
-            id: apiRequest.computer_equipment?.id || 0,
-            name: apiRequest.computer_equipment?.model || "N/A",
-            serial_number: apiRequest.computer_equipment?.serial_number || "N/A",
-            model: apiRequest.computer_equipment?.model || "N/A",
+  apiRequest.users_requests_beneficiary_idTousers
+  ? {
+      full_name: apiRequest.users_requests_beneficiary_idTousers.full_name,
+      email: apiRequest.users_requests_beneficiary_idTousers.email,
+      identity_card: apiRequest.users_requests_beneficiary_idTousers.identity_card,
+      department: apiRequest.users_requests_beneficiary_idTousers.department,
+      position: apiRequest.users_requests_beneficiary_idTousers.position,
+      computer_equipment: apiRequest.users_requests_beneficiary_idTousers.computer_equipment?.[0]
+        ? {
+            id: Number(apiRequest.users_requests_beneficiary_idTousers.computer_equipment[0].asset_number) || 0,
+            asset_number: apiRequest.users_requests_beneficiary_idTousers.computer_equipment[0].asset_number ?? 0,
+            serial_number: apiRequest.users_requests_beneficiary_idTousers.computer_equipment[0].serial_number ?? "",
+            model: apiRequest.users_requests_beneficiary_idTousers.computer_equipment[0].model ?? "",
             brand: "N/A",
-            location: apiRequest.computer_equipment?.location || "N/A",
+            location: apiRequest.users_requests_beneficiary_idTousers.computer_equipment[0].location ?? "N/A",
+          }
+        : {
+            id: 0,
+            asset_number: 0,
+            serial_number: "",
+            model: "",
+            brand: "N/A",
+            location: "N/A",
           },
-        }
-      : undefined,
+    }
+  : undefined,
   };
 };
 
