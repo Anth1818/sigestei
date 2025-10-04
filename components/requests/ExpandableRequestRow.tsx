@@ -178,7 +178,7 @@ const updateStatusMutation = useMutation({
                   </Select>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top">
+              <TooltipContent side="left">
                 Cambiar estado de la solicitud
               </TooltipContent>
             </Tooltip>
@@ -203,7 +203,7 @@ const updateStatusMutation = useMutation({
                   </Select>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top">
+              <TooltipContent side="left">
                 Cambiar prioridad de la solicitud
               </TooltipContent>
             </Tooltip>

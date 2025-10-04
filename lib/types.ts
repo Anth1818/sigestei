@@ -74,18 +74,15 @@ export type Request = {
     };
   };
 };
-
+ 
 // Tipo para formulario de creación de solicitud
-export type CreateRequestForm = {
-  request_type: string;
-  priority: string;
+export type CreateRequestPayload = {
   description: string;
+  requester_id: number;
+  beneficiary_id?: number | null;
   computer_equipment_id: number;
-  
-  // Campos para tercero
-  is_for_third_party: boolean;
-  third_party_identity_card?: number;
-  third_party_computer_equipment_id?: number; // Equipo del beneficiario final
+  type_id: number;
+
 };
 
 // Tipo para historial de incidencias por equipo

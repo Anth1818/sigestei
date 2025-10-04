@@ -125,7 +125,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               disabled={updateTechnicianMutation.isPending}
             >
               <SelectTrigger className="h-7 min-w-[180px] w-auto">
-                <SelectValue placeholder="Asignar técnico" />
+                <SelectValue placeholder="Asignar tecnicos" />
               </SelectTrigger>
               <SelectContent>
                 {catalogsLoading ? (
