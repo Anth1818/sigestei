@@ -18,8 +18,8 @@ export default function SelectTechinalRequestStatus( { onChange, status }: Selec
             <SelectContent>
                 <SelectItem value="pending">Pendientes</SelectItem>
                 <SelectItem value="in_process">En proceso</SelectItem>
-                <SelectItem value="resolved">Resueltas</SelectItem>
-                <SelectItem value="closed">Cerradas</SelectItem>
+                <SelectItem value="resolved">Completadas</SelectItem>
+                <SelectItem value="closed">Cancelada</SelectItem>
             </SelectContent>
         </Select>
     )

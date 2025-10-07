@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -26,7 +27,13 @@ import {
 
 import { Notification } from "../shared/Notification";
 import { ExpandableComputerRow } from "@/components/inventory/ExpandableComputerRow";
-import { mockComputerEquipment } from "@/data/mockComputerEquipment";
+import { fetchAllEquipment } from "@/api/api";
+import { 
+  adaptComputerData, 
+  getStatusColor,
+  ComputerEquipmentResponse,
+  ComputerEquipmentAdapted 
+} from "@/lib/computerUtils";
 
 export default function ComputerTable() {
   const [searchId, setSearchId] = useState("");
@@ -35,7 +42,25 @@ export default function ComputerTable() {
   const [locationFilter, setLocationFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
 
-  const [computers, setComputers] = useState(mockComputerEquipment);
+  // React Query para obtener los equipos
+  const { data: equipmentData, isLoading, error } = useQuery<ComputerEquipmentResponse[]>({
+    queryKey: ['equipment'],
+    queryFn: fetchAllEquipment,
+  });
+
+  // Adaptar datos de la API al formato del componente
+  const adaptedComputers: ComputerEquipmentAdapted[] = useMemo(() => {
+    if (!equipmentData) return [];
+    return equipmentData.map(adaptComputerData);
+  }, [equipmentData]);
+
+  // Datos adaptados
+  const computers = adaptedComputers;
+
+  // Opciones únicas para los filtros
+  const uniqueStatuses = [...new Set(computers.map((c) => c.status).filter(Boolean))] as string[];
+  const uniqueBrands = [...new Set(computers.map((c) => c.brand).filter(Boolean))] as string[];
+  const uniqueTypes = [...new Set(computers.map((c) => c.type).filter(Boolean))] as string[];
 
   const columns = [
     {
@@ -80,13 +105,14 @@ export default function ComputerTable() {
 
   const updateComputerStatus = async (id: number, newStatus: string) => {
     setShowNotification(true);
-    const updatedComputers = computers.map((computer) => {
-      if (computer.id === id) {
-        return { ...computer, status: newStatus };
-      }
-      return computer;
-    });
-    setComputers(updatedComputers);
+    // TODO: Implementar llamada a la API para actualizar el estado
+    // const updatedComputers = computers.map((computer) => {
+    //   if (computer.id === id) {
+    //     return { ...computer, status: newStatus };
+    //   }
+    //   return computer;
+    // });
+    // setComputers(updatedComputers);
     const timer = setTimeout(() => {
       setShowNotification(false);
       clearTimeout(timer);
@@ -100,16 +126,17 @@ export default function ComputerTable() {
         : "asc";
     setCurrentSort({ column: field, direction: newDirection });
 
-    const sortedComputers = [...computers].sort((a, b) => {
-      const valueA = (a[field as keyof typeof a] || "").toString().trim();
-      const valueB = (b[field as keyof typeof b] || "").toString().trim();
+    // TODO: Implementar sorting con react-query si es necesario
+    // const sortedComputers = [...computers].sort((a, b) => {
+    //   const valueA = (a[field as keyof typeof a] || "").toString().trim();
+    //   const valueB = (b[field as keyof typeof b] || "").toString().trim();
 
-      if (valueA < valueB) return newDirection === "asc" ? -1 : 1;
-      if (valueA > valueB) return newDirection === "asc" ? 1 : -1;
-      return 0;
-    });
+    //   if (valueA < valueB) return newDirection === "asc" ? -1 : 1;
+    //   if (valueA > valueB) return newDirection === "asc" ? 1 : -1;
+    //   return 0;
+    // });
 
-    setComputers(sortedComputers);
+    // setComputers(sortedComputers);
   };
 
   const renderSortIcon = (field: string) => {
@@ -125,33 +152,33 @@ export default function ComputerTable() {
 
   // Filtros múltiples
   const filteredComputers = useMemo(() => {
-    let filtered = computers;
+    let filtered: ComputerEquipmentAdapted[] = computers;
 
     // Filtro por ID
     if (searchId.trim()) {
-      filtered = filtered.filter((computer) =>
+      filtered = filtered.filter((computer: ComputerEquipmentAdapted) =>
         computer.id.toString().includes(searchId.trim())
       );
     }
 
     // Filtro por estado
     if (statusFilter) {
-      filtered = filtered.filter((computer) => computer.status === statusFilter);
+      filtered = filtered.filter((computer: ComputerEquipmentAdapted) => computer.status === statusFilter);
     }
 
     // Filtro por marca
     if (brandFilter) {
-      filtered = filtered.filter((computer) => computer.brand === brandFilter);
+      filtered = filtered.filter((computer: ComputerEquipmentAdapted) => computer.brand === brandFilter);
     }
 
     // Filtro por tipo de equipo
     if (typeFilter) {
-      filtered = filtered.filter((computer) => computer.type === typeFilter);
+      filtered = filtered.filter((computer: ComputerEquipmentAdapted) => computer.type === typeFilter);
     }
 
     // Filtro por ubicación
     if (locationFilter) {
-      filtered = filtered.filter((computer) =>
+      filtered = filtered.filter((computer: ComputerEquipmentAdapted) =>
         computer.location.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
@@ -180,20 +207,27 @@ export default function ComputerTable() {
     setCurrentPage(1);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Activo": return "text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs";
-      case "En mantenimiento": return "text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full text-xs";
-      case "En reparación": return "text-orange-600 bg-orange-100 px-2 py-1 rounded-full text-xs";
-      case "Inactivo": return "text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs";
-      default: return "";
-    }
-  };
-
   return (
     <div className="container mx-auto py-1">
-      {/* Filtros */}
-      <div className="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="text-lg">Cargando equipos...</div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="flex justify-center items-center py-8">
+          <div className="text-lg text-red-600">Error al cargar los equipos</div>
+        </div>
+      )}
+
+      {/* Main content - only show when not loading and no error */}
+      {!isLoading && !error && (
+        <>
+          {/* Filtros */}
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
         <div>
           <label htmlFor="search-id" className="text-sm font-medium block mb-1">
             Buscar por ID:
@@ -221,8 +255,9 @@ export default function ComputerTable() {
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Laptop">Laptop</SelectItem>
-              <SelectItem value="PC">PC</SelectItem>
+              {uniqueTypes.map((type) => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -237,10 +272,9 @@ export default function ComputerTable() {
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Activo">Activo</SelectItem>
-              <SelectItem value="En mantenimiento">En mantenimiento</SelectItem>
-              <SelectItem value="En reparación">En reparación</SelectItem>
-              <SelectItem value="Inactivo">Inactivo</SelectItem>
+              {uniqueStatuses.map((status) => (
+                <SelectItem key={status} value={status}>{status}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -255,12 +289,9 @@ export default function ComputerTable() {
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Dell">Dell</SelectItem>
-              <SelectItem value="HP">HP</SelectItem>
-              <SelectItem value="Lenovo">Lenovo</SelectItem>
-              <SelectItem value="Acer">Acer</SelectItem>
-              <SelectItem value="ASUS">ASUS</SelectItem>
-              <SelectItem value="MSI">MSI</SelectItem>
+              {uniqueBrands.map((brand) => (
+                <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -306,7 +337,7 @@ export default function ComputerTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedComputers.map((computer) => (
+          {paginatedComputers.map((computer: ComputerEquipmentAdapted) => (
             <ExpandableComputerRow
               key={computer.id}
               computer={computer}
@@ -365,6 +396,8 @@ export default function ComputerTable() {
           </Button>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

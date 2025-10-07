@@ -36,7 +36,7 @@ export default function DashboardPage() {
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <CardDashboard
               title="Buscar solicitudes por:"
-              content={`${data?.requestByStatusCurrentMonth[selectRequestStatus] || "No existen registros"} ${TEXTREQUESTBYSTATUS[selectRequestStatus] || ''}`}
+              content={`${data?.requestByStatusCurrentMonth[selectRequestStatus] || "0"} ${TEXTREQUESTBYSTATUS[selectRequestStatus] || ''}`}
               footer={`Cantidad por mes`}
               Icon={FileCheck}
             >

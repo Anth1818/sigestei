@@ -76,8 +76,6 @@ export const fetchAllUsersByDepartment = async (departmentId: number) => {
 
 // REQUESTS
 
-
-
 export const createRequest = async (data: CreateRequestPayload) => {
   const response = await axios.post(`${API_BASE_URL}/requests/register`, data, {
     withCredentials: true,
@@ -93,7 +91,6 @@ export const fetchRequests = async () => {
   return response.data;
 }
 
-
 // Actualizar una solicitud
 export const updateRequest = async (id: number, data: Partial<CreateRequestInput>) => {
   const response = await axios.put(`${API_BASE_URL}/requests/updateRequest/${id}`, data, {
@@ -102,3 +99,13 @@ export const updateRequest = async (id: number, data: Partial<CreateRequestInput
   return response.data;
 }
 
+
+// EQUIPMENT
+
+// Obtener todos los equipos
+export const fetchAllEquipment = async () => {
+  const response = await axios.get(`${API_BASE_URL}/computer-equipment`, {
+    withCredentials: true,
+  });
+  return response.data;
+}

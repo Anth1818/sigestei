@@ -60,14 +60,14 @@ export function ExpandableComputerRow({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Activo">Activo</SelectItem>
-                      <SelectItem value="En mantenimiento">En mantenimiento</SelectItem>
-                      <SelectItem value="En reparación">En reparación</SelectItem>
+                      <SelectItem value="En revisión">En revisión</SelectItem>
+                      <SelectItem value="Dañado">Dañado</SelectItem>
                       <SelectItem value="Inactivo">Inactivo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top">
+              <TooltipContent side="left">
                 Cambiar estado del equipo
               </TooltipContent>
             </Tooltip>

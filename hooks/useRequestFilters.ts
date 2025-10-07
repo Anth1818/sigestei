@@ -6,6 +6,7 @@ export const useRequestFilters = (requests: RequestResponse[]) => {
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [dateFilterType, setDateFilterType] = useState<"creation" | "resolution">("creation");
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined;
     to: Date | undefined;
@@ -48,21 +49,33 @@ export const useRequestFilters = (requests: RequestResponse[]) => {
     // Filtro por rango de fechas
     if (dateRange.from || dateRange.to) {
       filtered = filtered.filter((request) => {
-        const requestDate = new Date(request.request_date);
+        // Determinar qué fecha usar según el tipo de filtro
+        const dateToCompare = dateFilterType === "creation" 
+          ? new Date(request.request_date)
+          : request.resolution_date 
+            ? new Date(request.resolution_date) 
+            : null;
+        
+        // Si no hay fecha de resolución y se está filtrando por resolución, excluir
+        if (dateFilterType === "resolution" && !dateToCompare) {
+          return false;
+        }
+        
+        if (!dateToCompare) return true;
         
         // Si solo hay fecha desde
         if (dateRange.from && !dateRange.to) {
-          return requestDate >= dateRange.from;
+          return dateToCompare >= dateRange.from;
         }
         
         // Si solo hay fecha hasta
         if (!dateRange.from && dateRange.to) {
-          return requestDate <= dateRange.to;
+          return dateToCompare <= dateRange.to;
         }
         
         // Si hay ambas fechas
         if (dateRange.from && dateRange.to) {
-          return requestDate >= dateRange.from && requestDate <= dateRange.to;
+          return dateToCompare >= dateRange.from && dateToCompare <= dateRange.to;
         }
         
         return true;
@@ -70,13 +83,14 @@ export const useRequestFilters = (requests: RequestResponse[]) => {
     }
 
     return filtered;
-  }, [requests, searchId, statusFilter, priorityFilter, typeFilter, dateRange]);
+  }, [requests, searchId, statusFilter, priorityFilter, typeFilter, dateFilterType, dateRange]);
 
   const clearFilters = () => {
     setSearchId("");
     setStatusFilter("");
     setPriorityFilter("");
     setTypeFilter("");
+    setDateFilterType("creation");
     setDateRange({ from: undefined, to: undefined });
   };
 
@@ -89,6 +103,8 @@ export const useRequestFilters = (requests: RequestResponse[]) => {
     setPriorityFilter,
     typeFilter,
     setTypeFilter,
+    dateFilterType,
+    setDateFilterType,
     dateRange,
     setDateRange,
     filteredRequests,

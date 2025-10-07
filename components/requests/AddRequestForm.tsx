@@ -26,15 +26,12 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  fetchCatalogs,
-  fetchAllUsersByDepartment,
-  createRequest,
-} from "@/api/api";
+import { fetchCatalogs, createRequest } from "@/api/api";
 import { useUserStore } from "@/hooks/useUserStore";
-import { useEffect } from "react";
-import { CreateRequestPayload, UserData } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { CreateRequestPayload } from "@/lib/types";
 import { toast } from "sonner";
+import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
 
 const requestSchema = z
   .object({
@@ -64,6 +61,10 @@ type RequestFormData = z.infer<typeof requestSchema>;
 export default function AddRequestForm() {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
+  
+  // Estados para el selector de departamento y usuario (fuera del form)
+  const [selectedDepartmentIdState, setSelectedDepartmentIdState] = useState("");
+  const [selectedUserIdState, setSelectedUserIdState] = useState("");
 
   const {
     control,
@@ -84,8 +85,6 @@ export default function AddRequestForm() {
   });
 
   const isForThirdParty = watch("isForThirdParty");
-  const selectedThirdPartyId = watch("selectedThirdPartyId");
-  const selectedDepartmentId = watch("selectedDepartmentId");
 
   // Obtener catálogos (incluye categorías)
   const { data: catalogs, isLoading: catalogsLoading } = useQuery({
@@ -93,45 +92,13 @@ export default function AddRequestForm() {
     queryFn: fetchCatalogs,
   });
 
-  const departments = catalogs?.departments || [];
   const categories = catalogs?.request_types || [];
 
-  // Esta variable contendrá el ID definitivo del departamento para la consulta.
-  // Para un usuario regular, es su propio departamento.
-  //Para un administrador/gerente, es el que seleccionan del dropdown.
-  const departmentIdToFetch =
-    user?.role_id === 4
-      ? user.department_id
-      : selectedDepartmentId
-      ? Number(selectedDepartmentId)
-      : null;
-
-  const { data: departmentUsers, isLoading: departmentUsersLoading } = useQuery(
-    {
-      queryKey: ["departmentUsers", departmentIdToFetch],
-
-      queryFn: async () => {
-        if (!departmentIdToFetch) {
-          return [];
-        }
-        return await fetchAllUsersByDepartment(departmentIdToFetch);
-      },
-
-      enabled: isForThirdParty && !!departmentIdToFetch,
-    }
-  );
-
-  const filteredDepartmentUsers =
-    departmentUsers?.filter(
-      (u: UserData) => u.id.toString() !== user?.id.toString()
-    ) || [];
-
-  // Reset selectedThirdPartyId cuando cambia el departamento
+  // Sincronizar estados externos con el formulario
   useEffect(() => {
-    if (selectedDepartmentId) {
-      setValue("selectedThirdPartyId", "");
-    }
-  }, [selectedDepartmentId, setValue]);
+    setValue("selectedDepartmentId", selectedDepartmentIdState);
+    setValue("selectedThirdPartyId", selectedUserIdState);
+  }, [selectedDepartmentIdState, selectedUserIdState, setValue]);
 
   const createRequestMutation = useMutation({
     mutationFn: (payload: CreateRequestPayload) => createRequest(payload),
@@ -230,94 +197,24 @@ export default function AddRequestForm() {
             </div>
           </div>
 
-          {/* Si es para tercero y NO es role_id 4, mostrar select de departamentos */}
-          {isForThirdParty && user?.role_id !== 4 && (
-            <div className="mb-6">
-              <Label htmlFor="department-select" className="block mb-1">
-                Selecciona el departamento
-              </Label>
-              <Controller
-                name="selectedDepartmentId"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="department-select" className="w-full">
-                      <SelectValue placeholder="Selecciona un departamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {catalogsLoading ? (
-                        <SelectItem value="loading" disabled>
-                          Cargando departamentos...
-                        </SelectItem>
-                      ) : departments.length === 0 ? (
-                        <SelectItem value="not-found" disabled>
-                          No hay departamentos disponibles
-                        </SelectItem>
-                      ) : (
-                        departments.map((dept: any) => (
-                          <SelectItem key={dept.id} value={dept.id.toString()}>
-                            {dept.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.selectedDepartmentId && (
-                <span className="text-red-500 text-xs">
-                  {errors.selectedDepartmentId.message}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Si es para tercero, mostrar select de usuarios */}
-          {isForThirdParty && (user?.role_id === 4 || selectedDepartmentId) && (
-            <div className="mb-6">
-              <Label htmlFor="third-party-select" className="block mb-1">
-                Selecciona el usuario beneficiario
-              </Label>
-              <Controller
-                name="selectedThirdPartyId"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="third-party-select" className="w-full">
-                      <SelectValue placeholder="Selecciona un usuario" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departmentUsersLoading ? (
-                        <SelectItem value="loading" disabled>
-                          Cargando usuarios...
-                        </SelectItem>
-                      ) : (
-                        (() => {
-                          const users = filteredDepartmentUsers || [];
-
-                          return users.length === 0 ? (
-                            <SelectItem value="not-found" disabled>
-                              No hay usuarios disponibles
-                            </SelectItem>
-                          ) : (
-                            users.map((u: any) => (
-                              <SelectItem key={u.id} value={u.id.toString()}>
-                                {u.full_name}
-                              </SelectItem>
-                            ))
-                          );
-                        })()
-                      )}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.selectedThirdPartyId && (
-                <span className="text-red-500 text-xs">
-                  {errors.selectedThirdPartyId.message}
-                </span>
-              )}
-            </div>
+          {/* Selector de Departamento y Usuario para terceros */}
+          {isForThirdParty && (
+            <DepartmentUserSelector
+              currentUserId={user?.id}
+              currentUserRoleId={user?.role_id}
+              currentUserDepartmentId={user?.department_id}
+              selectedDepartmentId={selectedDepartmentIdState}
+              selectedUserId={selectedUserIdState}
+              onDepartmentChange={setSelectedDepartmentIdState}
+              onUserChange={setSelectedUserIdState}
+              filterCurrentUser={true}
+              departmentLabel="Selecciona el departamento"
+              userLabel="Selecciona el usuario beneficiario"
+              departmentPlaceholder="Selecciona un departamento"
+              userPlaceholder="Selecciona un usuario"
+              departmentError={errors.selectedDepartmentId?.message}
+              userError={errors.selectedThirdPartyId?.message}
+            />
           )}
 
           {/* Formulario de solicitud */}

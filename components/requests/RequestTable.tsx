@@ -59,7 +59,7 @@ export default function RequestTable() {
     { label: "Estado", field: "status" },
     { label: "Solicitante", field: "requestor_name" },
     { label: "Beneficiario", field: "beneficiary_name" },
-    { label: "Fecha", field: "request_date" },
+    { label: "Fecha de creación", field: "request_date" },
   ];
 
   // Opciones únicas para los filtros
@@ -176,6 +176,34 @@ export default function RequestTable() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium block mb-1">Filtrar fechas por:</label>
+              <div className="flex gap-4 items-center h-8">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="radio"
+                    name="dateFilterType"
+                    value="creation"
+                    checked={filters.dateFilterType === "creation"}
+                    onChange={() => filters.setDateFilterType("creation")}
+                    className="cursor-pointer"
+                  />
+                  Creación
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="radio"
+                    name="dateFilterType"
+                    value="resolution"
+                    checked={filters.dateFilterType === "resolution"}
+                    onChange={() => filters.setDateFilterType("resolution")}
+                    className="cursor-pointer"
+                  />
+                  Resolución
+                </label>
+              </div>
             </div>
 
             <div>

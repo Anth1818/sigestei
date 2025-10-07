@@ -1,8 +1,8 @@
 export const TEXTREQUESTBYSTATUS: Record<string, string> = {
   pending: "Solicitudes Pendientes",
-  in_progress: "Solicitudes En progreso",
-  resolved: "Solicitudes Resueltas",
-  closed: "Solicitudes Cerradas",
+  in_process: "Solicitudes En progreso",
+  resolved: "Solicitudes Completadas",
+  closed: "Solicitudes Canceladas",
 };
 
 export const TEXTCOMPUTERBYSTATUS: Record<string, string> = {
