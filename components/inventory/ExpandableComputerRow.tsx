@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AnimatePresence, motion } from "framer-motion";
 import { ContentComputerRow } from "./ContentComputerRow";
 import Link from "next/link";
+import { useState } from "react";
 
 interface ExpandableComputerRowProps {
   computer: any;
@@ -32,6 +33,10 @@ export function ExpandableComputerRow({
     });
   };
 
+  const [assigned_user_name, setAssigned_user_name] = useState(
+      computer.assigned_to || ""
+    );
+
   return (
     <>
       <TableRow className="hover:bg-muted/50">
@@ -45,7 +50,7 @@ export function ExpandableComputerRow({
           </span>
         </TableCell>
         <TableCell className="p-2">{computer.location}</TableCell>
-        <TableCell className="p-2">{computer.assigned_to}</TableCell>
+        <TableCell className="p-2">{assigned_user_name}</TableCell>
         <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
           <TooltipProvider>
             <Tooltip>
@@ -105,7 +110,7 @@ export function ExpandableComputerRow({
                 }}
                 transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
               >
-                <ContentComputerRow computer={computer} />
+                <ContentComputerRow computer={computer} assigned_user_name={assigned_user_name} setAssigned_user_name={setAssigned_user_name} />
               </motion.div>
             </TableCell>
           </TableRow>

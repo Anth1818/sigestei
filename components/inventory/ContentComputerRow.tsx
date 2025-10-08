@@ -1,24 +1,75 @@
-import { Computer, FileText, User, ListChecks, Users } from "lucide-react";
+import { FileText, User, ListChecks, Users } from "lucide-react";
 import { useState } from "react";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
 import { useUserStore } from "@/hooks/useUserStore";
 import Link from "next/link";
+import { ComputerEquipmentAdapted } from "@/lib/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateEquipmentData } from "@/api/api";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ContentComputerRowProps {
-  computer: any;
+  computer: ComputerEquipmentAdapted;
+  assigned_user_name: string;
+  setAssigned_user_name: (name: string) => void;
 }
 
-const ContentComputerRow = ({ computer }: ContentComputerRowProps) => {
+const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_name }: ContentComputerRowProps) => {
   const user = useUserStore((state) => state.user);
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(
     computer.assigned_user_id?.toString() || ""
   );
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Extraer los IDs de requests asociados
   const associatedRequests = Array.isArray(computer.requests)
     ? computer.requests
     : [];
+
+  // Mutation para actualizar el equipo
+  const updateEquipmentMutation = useMutation({
+    mutationFn: async (newUserId: number) =>{
+      const response = await updateEquipmentData(computer.id, { assigned_user_id: newUserId })
+      return response
+    },
+    onSuccess: (response) => {
+      toast.success("Equipo reasignado correctamente");
+      setIsDialogOpen(false);
+      setSelectedDepartmentId("");
+      setSelectedUserId("");
+      setAssigned_user_name(response.data.users.full_name);
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          "Error al reasignar el equipo. Intenta nuevamente."
+      );
+    },
+  });
+
+  // Abrir dialog cuando hay departamento y usuario seleccionado
+  const handleReassign = () => {
+    if (selectedDepartmentId && selectedUserId) {
+      setIsDialogOpen(true);
+    }
+  };
+
+  // Confirmar reasignación
+  const handleConfirmReassign = () => {
+    if (selectedUserId) {
+      updateEquipmentMutation.mutate(parseInt(selectedUserId));
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -33,7 +84,7 @@ const ContentComputerRow = ({ computer }: ContentComputerRowProps) => {
           <p className="text-sm text-gray-500">
             Equipo asignado a:{" "}
             <span className="font-medium">
-              {computer.assigned_to || "No asignado"}
+              {assigned_user_name || "No asignado"}
             </span>
           </p>
         </div>
@@ -57,6 +108,19 @@ const ContentComputerRow = ({ computer }: ContentComputerRowProps) => {
           departmentPlaceholder="Selecciona un departamento"
           userPlaceholder="Selecciona un usuario"
         />
+
+        {/* Botón para confirmar reasignación */}
+        {selectedDepartmentId && selectedUserId && (
+          <Button
+            onClick={handleReassign}
+            className="w-full mt-4"
+            disabled={updateEquipmentMutation.isPending}
+          >
+            {updateEquipmentMutation.isPending
+              ? "Procesando..."
+              : "Reasignar equipo"}
+          </Button>
+        )}
 
         {/* Lista de solicitudes asociadas */}
         <div className="mt-6">
@@ -138,6 +202,50 @@ const ContentComputerRow = ({ computer }: ContentComputerRowProps) => {
           </div>
         </div>
       </div>
+
+      {/* Dialog de confirmación */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar reasignación de equipo</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas reasignar este equipo al usuario
+              seleccionado? Esta acción actualizará el registro de asignación.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-gray-600">
+              <strong>Equipo:</strong> {computer.brand} {computer.model}
+            </p>
+            <p className="text-sm text-gray-600">
+              <strong>Número de serie:</strong> {computer.serial_number}
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
+              <strong>Asignación actual:</strong>{" "}
+              {computer.assigned_to || "No asignado"}
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={updateEquipmentMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmReassign}
+              disabled={updateEquipmentMutation.isPending}
+            >
+              {updateEquipmentMutation.isPending
+                ? "Procesando..."
+                : "Confirmar reasignación"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

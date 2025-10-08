@@ -31,9 +31,9 @@ import { fetchAllEquipment } from "@/api/api";
 import { 
   adaptComputerData, 
   getStatusColor,
-  ComputerEquipmentResponse,
-  ComputerEquipmentAdapted 
 } from "@/lib/computerUtils";
+
+import {ComputerEquipmentAdapted, ComputerEquipmentResponse}  from "@/lib/types";
 
 export default function ComputerTable() {
   const [searchId, setSearchId] = useState("");

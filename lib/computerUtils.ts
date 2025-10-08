@@ -1,77 +1,4 @@
-// Tipos para la respuesta de la API
-export interface ComputerEquipmentResponse {
-  id: number;
-  asset_number: string;
-  serial_number: string;
-  model: string;
-  location: string;
-  hardware_specs: {
-    cpu: string;
-    gpu: string;
-    ram: string;
-    network: string;
-    storage: string;
-  };
-  software_specs: {
-    os: string;
-    office: string;
-    antivirus: string;
-  };
-  assigned_user_id: number;
-  type_id: number;
-  brand_id: number;
-  status_id: number;
-  users?: {
-    id: number;
-    full_name: string;
-    identity_card: number;
-    email: string;
-    role_id: number;
-    position_id: number;
-    gender_id: number;
-    department_id: number;
-  };
-  requests?: number[];
-  equipment_brands?: {
-    id: number;
-    name: string;
-  };
-  equipment_statuses?: {
-    id: number;
-    name: string;
-  };
-  equipment_types?: {
-    id: number;
-    name: string;
-  };
-}
-
-// Tipo para el formato que espera el componente
-export interface ComputerEquipmentAdapted {
-  id: number;
-  name: string;
-  serial_number: string;
-  model: string;
-  brand: string;
-  location: string;
-  status: string;
-  asset_number: string;
-  assigned_to: string;
-  requests: number[]
-  type: string;
-  hardware_specs: {
-    cpu: string;
-    ram: string;
-    storage: string;
-    gpu: string;
-    network: string;
-  };
-  software: {
-    os: string;
-    office: string;
-    antivirus: string;
-  };
-}
+import { ComputerEquipmentResponse, ComputerEquipmentAdapted } from "@/lib/types";
 
 // Función para mapear los nombres de estado de la API al formato esperado
 export const mapStatusName = (apiStatus: string): string => {
@@ -115,6 +42,7 @@ export const adaptComputerData = (apiEquipment: ComputerEquipmentResponse): Comp
     asset_number: apiEquipment.asset_number,
     assigned_to: getAssignedUserName(apiEquipment),
     requests: apiEquipment.requests || [],
+    assigned_user_id: apiEquipment.assigned_user_id,
     type: type,
     hardware_specs: {
       cpu: apiEquipment.hardware_specs.cpu,
