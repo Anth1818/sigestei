@@ -1,12 +1,15 @@
-import { ComputerEquipmentResponse, ComputerEquipmentAdapted } from "@/lib/types";
+import {
+  ComputerEquipmentResponse,
+  ComputerEquipmentAdapted,
+} from "@/lib/types";
 
 // Función para mapear los nombres de estado de la API al formato esperado
 export const mapStatusName = (apiStatus: string): string => {
   const statusMap: { [key: string]: string } = {
-    'operational': 'Activo',
-    'under_review': 'En revisión',
-    'damaged': 'Dañado',
-    'inactive': 'Inactivo',
+    Activo: "Activo",
+    "En mantenimiento": "En mantenimiento",
+    Averiado: "Averiado",
+    Inactivo: "Inactivo",
   };
   return statusMap[apiStatus] || apiStatus;
 };
@@ -27,10 +30,12 @@ export const getAssignedUserName = (equipment: ComputerEquipmentResponse) =>
   equipment.users?.full_name || "No asignado";
 
 // Función para convertir ComputerEquipmentResponse al formato esperado por el componente
-export const adaptComputerData = (apiEquipment: ComputerEquipmentResponse): ComputerEquipmentAdapted => {
+export const adaptComputerData = (
+  apiEquipment: ComputerEquipmentResponse
+): ComputerEquipmentAdapted => {
   const brand = getBrandName(apiEquipment);
   const type = getTypeName(apiEquipment);
-  
+
   return {
     id: apiEquipment.id,
     name: `${brand} ${apiEquipment.model}`,
@@ -39,6 +44,7 @@ export const adaptComputerData = (apiEquipment: ComputerEquipmentResponse): Comp
     brand: brand,
     location: apiEquipment.location,
     status: getStatusName(apiEquipment),
+    status_id: apiEquipment.status_id,
     asset_number: apiEquipment.asset_number,
     assigned_to: getAssignedUserName(apiEquipment),
     requests: apiEquipment.requests || [],
@@ -64,16 +70,12 @@ export const getStatusColor = (status: string) => {
   const normalizedStatus = status.toLowerCase();
   switch (normalizedStatus) {
     case "activo":
-    case "operational":
       return "text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs";
-    case "en revisión":
-    case "under_review":
+    case "en mantenimiento":
       return "text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full text-xs";
-    case "dañado":
-    case "damaged":
+    case "averiado":
       return "text-orange-600 bg-orange-100 px-2 py-1 rounded-full text-xs";
     case "inactivo":
-    case "inactive":
       return "text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs";
     default:
       return "text-gray-600 bg-gray-100 px-2 py-1 rounded-full text-xs";

@@ -7,15 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
 import { ContentComputerRow } from "./ContentComputerRow";
+import { ComputerEquipmentAdapted } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";
 
 interface ExpandableComputerRowProps {
-  computer: any;
+  computer: ComputerEquipmentAdapted;
   expanded: boolean;
   onToggle: () => void;
-  onUpdateStatus: (id: number, status: string) => void;
+  onUpdateStatus: (computerId: number, newStatusId: number, newStatusName: string) => void;
   getStatusColor: (status: string) => string;
+  equipmentStatuses: Array<{ id: number; name: string }>;
 }
 
 export function ExpandableComputerRow({
@@ -24,7 +26,9 @@ export function ExpandableComputerRow({
   onToggle,
   onUpdateStatus,
   getStatusColor,
+  equipmentStatuses,
 }: ExpandableComputerRowProps) {
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-ES", {
       year: "numeric",
@@ -37,11 +41,21 @@ export function ExpandableComputerRow({
       computer.assigned_to || ""
     );
 
+  // Manejar el cambio de estado
+  const handleStatusChange = (statusId: string) => {
+    const selectedStatus = equipmentStatuses.find(
+      (status) => status.id.toString() === statusId
+    );
+    if (selectedStatus) {
+      onUpdateStatus(computer.id, selectedStatus.id, selectedStatus.name);
+    }
+  };
+
   return (
     <>
       <TableRow className="hover:bg-muted/50">
         <TableCell className="p-2 text-center">{computer.id}</TableCell>
-        <TableCell className="p-2">{computer.name}</TableCell>
+        <TableCell className="p-2">{computer.asset_number}</TableCell>
         <TableCell className="p-2">{computer.model}</TableCell>
         <TableCell className="p-2">{computer.serial_number}</TableCell>
         <TableCell className="p-2">
@@ -57,17 +71,18 @@ export function ExpandableComputerRow({
               <TooltipTrigger asChild>
                 <div>
                   <Select
-                    value={computer.status}
-                    onValueChange={(value) => onUpdateStatus(computer.id, value)}
+                    value={computer.status_id?.toString()}
+                    onValueChange={handleStatusChange}
                   >
                     <SelectTrigger className="h-8 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Activo">Activo</SelectItem>
-                      <SelectItem value="En revisión">En revisión</SelectItem>
-                      <SelectItem value="Dañado">Dañado</SelectItem>
-                      <SelectItem value="Inactivo">Inactivo</SelectItem>
+                      {equipmentStatuses.map((status) => (
+                        <SelectItem key={status.id} value={status.id.toString()}>
+                          {status.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -82,7 +97,7 @@ export function ExpandableComputerRow({
               e.stopPropagation();
             }}
           >
-            <Link href={`/editComputerEquipment`}>Editar</Link>
+            <Link href={`/editComputerEquipment/${computer.id}`}>Editar</Link>
           </Button>
         </TableCell>
         <TableCell className="p-2">

@@ -103,6 +103,7 @@ export default function AddRequestForm() {
   const createRequestMutation = useMutation({
     mutationFn: (payload: CreateRequestPayload) => createRequest(payload),
     onSuccess: () => {
+      
       // Invalidar queries relacionadas para refrescar datos
       queryClient.invalidateQueries({ queryKey: ["requests"] });
 
@@ -143,7 +144,7 @@ export default function AddRequestForm() {
           ? Number(data.selectedThirdPartyId)
           : null
         : user.id,
-      computer_equipment_id: (user as any).computer_equipment_id ?? null,
+      computer_equipment_id: user?.computer_equipment_id ?? 0 ,
       type_id: Number(data.request_category),
     };
 

@@ -6,20 +6,20 @@ export const dataNav = {
     {
       role_access: [1, 2,],
       name: "Dashboard",
-      url: "dashboard",
+      url: "/dashboard",
       icon: Home,
     },
     ,
     {
       role_access: [1, 2, 3, 4],
       name: "Solicitudes",
-      url: "viewRequests",
+      url: "/viewRequests",
       icon: FileText,
     },
     {
       role_access: [1, 2, 3],
       name: "Inventario",
-      url: "viewInventory",
+      url: "/viewInventory",
       icon: ComputerIcon,
     },
     // {
@@ -30,7 +30,7 @@ export const dataNav = {
     // },
     {role_access: [1],
       name: "Usuarios",
-      url: "viewUsers",
+      url: "/viewUsers",
       icon: Users,
     },
   ],

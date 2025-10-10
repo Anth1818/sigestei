@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -24,16 +24,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-import { Notification } from "../shared/Notification";
 import { ExpandableComputerRow } from "@/components/inventory/ExpandableComputerRow";
-import { fetchAllEquipment } from "@/api/api";
+import { fetchAllEquipment, updateEquipmentData, fetchCatalogs } from "@/api/api";
 import { 
   adaptComputerData, 
   getStatusColor,
 } from "@/lib/computerUtils";
 
 import {ComputerEquipmentAdapted, ComputerEquipmentResponse}  from "@/lib/types";
+import { toast } from "sonner";
 
 export default function ComputerTable() {
   const [searchId, setSearchId] = useState("");
@@ -41,11 +49,52 @@ export default function ComputerTable() {
   const [brandFilter, setBrandFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{
+    computerId: number;
+    newStatusId: number;
+    newStatusName: string;
+  } | null>(null);
+
+  const queryClient = useQueryClient();
 
   // React Query para obtener los equipos
   const { data: equipmentData, isLoading, error } = useQuery<ComputerEquipmentResponse[]>({
     queryKey: ['equipment'],
     queryFn: fetchAllEquipment,
+  });
+
+  // Obtener catálogos para los estados
+  const { data: catalogsData } = useQuery({
+    queryKey: ['catalogs'],
+    queryFn: fetchCatalogs,
+  });
+
+  // Mutation para actualizar el status
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ computerId, statusId }: { computerId: number; statusId: number }) =>
+      updateEquipmentData(computerId, { status_id: statusId }),
+    onSuccess: (response, variables) => {
+      // Actualizar el caché localmente
+      queryClient.setQueryData(['equipment'], (old: ComputerEquipmentResponse[] | undefined) => {
+        if (!old) return old;
+        return old.map((item) =>
+          item.id === variables.computerId
+            ? { ...item, status_id: variables.statusId, equipment_statuses: response.data.equipment_statuses }
+            : item
+        );
+      });
+      
+      toast.success("Estado del equipo actualizado correctamente");
+      setIsStatusDialogOpen(false);
+      setPendingStatusUpdate(null);
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          "Error al actualizar el estado. Intenta nuevamente."
+      );
+    },
   });
 
   // Adaptar datos de la API al formato del componente
@@ -68,8 +117,8 @@ export default function ComputerTable() {
       field: "id",
     },
     {
-      label: "Nombre",
-      field: "name",
+      label: "Número de bien",
+      field: "asset_number",
     },
     {
       label: "Modelo",
@@ -103,6 +152,22 @@ export default function ComputerTable() {
     setExpanded(expanded === id ? null : id);
   };
 
+  // Manejar solicitud de cambio de status (abre dialog)
+  const handleStatusChange = (computerId: number, newStatusId: number, newStatusName: string) => {
+    setPendingStatusUpdate({ computerId, newStatusId, newStatusName });
+    setIsStatusDialogOpen(true);
+  };
+
+  // Confirmar cambio de status
+  const confirmStatusUpdate = () => {
+    if (pendingStatusUpdate) {
+      updateStatusMutation.mutate({
+        computerId: pendingStatusUpdate.computerId,
+        statusId: pendingStatusUpdate.newStatusId,
+      });
+    }
+  };
+
   const updateComputerStatus = async (id: number, newStatus: string) => {
     setShowNotification(true);
     // TODO: Implementar llamada a la API para actualizar el estado
@@ -125,18 +190,7 @@ export default function ComputerTable() {
         ? "desc"
         : "asc";
     setCurrentSort({ column: field, direction: newDirection });
-
-    // TODO: Implementar sorting con react-query si es necesario
-    // const sortedComputers = [...computers].sort((a, b) => {
-    //   const valueA = (a[field as keyof typeof a] || "").toString().trim();
-    //   const valueB = (b[field as keyof typeof b] || "").toString().trim();
-
-    //   if (valueA < valueB) return newDirection === "asc" ? -1 : 1;
-    //   if (valueA > valueB) return newDirection === "asc" ? 1 : -1;
-    //   return 0;
-    // });
-
-    // setComputers(sortedComputers);
+  
   };
 
   const renderSortIcon = (field: string) => {
@@ -317,7 +371,6 @@ export default function ComputerTable() {
         </div>
       </div>
 
-      {showNotification && <Notification message="Equipo actualizado" />}
 
       <Table>
         <TableHeader>
@@ -343,8 +396,9 @@ export default function ComputerTable() {
               computer={computer}
               expanded={expanded === computer.id}
               onToggle={() => toggleExpansion(computer.id)}
-              onUpdateStatus={updateComputerStatus}
+              onUpdateStatus={handleStatusChange}
               getStatusColor={getStatusColor}
+              equipmentStatuses={catalogsData?.computer_statuses || []}
             />
           ))}
         </TableBody>
@@ -398,6 +452,47 @@ export default function ComputerTable() {
       </div>
         </>
       )}
+
+      {/* Dialog de confirmación para cambio de estado */}
+      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar cambio de estado</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas cambiar el estado de este equipo?
+            </DialogDescription>
+          </DialogHeader>
+
+          {pendingStatusUpdate && (
+            <div className="py-4">
+              <p className="text-sm text-gray-600">
+                <strong>Nuevo estado:</strong> {pendingStatusUpdate.newStatusName}
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsStatusDialogOpen(false);
+                setPendingStatusUpdate(null);
+              }}
+              disabled={updateStatusMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmStatusUpdate}
+              disabled={updateStatusMutation.isPending}
+            >
+              {updateStatusMutation.isPending
+                ? "Actualizando..."
+                : "Confirmar cambio"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

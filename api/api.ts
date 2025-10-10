@@ -111,6 +111,13 @@ export const fetchAllEquipment = async () => {
   return response.data;
 }
 
+export const fetchComputerById = async (id: number) => {
+  const response = await axios.get(`${API_BASE_URL}/computer-equipment/${id}`, {
+    withCredentials: true,
+  });
+  return response.data;
+}
+
 export const updateEquipmentData = async (id: number, data: Partial<ComputerEquipmentResponse>) => {
   const response = await axios.put(`${API_BASE_URL}/computer-equipment/update/${id}`, data, {
     withCredentials: true,

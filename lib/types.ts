@@ -101,7 +101,9 @@ export type UserData = {
   role: string;
   identity_card: number;
   department_id: number;
-  status: boolean;}
+  status: boolean;
+  computer_equipment_id?: number ;
+}
   
 
   
@@ -296,6 +298,7 @@ export interface ComputerEquipmentAdapted {
   brand: string;
   location: string;
   status: string;
+  status_id: number;
   asset_number: string;
   assigned_to: string;
   requests: number[]
