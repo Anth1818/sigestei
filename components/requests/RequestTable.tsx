@@ -23,8 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ExpandableRequestRow } from "./ExpandableRequestRow";
-import { DateRangePicker } from "./DateRangePicker";
+import { RequestFilters } from "./RequestFilters";
 import { fetchRequests } from "@/api/api";
 import { useRequestFilters } from "@/hooks/useRequestFilters";
 import { usePagination } from "@/hooks/usePagination";
@@ -32,10 +40,9 @@ import { useRequestActions } from "@/hooks/useRequestActions";
 import { useRequestSorting } from "@/hooks/useRequestSorting";
 import { adaptRequestData, getPriorityColor, getStatusColor } from "@/lib/requestUtils";
 import { RequestResponse } from "@/lib/types";
-import {useUserStore} from "@/hooks/useUserStore";
+import { useUserStore } from "@/hooks/useUserStore";
 
 export default function RequestTable() {
-
   const user = useUserStore((state) => state.user);
   // React Query para obtener las requests
   const { data: requestsData, isLoading, error } = useQuery({
@@ -105,124 +112,29 @@ export default function RequestTable() {
         </div>
       )}
 
-      {/* Main content - only show when not loading and no error */}
+      {/*Contenido principal - mostrar solo cuando no este cargando o no haya error */}
       {!isLoading && !error && (
         <>
           {/* Filtros */}
-          <div className="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
-            <div>
-              <label htmlFor="search-id" className="text-sm font-medium block mb-1">
-                Buscar por ID:
-              </label>
-              <input
-                id="search-id"
-                type="text"
-                value={filters.searchId}
-                onChange={(e) => {
-                  filters.setSearchId(e.target.value);
-                  pagination.setCurrentPage(1);
-                }}
-                className="border rounded px-2 py-1 text-sm w-full"
-                placeholder="ID de solicitud"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium block mb-1">Estado:</label>
-              <Select value={filters.statusFilter} onValueChange={(value) => {
-                filters.setStatusFilter(value);
-                pagination.setCurrentPage(1);
-              }}>
-                <SelectTrigger className="h-8 w-full">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueStatuses.map((status) => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium block mb-1">Prioridad:</label>
-              <Select value={filters.priorityFilter} onValueChange={(value) => {
-                filters.setPriorityFilter(value);
-                pagination.setCurrentPage(1);
-              }}>
-                <SelectTrigger className="h-8 w-full">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniquePriorities.map((priority) => (
-                    <SelectItem key={priority} value={priority}>{priority}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium block mb-1">Tipo:</label>
-              <Select value={filters.typeFilter} onValueChange={(value) => {
-                filters.setTypeFilter(value);
-                pagination.setCurrentPage(1);
-              }}>
-                <SelectTrigger className="h-8 w-full">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium block mb-1">Filtrar fechas por:</label>
-              <div className="flex gap-4 items-center h-8">
-                <label className="flex items-center gap-2 cursor-pointer text-sm">
-                  <input
-                    type="radio"
-                    name="dateFilterType"
-                    value="creation"
-                    checked={filters.dateFilterType === "creation"}
-                    onChange={() => filters.setDateFilterType("creation")}
-                    className="cursor-pointer"
-                  />
-                  Creación
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer text-sm">
-                  <input
-                    type="radio"
-                    name="dateFilterType"
-                    value="resolution"
-                    checked={filters.dateFilterType === "resolution"}
-                    onChange={() => filters.setDateFilterType("resolution")}
-                    className="cursor-pointer"
-                  />
-                  Resolución
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium block mb-1">Rango de Fechas:</label>
-              <DateRangePicker 
-                dateRange={filters.dateRange} 
-                setDateRange={filters.setDateRange} 
-              />
-            </div>
-
-            <div className="flex items-end">
-              <Button variant="outline" onClick={() => {
-                filters.clearFilters();
-                pagination.setCurrentPage(1);
-              }} className="h-8">
-                Limpiar filtros
-              </Button>
-            </div>
-          </div>
+          <RequestFilters
+            searchId={filters.searchId}
+            setSearchId={filters.setSearchId}
+            statusFilter={filters.statusFilter}
+            setStatusFilter={filters.setStatusFilter}
+            priorityFilter={filters.priorityFilter}
+            setPriorityFilter={filters.setPriorityFilter}
+            typeFilter={filters.typeFilter}
+            setTypeFilter={filters.setTypeFilter}
+            dateFilterType={filters.dateFilterType}
+            setDateFilterType={filters.setDateFilterType}
+            dateRange={filters.dateRange}
+            setDateRange={filters.setDateRange}
+            clearFilters={filters.clearFilters}
+            uniqueStatuses={uniqueStatuses}
+            uniquePriorities={uniquePriorities}
+            uniqueTypes={uniqueTypes}
+            onPageReset={() => pagination.setCurrentPage(1)}
+          />
                    
           <Table>
             <TableHeader>
@@ -248,8 +160,8 @@ export default function RequestTable() {
                   request={adaptRequestData(request)}
                   expanded={actions.expanded === request.id}
                   onToggle={() => actions.toggleExpansion(request.id)}
-                  onUpdateStatus={actions.updateRequestStatus}
-                  onUpdatePriority={actions.updateRequestPriority}
+                  onUpdateStatus={actions.handleStatusChange}
+                  onUpdatePriority={actions.handlePriorityChange}
                   getPriorityColor={getPriorityColor}
                   getStatusColor={getStatusColor}
                   itemsToSelectStatuses={uniqueStatuses}
@@ -305,6 +217,91 @@ export default function RequestTable() {
           </div>
         </>
       )}
+
+      {/* Dialog de confirmación para cambio de estado */}
+      <Dialog open={actions.isStatusDialogOpen} onOpenChange={actions.cancelStatusUpdate}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar cambio de estado</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas cambiar el estado de esta solicitud?
+            </DialogDescription>
+          </DialogHeader>
+
+          {actions.pendingStatusUpdate && (
+            <div className="py-4">
+              <p className="text-sm text-gray-600">
+                <strong>Nuevo estado:</strong> {actions.pendingStatusUpdate.newStatus}
+              </p>
+              {(actions.pendingStatusUpdate.newStatus === "Completada" ||
+                actions.pendingStatusUpdate.newStatus === "Cancelada") && (
+                <p className="text-sm text-gray-600 mt-2">
+                  Se registrará automáticamente la fecha de resolución.
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={actions.cancelStatusUpdate}
+              disabled={actions.updateStatusMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={actions.confirmStatusUpdate}
+              disabled={actions.updateStatusMutation.isPending}
+            >
+              {actions.updateStatusMutation.isPending
+                ? "Actualizando..."
+                : "Confirmar cambio"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmación para cambio de prioridad */}
+      <Dialog open={actions.isPriorityDialogOpen} onOpenChange={actions.cancelPriorityUpdate}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar cambio de prioridad</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas cambiar la prioridad de esta solicitud?
+            </DialogDescription>
+          </DialogHeader>
+
+          {actions.pendingPriorityUpdate && (
+            <div className="py-4">
+              <p className="text-sm text-gray-600">
+                <strong>Nueva prioridad:</strong>{" "}
+                <span className={getPriorityColor(actions.pendingPriorityUpdate.newPriority)}>
+                  {actions.pendingPriorityUpdate.newPriority}
+                </span>
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={actions.cancelPriorityUpdate}
+              disabled={actions.updatePriorityMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={actions.confirmPriorityUpdate}
+              disabled={actions.updatePriorityMutation.isPending}
+            >
+              {actions.updatePriorityMutation.isPending
+                ? "Actualizando..."
+                : "Confirmar cambio"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

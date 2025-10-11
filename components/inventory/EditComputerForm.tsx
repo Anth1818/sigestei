@@ -7,7 +7,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateEquipmentData } from "@/api/api";
@@ -43,14 +49,18 @@ interface EditComputerFormProps {
   catalogsData: any;
 }
 
-export const EditComputerForm = ({ computerId, computerData, catalogsData }: EditComputerFormProps) => {
+export const EditComputerForm = ({
+  computerId,
+  computerData,
+  catalogsData,
+}: EditComputerFormProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
   // Calcular defaultValues directamente desde computerData (que ya viene cargado del padre)
   const defaultValues = useMemo(() => {
     const equipment = computerData;
-    
+
     return {
       serial_number: equipment?.serial_number || "",
       model: equipment?.model || "",
@@ -73,7 +83,7 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
   const {
     control,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<ComputerFormData>({
     resolver: zodResolver(computerSchema),
     defaultValues,
@@ -105,8 +115,8 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
       }),
     onSuccess: () => {
       toast.success("Equipo actualizado correctamente");
-      queryClient.invalidateQueries({ queryKey: ['equipment'] });
-      queryClient.invalidateQueries({ queryKey: ['computer', computerId] });
+      queryClient.invalidateQueries({ queryKey: ["equipment"] });
+      queryClient.invalidateQueries({ queryKey: ["computer", computerId] });
     },
     onError: (error: any) => {
       toast.error(
@@ -134,21 +144,27 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
         </CardHeader>
         <Separator />
         <CardContent>
-          <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form
+            className="flex flex-col gap-5"
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+          >
             {/* Información General del Equipo */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">Información General</h3>
+              <h3 className="text-lg font-semibold mb-3">
+                Información General
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="type_id" className="pb-2">
-                    Tipo de equipo: <span className="font-bold text-primary">{computerData?.equipment_types.name || 'Cargando...'}</span>
+                    Tipo de equipo
                   </Label>
                   <Controller
                     name="type_id"
                     control={control}
                     render={({ field }) => (
-                      <Select 
-                        value={field.value || undefined} 
+                      <Select
+                        value={field.value || undefined}
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
@@ -156,28 +172,37 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                           <SelectValue placeholder="Seleccione tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                          {equipmentTypes.map((type: {id:number, name:string}) => (
-                            <SelectItem key={type.id} value={type.id.toString()}>
-                              {type.name}
-                            </SelectItem>
-                          ))}
+                          {equipmentTypes.map(
+                            (type: { id: number; name: string }) => (
+                              <SelectItem
+                                key={type.id}
+                                value={type.id.toString()}
+                              >
+                                {type.name}
+                              </SelectItem>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                     )}
                   />
-                  {errors.type_id && <span className="text-red-500 text-xs">{errors.type_id.message}</span>}
+                  {errors.type_id && (
+                    <span className="text-red-500 text-xs">
+                      {errors.type_id.message}
+                    </span>
+                  )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="brand_id" className="pb-2">
-                    Marca: <span className="font-bold text-primary">{computerData?.equipment_brands.name || 'Cargando...'}</span>
+                    Marca
                   </Label>
                   <Controller
                     name="brand_id"
                     control={control}
                     render={({ field }) => (
-                      <Select 
-                        value={field.value || undefined} 
+                      <Select
+                        value={field.value || undefined}
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
@@ -186,7 +211,10 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                         </SelectTrigger>
                         <SelectContent>
                           {equipmentBrands.map((brand: any) => (
-                            <SelectItem key={brand.id} value={brand.id.toString()}>
+                            <SelectItem
+                              key={brand.id}
+                              value={brand.id.toString()}
+                            >
                               {brand.name}
                             </SelectItem>
                           ))}
@@ -194,11 +222,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       </Select>
                     )}
                   />
-                  {errors.brand_id && <span className="text-red-500 text-xs">{errors.brand_id.message}</span>}
+                  {errors.brand_id && (
+                    <span className="text-red-500 text-xs">
+                      {errors.brand_id.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="model" className="pb-2">Modelo</Label>
+                  <Label htmlFor="model" className="pb-2">
+                    Modelo
+                  </Label>
                   <Controller
                     name="model"
                     control={control}
@@ -211,11 +245,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.model && <span className="text-red-500 text-xs">{errors.model.message}</span>}
+                  {errors.model && (
+                    <span className="text-red-500 text-xs">
+                      {errors.model.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="serial_number" className="pb-2">Número de Serie</Label>
+                  <Label htmlFor="serial_number" className="pb-2">
+                    Número de Serie
+                  </Label>
                   <Controller
                     name="serial_number"
                     control={control}
@@ -228,11 +268,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.serial_number && <span className="text-red-500 text-xs">{errors.serial_number.message}</span>}
+                  {errors.serial_number && (
+                    <span className="text-red-500 text-xs">
+                      {errors.serial_number.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="asset_number" className="pb-2">Número de Bien</Label>
+                  <Label htmlFor="asset_number" className="pb-2">
+                    Número de Bien
+                  </Label>
                   <Controller
                     name="asset_number"
                     control={control}
@@ -245,19 +291,23 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.asset_number && <span className="text-red-500 text-xs">{errors.asset_number.message}</span>}
+                  {errors.asset_number && (
+                    <span className="text-red-500 text-xs">
+                      {errors.asset_number.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="location" className="pb-2">
-                    Ubicación: <span className="font-bold text-primary">{computerData?.location || 'Cargando...'}</span>
+                    Ubicación
                   </Label>
                   <Controller
                     name="location"
                     control={control}
                     render={({ field }) => (
-                      <Select 
-                        value={field.value || undefined} 
+                      <Select
+                        value={field.value || undefined}
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
@@ -265,28 +315,37 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                           <SelectValue placeholder="Seleccione la ubicación" />
                         </SelectTrigger>
                         <SelectContent>
-                          {departments.map((department: {id:number, name:string}) => (
-                            <SelectItem key={department.id} value={department.name}>
-                              {department.name}
-                            </SelectItem>
-                          ))}
+                          {departments.map(
+                            (department: { id: number; name: string }) => (
+                              <SelectItem
+                                key={department.id}
+                                value={department.name}
+                              >
+                                {department.name}
+                              </SelectItem>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                     )}
                   />
-                  {errors.location && <span className="text-red-500 text-xs">{errors.location.message}</span>}
+                  {errors.location && (
+                    <span className="text-red-500 text-xs">
+                      {errors.location.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="status_id" className="pb-2">
-                    Estado: <span className="font-bold text-primary">{computerData?.equipment_statuses.name || 'Cargando...'}</span>
+                    Estado
                   </Label>
                   <Controller
                     name="status_id"
                     control={control}
                     render={({ field }) => (
-                      <Select 
-                        value={field.value || undefined} 
+                      <Select
+                        value={field.value || undefined}
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
@@ -295,7 +354,10 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                         </SelectTrigger>
                         <SelectContent>
                           {equipmentStatuses.map((status: any) => (
-                            <SelectItem key={status.id} value={status.id.toString()}>
+                            <SelectItem
+                              key={status.id}
+                              value={status.id.toString()}
+                            >
                               {status.name}
                             </SelectItem>
                           ))}
@@ -303,7 +365,11 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       </Select>
                     )}
                   />
-                  {errors.status_id && <span className="text-red-500 text-xs">{errors.status_id.message}</span>}
+                  {errors.status_id && (
+                    <span className="text-red-500 text-xs">
+                      {errors.status_id.message}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -312,10 +378,14 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
 
             {/* Especificaciones de Hardware */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">Especificaciones de Hardware</h3>
+              <h3 className="text-lg font-semibold mb-3">
+                Especificaciones de Hardware
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="cpu" className="pb-2">Procesador (CPU)</Label>
+                  <Label htmlFor="cpu" className="pb-2">
+                    Procesador (CPU)
+                  </Label>
                   <Controller
                     name="cpu"
                     control={control}
@@ -328,11 +398,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.cpu && <span className="text-red-500 text-xs">{errors.cpu.message}</span>}
+                  {errors.cpu && (
+                    <span className="text-red-500 text-xs">
+                      {errors.cpu.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="ram" className="pb-2">Memoria RAM</Label>
+                  <Label htmlFor="ram" className="pb-2">
+                    Memoria RAM
+                  </Label>
                   <Controller
                     name="ram"
                     control={control}
@@ -345,11 +421,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.ram && <span className="text-red-500 text-xs">{errors.ram.message}</span>}
+                  {errors.ram && (
+                    <span className="text-red-500 text-xs">
+                      {errors.ram.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="storage" className="pb-2">Almacenamiento</Label>
+                  <Label htmlFor="storage" className="pb-2">
+                    Almacenamiento
+                  </Label>
                   <Controller
                     name="storage"
                     control={control}
@@ -362,11 +444,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.storage && <span className="text-red-500 text-xs">{errors.storage.message}</span>}
+                  {errors.storage && (
+                    <span className="text-red-500 text-xs">
+                      {errors.storage.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="gpu" className="pb-2">Tarjeta Gráfica (GPU)</Label>
+                  <Label htmlFor="gpu" className="pb-2">
+                    Tarjeta Gráfica (GPU)
+                  </Label>
                   <Controller
                     name="gpu"
                     control={control}
@@ -379,11 +467,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.gpu && <span className="text-red-500 text-xs">{errors.gpu.message}</span>}
+                  {errors.gpu && (
+                    <span className="text-red-500 text-xs">
+                      {errors.gpu.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="network" className="pb-2">Red</Label>
+                  <Label htmlFor="network" className="pb-2">
+                    Red
+                  </Label>
                   <Controller
                     name="network"
                     control={control}
@@ -396,7 +490,11 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.network && <span className="text-red-500 text-xs">{errors.network.message}</span>}
+                  {errors.network && (
+                    <span className="text-red-500 text-xs">
+                      {errors.network.message}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -408,7 +506,9 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
               <h3 className="text-lg font-semibold mb-3">Software Instalado</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="os" className="pb-2">Sistema Operativo</Label>
+                  <Label htmlFor="os" className="pb-2">
+                    Sistema Operativo
+                  </Label>
                   <Controller
                     name="os"
                     control={control}
@@ -421,11 +521,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.os && <span className="text-red-500 text-xs">{errors.os.message}</span>}
+                  {errors.os && (
+                    <span className="text-red-500 text-xs">
+                      {errors.os.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="office" className="pb-2">Suite de Oficina</Label>
+                  <Label htmlFor="office" className="pb-2">
+                    Suite de Oficina
+                  </Label>
                   <Controller
                     name="office"
                     control={control}
@@ -438,11 +544,17 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.office && <span className="text-red-500 text-xs">{errors.office.message}</span>}
+                  {errors.office && (
+                    <span className="text-red-500 text-xs">
+                      {errors.office.message}
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="antivirus" className="pb-2">Antivirus</Label>
+                  <Label htmlFor="antivirus" className="pb-2">
+                    Antivirus
+                  </Label>
                   <Controller
                     name="antivirus"
                     control={control}
@@ -455,7 +567,11 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
                       />
                     )}
                   />
-                  {errors.antivirus && <span className="text-red-500 text-xs">{errors.antivirus.message}</span>}
+                  {errors.antivirus && (
+                    <span className="text-red-500 text-xs">
+                      {errors.antivirus.message}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -467,15 +583,12 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/viewInventory')}
+                onClick={() => router.push("/viewInventory")}
                 disabled={updateMutation.isPending}
               >
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
-                disabled={updateMutation.isPending}
-              >
+              <Button type="submit" disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? "Guardando..." : "Guardar Cambios"}
               </Button>
             </div>
@@ -485,4 +598,3 @@ export const EditComputerForm = ({ computerId, computerData, catalogsData }: Edi
     </div>
   );
 };
-

@@ -27,7 +27,7 @@ export const adaptRequestData = (apiRequest: RequestResponse): Request => {
     comments_technician: apiRequest.comments_technician || "",
     status: getStatusName(apiRequest) as "Pendiente" | "En proceso" | "Completada" | "Cancelada",
     priority: getPriorityName(apiRequest) as "Alta" | "Media" | "Baja",
-    request_type: getTypeName(apiRequest) as "Mantenimiento" | "Instalación" | "Reparación" | "Actualización" | "Soporte",
+    request_type: getTypeName(apiRequest) ,
     description: apiRequest.description,
     assigned_to: apiRequest.users_requests_technician_idTousers?.full_name || "N/A",
     user: {

@@ -11,7 +11,7 @@ export type Request = {
   resolution_date?: string | Date | null;
   status: "Pendiente" | "En proceso" | "Completada" | "Cancelada";
   priority: "Alta" | "Media" | "Baja";
-  request_type?: "Mantenimiento" | "Instalación" | "Reparación" | "Actualización" | "Soporte";
+  request_type?: string;
   description: string;
   comments_technician?: string;
   assigned_to: string;
@@ -297,7 +297,7 @@ export interface ComputerEquipmentAdapted {
   model: string;
   brand: string;
   location: string;
-  status: string;
+  status: "Activo" | "En mantenimiento" | "Averiado" | "Inactivo";
   status_id: number;
   asset_number: string;
   assigned_to: string;

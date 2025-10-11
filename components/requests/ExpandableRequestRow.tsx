@@ -3,7 +3,7 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { Request} from "@/lib/types";
+import { Request } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -18,11 +18,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateRequest } from "@/api/api";
-import { toast } from "sonner";
 import ContentRequestRow from "./ContentRequestRow";
-import {useUserStore} from "@/hooks/useUserStore";
+import { useUserStore } from "@/hooks/useUserStore";
 
 interface ExpandableRequestRowProps {
   request: Request;
@@ -47,72 +44,14 @@ export function ExpandableRequestRow({
   getStatusColor,
   
 }: ExpandableRequestRowProps) {
-  const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  // Mutation para actualizar el estado
-const updateStatusMutation = useMutation({
-  mutationFn: ({ id, status }: { id: number; status: string }) => {
-    const statusId = getStatusId(status);
-    // Si el status es 3 (Completada) o 4 (Cancelada), agrega resolution_date
-    const needsResolutionDate = statusId === 3 || statusId === 4;
-    const updateData: { status_id: number; resolution_date?: string } = { status_id: statusId };
-    if (needsResolutionDate) {
-      updateData.resolution_date = new Date().toISOString();
-    }
-    return updateRequest(id, updateData);
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["requests"] });
-    toast.success("Estado actualizado correctamente");
-  },
-  onError: (error: any) => {
-    toast.error(error?.message || "Error al actualizar el estado");
-  },
-});
-
-  // Mutation para actualizar la prioridad 
-  const updatePriorityMutation = useMutation({
-    mutationFn: ({ id, priority }: { id: number; priority: string }) =>
-      updateRequest(id, { priority_id: getPriorityId(priority) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["requests"] });
-      toast.success("Prioridad actualizada correctamente");
-    },
-    onError: (error: any) => {
-      toast.error(error?.message || "Error al actualizar la prioridad");
-    },
-  });
-
-  // Funciones auxiliares para mapear nombres a IDs
-  const getStatusId = (statusName: string): number => {
-    const statusMap: Record<string, number> = {
-      "Pendiente": 1,
-      "En proceso": 2,
-      "Completada": 3,
-      "Cancelada": 4,
-      
-    };
-    return statusMap[statusName] || 1;
-  };
-
-  const getPriorityId = (priorityName: string): number => {
-    const priorityMap: Record<string, number> = {
-      "Alta": 1,
-      "Media": 2,
-      "Baja": 3,
-    };
-    return priorityMap[priorityName] || 2;
-  };
-
-  // Handlers que usan las mutations
+  // Handlers que llaman a los callbacks del padre (que abrirán los diálogos)
   const handleStatusChange = (newStatus: string) => {
-    updateStatusMutation.mutate({ id: request.id, status: newStatus });
     onUpdateStatus(request.id, newStatus);
   };
 
   const handlePriorityChange = (newPriority: string) => {
-    updatePriorityMutation.mutate({ id: request.id, priority: newPriority });
     onUpdatePriority(request.id, newPriority);
   };
 
@@ -166,7 +105,6 @@ const updateStatusMutation = useMutation({
                   <Select
                     value={request.status}
                     onValueChange={handleStatusChange}
-                    disabled={updateStatusMutation.isPending}
                   >
                     <SelectTrigger className="h-8 w-full mb-1">
                       <SelectValue />
@@ -192,7 +130,6 @@ const updateStatusMutation = useMutation({
                   <Select
                     value={request.priority}
                     onValueChange={handlePriorityChange}
-                    disabled={updatePriorityMutation.isPending}
                   >
                     <SelectTrigger className="h-8 w-full">
                       <SelectValue />

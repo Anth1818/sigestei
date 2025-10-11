@@ -43,7 +43,7 @@ export const adaptComputerData = (
     model: apiEquipment.model,
     brand: brand,
     location: apiEquipment.location,
-    status: getStatusName(apiEquipment),
+    status: getStatusName(apiEquipment) as "Activo" | "En mantenimiento" | "Averiado" | "Inactivo",
     status_id: apiEquipment.status_id,
     asset_number: apiEquipment.asset_number,
     assigned_to: getAssignedUserName(apiEquipment),
