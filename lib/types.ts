@@ -15,7 +15,7 @@ export type Request = {
   description: string;
   comments_technician?: string;
   assigned_to: string;
-  
+
   // Usuario que crea la solicitud (requestor)
   user: {
     full_name: string;
@@ -24,7 +24,7 @@ export type Request = {
     department: string;
     position: string;
   };
-  
+
   // Equipo principal de la solicitud
   computer_equipment: {
     asset_number: number | string;
@@ -32,7 +32,7 @@ export type Request = {
     serial_number: string;
     model: string;
   };
-  
+
   // Si es para tercero, datos del beneficiario final
   third_party?: {
     full_name: string;
@@ -40,7 +40,7 @@ export type Request = {
     identity_card: number;
     department: string;
     position: string;
-    
+
     // Equipo del beneficiario final (para historial de incidencias)
     computer_equipment: {
       id: number;
@@ -52,7 +52,7 @@ export type Request = {
     };
   };
 };
- 
+
 // Tipo para formulario de creación de solicitud
 export type CreateRequestPayload = {
   description: string;
@@ -60,7 +60,6 @@ export type CreateRequestPayload = {
   beneficiary_id?: number | null;
   computer_equipment_id: number;
   type_id: number;
-
 };
 
 // Tipo para historial de incidencias por equipo
@@ -102,21 +101,10 @@ export type UserData = {
   identity_card: number;
   department_id: number;
   status: boolean;
-  computer_equipment_id?: number ;
-}
-  
+  computer_equipment_id?: number;
+};
 
-  
-
-
-
-
-
-
-
-
-
-  // Types creados en base a los endpoints de la API
+// Types creados en base a los endpoints de la API
 
 export type CreateRequestInput = {
   description: string;
@@ -130,12 +118,11 @@ export type CreateRequestInput = {
   type_id: number;
   status_id: number;
   priority_id: number;
-}
-
+};
 
 export interface SelectUserStatusProps {
-    role: string;
-    onChange: (newStatus: string) => void;
+  role: string;
+  onChange: (newStatus: string) => void;
 }
 
 export interface SelectComputerByStatusProps {
@@ -143,6 +130,8 @@ export interface SelectComputerByStatusProps {
   onChange: (newStatus: string) => void;
 }
 
+
+// Tipo para los datos del dashboard
 export type DashboardData = {
   requestByStatusCurrentMonth: {
     pending?: number;
@@ -204,8 +193,6 @@ export type DashboardData = {
   };
 };
 
-
-
 export type User = {
   id: number;
   full_name: string;
@@ -217,9 +204,9 @@ export type User = {
   gender_id: number;
   department_id: number;
   created_at: string;
-  department: string
-  position: string
-  role: string
+  department: string;
+  position: string;
+  role: string;
   computer_equipment?: ComputerEquipment[];
 };
 
@@ -251,7 +238,6 @@ export type ComputerEquipment = {
   status_id: number;
 };
 
-
 export type RequestPriority = {
   id: number;
   name: string;
@@ -260,13 +246,15 @@ export type RequestPriority = {
 export type RequestStatus = {
   id: number;
   name: string;
-}
+};
 
 export type RequestType = {
   id: number;
   name: string;
 };
 
+
+// Tipo para la respuesta de la API de solicitudes
 export type RequestResponse = {
   id: number;
   description: string;
@@ -289,7 +277,7 @@ export type RequestResponse = {
   request_types: RequestType;
 };
 
-// Tipo para el formato que espera el componente
+// Tipo para el formato que espera el componente ExpandableComputerRow
 export interface ComputerEquipmentAdapted {
   id: number;
   name: string;
@@ -301,7 +289,7 @@ export interface ComputerEquipmentAdapted {
   status_id: number;
   asset_number: string;
   assigned_to: string;
-  requests: number[]
+  requests: number[];
   type: string;
   assigned_user_id: number;
   hardware_specs: {
@@ -318,7 +306,7 @@ export interface ComputerEquipmentAdapted {
   };
 }
 
-// Tipos para la respuesta de la API
+// Tipos para la respuesta de la API de equipos informáticos
 export interface ComputerEquipmentResponse {
   id: number;
   asset_number: string;
@@ -364,4 +352,84 @@ export interface ComputerEquipmentResponse {
     id: number;
     name: string;
   };
+}
+
+export interface CreateComputerEquipmentInput {
+  asset_number: string;
+  serial_number: string;
+  model?: string | null;
+  location?: string | null;
+  hardware_specs: {
+    cpu: string;
+    gpu: string;
+    ram: string;
+    network: string;
+    storage: string;
+  };
+  software_specs: {
+    os: string;
+    office: string;
+    antivirus: string;
+  };
+  assigned_user_id?: number | null;
+  type_id: number;
+  brand_id: number;
+  status_id: number;
+}
+
+
+
+//Catalogs types 
+
+export interface ComputerBrand {
+  id: number;
+  name: string;
+}
+
+export interface ComputerStatus {
+  id: number;
+  name: string;
+}
+
+export interface ComputerType {
+  id: number;
+  name: string;
+}
+
+export interface Role {
+  id: number;
+  name: string;
+}
+
+export interface Department {
+  id: number;
+  name: string;
+}
+
+export interface Position {
+  id: number;
+  name: string;
+  department_id: number;
+}
+
+export interface Gender {
+  id: number;
+  name: string;
+}
+
+export interface Technician {
+  id: number;
+  full_name: string;
+}
+
+export interface CatalogData {
+  request_types: RequestType[];
+  computer_brands: ComputerBrand[];
+  computer_statuses: ComputerStatus[];
+  computer_types: ComputerType[];
+  roles: Role[];
+  departments: Department[];
+  positions: Position[];
+  genders: Gender[];
+  technicians: Technician[];
 }

@@ -10,11 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createEquipment } from "@/api/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createEquipment, fetchCatalogs } from "@/api/api";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
-import { CatalogData, CreateComputerEquipmentInput, UserData } from "@/lib/types";
+import { useUserStore } from "@/hooks/useUserStore";
+import { CreateComputerEquipmentInput } from "@/lib/types";
 
 const computerSchema = z.object({
   serial_number: z.string().min(5, "El número de serie es requerido"),
@@ -39,24 +41,25 @@ const computerSchema = z.object({
 
 type ComputerFormData = z.infer<typeof computerSchema>;
 
-interface AddComputerFormProps {
-  catalogsData: CatalogData;
-  currentUser: UserData | null;
- 
-}
-
-export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormProps) => {
+export const AddComputerForm = () => {
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const { user } = useUserStore();
 
   // Estados para DepartmentUserSelector
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
 
+  // Obtener catálogos
+  const { data: catalogsData, isLoading: catalogsLoading } = useQuery({
+    queryKey: ["catalogs"],
+    queryFn: fetchCatalogs,
+  });
+
   const {
     control,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors }
   } = useForm<ComputerFormData>({
     resolver: zodResolver(computerSchema),
@@ -85,11 +88,11 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
     mutationFn: (data: CreateComputerEquipmentInput) => createEquipment(data),
     onSuccess: () => {
       toast.success("Equipo informático registrado exitosamente");
-      queryClient.invalidateQueries({ queryKey: ["computers"] });
+      queryClient.invalidateQueries({ queryKey: ["equipment"] });
       reset();
       setSelectedDepartmentId("");
       setSelectedUserId("");
-     
+      router.push("/viewInventory");
     },
     onError: (error: any) => {
       toast.error(
@@ -126,7 +129,7 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
     createMutation.mutate(equipmentData);
   };
 
-  // Extraer catálogos (ahora recibidos como props)
+  // Extraer catálogos
   const equipmentBrands = catalogsData?.computer_brands || [];
   const equipmentTypes = catalogsData?.computer_types || [];
   const equipmentStatuses = catalogsData?.computer_statuses || [];
@@ -146,80 +149,40 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
               <h3 className="text-lg font-semibold mb-3">Información General</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="type_id" className="pb-2">Tipo de equipo</Label>
+                  <Label htmlFor="type" className="pb-2">Tipo de equipo</Label>
                   <Controller
-                    name="type_id"
+                    name="type"
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="type_id" className="w-full">
+                        <SelectTrigger id="type" className="w-full">
                           <SelectValue placeholder="Seleccione tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                          {equipmentTypes.length === 0 ? (
-                            <SelectItem value="not-found" disabled>
-                              No hay tipos disponibles
-                            </SelectItem>
-                          ) : (
-                            equipmentTypes.map((type: any) => (
-                              <SelectItem key={type.id} value={type.id.toString()}>
-                                {type.name}
-                              </SelectItem>
-                            ))
-                          )}
+                          <SelectItem value="PC">PC</SelectItem>
+                          <SelectItem value="Laptop">Laptop</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
                   />
-                  {errors.type_id && <span className="text-red-500 text-xs">{errors.type_id.message}</span>}
+                  {errors.type && <span className="text-red-500 text-xs">{errors.type.message}</span>}
                 </div>
-
                 <div>
-                  <Label htmlFor="brand_id" className="pb-2">Marca</Label>
+                  <Label htmlFor="name" className="pb-2">Nombre del Equipo</Label>
                   <Controller
-                    name="brand_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="brand_id" className="w-full">
-                          <SelectValue placeholder="Seleccione marca" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {equipmentBrands.length === 0 ? (
-                            <SelectItem value="not-found" disabled>
-                              No hay marcas disponibles
-                            </SelectItem>
-                          ) : (
-                            equipmentBrands.map((brand: any) => (
-                              <SelectItem key={brand.id} value={brand.id.toString()}>
-                                {brand.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.brand_id && <span className="text-red-500 text-xs">{errors.brand_id.message}</span>}
-                </div>
-
-                <div>
-                  <Label htmlFor="model" className="pb-2">Modelo</Label>
-                  <Controller
-                    name="model"
+                    name="name"
                     control={control}
                     render={({ field }) => (
                       <Input
                         {...field}
-                        id="model"
-                        placeholder="Ej: OptiPlex 7090"
+                        id="name"
+                        placeholder="Ej: Dell OptiPlex 7090"
                         required
                       />
                     )}
                   />
-                  {errors.model && <span className="text-red-500 text-xs">{errors.model.message}</span>}
+                  {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
                 </div>
-
                 <div>
                   <Label htmlFor="serial_number" className="pb-2">Número de Serie</Label>
                   <Controller
@@ -236,7 +199,83 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
                   />
                   {errors.serial_number && <span className="text-red-500 text-xs">{errors.serial_number.message}</span>}
                 </div>
-
+                <div>
+                  <Label htmlFor="model" className="pb-2">Modelo</Label>
+                  <Controller
+                    name="model"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        id="model"
+                        placeholder="Ej: OptiPlex 7090"
+                        required
+                      />
+                    )}
+                  />
+                  {errors.model && <span className="text-red-500 text-xs">{errors.model.message}</span>}
+                </div>
+                <div>
+                  <Label htmlFor="brand" className="pb-2">Marca</Label>
+                  <Controller
+                    name="brand"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="brand" className="w-full">
+                          <SelectValue placeholder="Seleccione marca" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Dell">Dell</SelectItem>
+                          <SelectItem value="HP">HP</SelectItem>
+                          <SelectItem value="Lenovo">Lenovo</SelectItem>
+                          <SelectItem value="Acer">Acer</SelectItem>
+                          <SelectItem value="ASUS">ASUS</SelectItem>
+                          <SelectItem value="MSI">MSI</SelectItem>
+                          <SelectItem value="Apple">Apple</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.brand && <span className="text-red-500 text-xs">{errors.brand.message}</span>}
+                </div>
+                <div>
+                  <Label htmlFor="location" className="pb-2">Ubicación</Label>
+                  <Controller
+                    name="location"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        id="location"
+                        placeholder="Ej: Oficina 101 - IT"
+                        required
+                      />
+                    )}
+                  />
+                  {errors.location && <span className="text-red-500 text-xs">{errors.location.message}</span>}
+                </div>
+                <div>
+                  <Label htmlFor="status" className="pb-2">Estado</Label>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="status" className="w-full">
+                          <SelectValue placeholder="Seleccione estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Activo">Activo</SelectItem>
+                          <SelectItem value="En mantenimiento">En mantenimiento</SelectItem>
+                          <SelectItem value="En reparación">En reparación</SelectItem>
+                          <SelectItem value="Inactivo">Inactivo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.status && <span className="text-red-500 text-xs">{errors.status.message}</span>}
+                </div>
                 <div>
                   <Label htmlFor="asset_number" className="pb-2">Número de Bien</Label>
                   <Controller
@@ -246,107 +285,30 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
                       <Input
                         {...field}
                         id="asset_number"
-                        placeholder="Ej: ASSET-001"
+                        placeholder="Ej: 123456"
                         required
                       />
                     )}
                   />
                   {errors.asset_number && <span className="text-red-500 text-xs">{errors.asset_number.message}</span>}
                 </div>
-
                 <div>
-                  <Label htmlFor="location" className="pb-2">Ubicación</Label>
+                  <Label htmlFor="assigned_to" className="pb-2">Asignado a</Label>
                   <Controller
-                    name="location"
+                    name="assigned_to"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="location" className="w-full">
-                          <SelectValue placeholder="Seleccione ubicación" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {departments.length === 0 ? (
-                            <SelectItem value="not-found" disabled>
-                              No hay departamentos disponibles
-                            </SelectItem>
-                          ) : (
-                            departments.map((dept: any) => (
-                              <SelectItem key={dept.id} value={dept.name}>
-                                {dept.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        {...field}
+                        id="assigned_to"
+                        placeholder="Ej: John Doe"
+                        required
+                      />
                     )}
                   />
-                  {errors.location && <span className="text-red-500 text-xs">{errors.location.message}</span>}
-                </div>
-
-                <div>
-                  <Label htmlFor="status_id" className="pb-2">Estado</Label>
-                  <Controller
-                    name="status_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="status_id" className="w-full">
-                          <SelectValue placeholder="Seleccione estado" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {equipmentStatuses.length === 0 ? (
-                            <SelectItem value="not-found" disabled>
-                              No hay estados disponibles
-                            </SelectItem>
-                          ) : (
-                            equipmentStatuses.map((status: any) => (
-                              <SelectItem key={status.id} value={status.id.toString()}>
-                                {status.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.status_id && <span className="text-red-500 text-xs">{errors.status_id.message}</span>}
+                  {errors.assigned_to && <span className="text-red-500 text-xs">{errors.assigned_to.message}</span>}
                 </div>
               </div>
-            </div>
-
-            <Separator />
-
-            {/* Selector de Departamento y Usuario */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Asignación de Equipo</h3>
-              <DepartmentUserSelector
-                currentUserId={currentUser?.id}
-                currentUserRoleId={currentUser?.role_id}
-                currentUserDepartmentId={currentUser?.department_id}
-                selectedDepartmentId={selectedDepartmentId}
-                selectedUserId={selectedUserId}
-                onDepartmentChange={setSelectedDepartmentId}
-                onUserChange={(userId) => {
-                  setSelectedUserId(userId);
-                  setValue("assigned_user_id", userId);
-                }}
-                departmentLabel="Departamento del usuario"
-                userLabel="Usuario asignado"
-                departmentPlaceholder="Seleccione un departamento"
-                userPlaceholder="Seleccione un usuario"
-                userError={errors.assigned_user_id?.message}
-              />
-              <Controller
-                name="assigned_user_id"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    type="hidden"
-                    {...field}
-                    value={selectedUserId}
-                  />
-                )}
-              />
             </div>
 
             <Separator />
@@ -522,9 +484,9 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
             type="submit"
             onClick={handleSubmit(onSubmit)}
             className="w-full md:w-auto"
-            disabled={createMutation.isPending}
+            disabled={isSubmitting}
           >
-            {createMutation.isPending ? "Registrando..." : "Registrar Equipo"}
+            {isSubmitting ? "Registrando..." : "Registrar Equipo"}
           </Button>
         </CardFooter>
       </Card>

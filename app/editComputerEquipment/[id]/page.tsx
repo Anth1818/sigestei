@@ -4,7 +4,7 @@ import LayoutSideBar from "@/layouts/LayoutSideBar";
 import { EditComputerForm } from "@/components/inventory/EditComputerForm";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { fetchComputerById, fetchCatalogs } from "@/api/api";
+import { fetchEquipmentById, fetchCatalogs } from "@/api/api";
 import { ButtonNavigate } from "@/components/shared/ButtonToNavigate";
 import { ArrowBigLeft } from "lucide-react";
 
@@ -15,7 +15,7 @@ export default function EditComputerEquipmentPage() {
   // Obtener datos del equipo
   const { data: computerData, isLoading: isLoadingComputer } = useQuery({
     queryKey: ["computer", parseInt(computerId)],
-    queryFn: () => fetchComputerById(parseInt(computerId)),
+    queryFn: () => fetchEquipmentById(parseInt(computerId)),
   });
 
   // Obtener catálogos
