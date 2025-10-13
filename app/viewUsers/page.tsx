@@ -5,7 +5,7 @@ import {Plus} from "lucide-react"
 
 export default function UserPage () {
     return <LayoutSideBar>
-        <p>User page</p>
+        <h2 className="text-lg">Tabla de usuarios</h2>
         <ButtonNavigate icon={<Plus /> } url="addUser" className="md: w-fit" >
             Añadir usuario
         </ButtonNavigate>

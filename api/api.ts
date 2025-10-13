@@ -131,3 +131,15 @@ export const updateEquipmentData = async (id: number, data: Partial<ComputerEqui
   });
   return response.data;
 }
+
+
+// USERS
+
+export const fetchAllUsers = async () => {
+  const response = await axios.get(`${API_BASE_URL}/users`, {
+    withCredentials: true,
+  });
+  return response.data;
+}
+
+

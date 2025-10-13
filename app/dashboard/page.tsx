@@ -31,7 +31,7 @@ export default function DashboardPage() {
   return (
     <LayoutSideBar>
       <main>
-        <p className="p-4">Dashboard administrativo</p>
+        <h2 className="pb-4 text-lg">Dashboard administrativo</h2>
         <div className="flex flex-1 flex-col pb-4">
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <CardDashboard

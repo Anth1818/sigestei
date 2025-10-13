@@ -1,5 +1,5 @@
 export type SortColumnUser = {
-  columna: keyof User | "nombreCompleto";
+  columna: keyof UserData | "full_name";
   direccion: "asc" | "desc";
 } | null;
 
@@ -94,14 +94,21 @@ export type SortColumnRequest = {
 export type UserData = {
   id: number;
   full_name: string;
-  email: string;
-  role_id: number;
-  user: string;
-  role: string;
   identity_card: number;
+  email: string;
+  is_active: boolean;
+  role_id: number;
+  position_id: number;
   department_id: number;
-  status: boolean;
-  computer_equipment_id?: number;
+  gender_id: number;
+  created_at: string;
+  last_login: string | null;
+  last_login_backup: string | null;
+  department_name: string;
+  role_name: string;
+  gender_name: string;
+  position_name: string;
+  computer_equipment_asset_number?: string;
 };
 
 // Types creados en base a los endpoints de la API
