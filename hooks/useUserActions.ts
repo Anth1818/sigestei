@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-// TODO: Importar la función de API cuando esté disponible
-// import { updateUserStatus } from "@/api/api";
+import { toggleActiveUser } from "@/api/api";
 
 export function useUserActions() {
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -22,16 +20,8 @@ export function useUserActions() {
 
   // Mutation para actualizar el estado del usuario
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ userId, isActive }: { userId: number; isActive: boolean }) => {
-      // TODO: Implementar cuando el endpoint esté disponible
-      // return updateUserStatus(userId, { is_active: isActive });
-      
-      // Simulación temporal
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({ success: true });
-        }, 500);
-      });
+    mutationFn: async ({ identityCard }: { identityCard: number }) => {
+      return toggleActiveUser(identityCard);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -47,10 +37,10 @@ export function useUserActions() {
     },
   });
 
-  const handleStatusChange = (userId: number, currentStatus: boolean) => {
+  const handleStatusChange = (identityCard: number) => {
     setPendingStatusUpdate({
-      userId,
-      newStatus: !currentStatus,
+      userId: identityCard,
+      newStatus: true, // El backend hace toggle, no necesitamos saber el estado actual
     });
     setIsStatusDialogOpen(true);
   };
@@ -58,8 +48,7 @@ export function useUserActions() {
   const confirmStatusUpdate = () => {
     if (pendingStatusUpdate) {
       updateStatusMutation.mutate({
-        userId: pendingStatusUpdate.userId,
-        isActive: pendingStatusUpdate.newStatus,
+        identityCard: pendingStatusUpdate.userId,
       });
     }
   };

@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { mockUsers } from "@/data/mockUsers";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,55 +18,72 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { useEditUser } from "@/hooks/useEditUser";
+import { UserData, UpdateUserInput } from "@/lib/types";
+import { getStatusColor } from "@/lib/userUtils";
 
 const userSchema = z.object({
-  email: z.email("Formato de email inválido"),
-  // Simula obtener el usuario a editar (por ejemplo el primero del mock)
-  is_active: z.boolean(),
-  created: z.string().optional(),
-  role: z.string().min(1, "El rol es requerido"),
-  identity_card: z
-    .string()
-    .min(5, "La cédula es requerida")
-    .regex(/^[0-9]+$/, "La cédula debe contener solo números")
-    .max(9, "La cédula no puede tener más de 9 dígitos"),
   full_name: z.string().min(3, "El nombre es requerido"),
-  status: z.boolean(),
-  gender: z.string().min(1, "El género es requerido"),
-  position: z.string().optional(),
-  department: z.string().optional(),
+  gender_id: z.number().min(1, "El género es requerido"),
+  position_id: z.number().min(1, "El cargo es requerido"),
+  department_id: z.number().min(1, "El departamento es requerido"),
 });
 
-export const EditUser = () => {
-  // Simula obtener el usuario a editar (por ejemplo el primero del mock)
-  const userToEdit = mockUsers[0];
-  const [form, setForm] = useState({
-    email: userToEdit.email, // Simula email
-    password: userToEdit.password,
-    is_active: userToEdit.is_active,
-    created: userToEdit.created,
-    role: userToEdit.role,
-    identity_card: userToEdit.identity_card.toString(),
-    full_name: userToEdit.full_name,
-    status: userToEdit.status,
-    gender: userToEdit.gender,
-    position: userToEdit.position,
-    department: userToEdit.department,
+interface EditUserProps {
+  userData: UserData;
+  catalogsData: any;
+}
+
+export const EditUser = ({ userData, catalogsData }: EditUserProps) => {
+  const editUser = useEditUser(userData.identity_card);
+
+  const [form, setForm] = useState<UpdateUserInput>({
+    full_name: userData.full_name,
+    gender_id: userData.gender_id,
+    position_id: userData.position_id,
+    department_id: userData.department_id,
   });
+
   const [errors, setErrors] = useState<{ [k: string]: string | undefined }>({});
 
+  // Actualizar form cuando cambia userData
+  useEffect(() => {
+    setForm({
+      full_name: userData.full_name,
+      gender_id: userData.gender_id,
+      position_id: userData.position_id,
+      department_id: userData.department_id,
+    });
+  }, [userData]);
+
+  const genders = catalogsData?.genders || [];
+  const positions = catalogsData?.positions || [];
+  const departments = catalogsData?.departments || [];
+  const roles = catalogsData?.roles || [];
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleSelectChange = (name: keyof UpdateUserInput, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: Number(value),
+    }));
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
@@ -85,26 +100,7 @@ export const EditUser = () => {
       return;
     }
     setErrors({});
-    alert(
-      `✅ Usuario actualizado!\n\n` +
-      `Datos:\n` +
-      `- Nombre: ${form.full_name}\n` +
-      `- Email: ${form.email}\n` +
-      `- Cédula: ${form.identity_card}\n` +
-      `- Rol: ${form.role}\n` +
-      `- Estado: ${form.is_active ? "Activo" : "Inactivo"}\n` +
-      `- Cargo: ${form.position || "No especificado"}\n` +
-      `- Género: ${form.gender}\n` +
-      `- Departamento: ${form.department}\n`
-    );
-  };
-
-  const handleResetPassword = () => {
-    setForm((prev) => ({
-      ...prev,
-      password: prev.identity_card,
-    }));
-    alert("La contraseña ha sido reseteada a la cédula del usuario.");
+    editUser.handleUpdateUser(form);
   };
 
   return (
@@ -112,8 +108,15 @@ export const EditUser = () => {
       <Card className="w-full shadow-lg border border-gray-200">
         <CardHeader>
           <CardTitle>Editar usuario</CardTitle>
-          <span> {userToEdit.full_name}</span>
-          <p> Estatus: <span className={`${userToEdit.is_active ? "text-green-500" : "text-red-500"}`}>{userToEdit.is_active ? "Activo" : "Inactivo"}</span></p>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{userData.full_name}</p>
+            <p className="text-sm">
+              Estado:{" "}
+              <span className={getStatusColor(userData.is_active)}>
+                {userData.is_active ? "Activo" : "Inactivo"}
+              </span>
+            </p>
+          </div>
         </CardHeader>
         <Separator />
         <CardContent>
@@ -131,19 +134,11 @@ export const EditUser = () => {
                   id="identity_card"
                   name="identity_card"
                   type="text"
-                  maxLength={9}
-                  value={form.identity_card}
-                  onChange={handleChange}
-                  placeholder="Ingrese cédula"
-                  required
+                  value={userData.identity_card}
                   disabled
                 />
-                {errors.identity_card && (
-                  <span className="text-red-500 text-xs">
-                    {errors.identity_card}
-                  </span>
-                )}
               </div>
+
               <div>
                 <Label htmlFor="full_name" className="pb-2">
                   Nombre completo
@@ -162,6 +157,7 @@ export const EditUser = () => {
                   </span>
                 )}
               </div>
+
               <div>
                 <Label htmlFor="email" className="pb-2">
                   Email
@@ -170,16 +166,11 @@ export const EditUser = () => {
                   id="email"
                   name="email"
                   type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="Ingrese email"
-                  required
+                  value={userData.email}
                   disabled
                 />
-                {errors.email && (
-                  <span className="text-red-500 text-xs">{errors.email}</span>
-                )}
               </div>
+
               <div>
                 <Label htmlFor="password" className="pb-2">
                   Contraseña
@@ -188,101 +179,174 @@ export const EditUser = () => {
                   id="password"
                   name="password"
                   type="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="Ingrese contraseña"
-                  required
+                  value="********"
                   disabled
                 />
-                {errors.password && (
-                  <span className="text-red-500 text-xs">
-                    {errors.password}
-                  </span>
-                )}
               </div>
+
               <div>
                 <Label htmlFor="role" className="pb-2">
                   Rol
                 </Label>
-                <Select
-                  value={form.role}
-                  onValueChange={(value) => handleSelectChange("role", value)}
-                  disabled
-                >
+                <Select value={userData.role_id.toString()} disabled>
                   <SelectTrigger id="role" className="w-full">
-                    <SelectValue placeholder="Seleccione rol" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="User">User</SelectItem>
-                    <SelectItem value="Analyst">Analyst</SelectItem>
+                    {roles.map((role: any) => (
+                      <SelectItem key={role.id} value={role.id.toString()}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                {errors.role && (
-                  <span className="text-red-500 text-xs">{errors.role}</span>
-                )}
               </div>
+
               <div>
-                <Label htmlFor="position" className="pb-2">
-                  Cargo
-                </Label>
-                <Input
-                  id="position"
-                  name="position"
-                  value={form.position}
-                  onChange={handleChange}
-                  placeholder="Ingrese cargo"
-                />
-              </div>
-              <div>
-                <Label htmlFor="department" className="pb-2">
-                  Departamento
-                </Label>
-                <Input
-                  id="department"
-                  name="department"
-                  value={form.department}
-                  onChange={handleChange}
-                  placeholder="Ingrese departamento"
-                />
-              </div>
-              <div>
-                <Label htmlFor="gender" className="pb-2">
+                <Label htmlFor="gender_id" className="pb-2">
                   Género
                 </Label>
                 <Select
-                  value={form.gender}
-                  onValueChange={(value) => handleSelectChange("gender", value)}
+                  value={form.gender_id.toString()}
+                  onValueChange={(value) => handleSelectChange("gender_id", value)}
                 >
-                  <SelectTrigger id="gender" className="w-full">
+                  <SelectTrigger id="gender_id" className="w-full">
                     <SelectValue placeholder="Seleccione género" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="M">Masculino</SelectItem>
-                    <SelectItem value="F">Femenino</SelectItem>
+                    {genders.map((gender: any) => (
+                      <SelectItem key={gender.id} value={gender.id.toString()}>
+                        {gender.name === "M" ? "Masculino" : "Femenino"}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                {errors.gender && (
-                  <span className="text-red-500 text-xs">{errors.gender}</span>
+                {errors.gender_id && (
+                  <span className="text-red-500 text-xs">{errors.gender_id}</span>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="position_id" className="pb-2">
+                  Cargo
+                </Label>
+                <Select
+                  value={form.position_id.toString()}
+                  onValueChange={(value) => handleSelectChange("position_id", value)}
+                >
+                  <SelectTrigger id="position_id" className="w-full">
+                    <SelectValue placeholder="Seleccione cargo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {positions.map((position: any) => (
+                      <SelectItem key={position.id} value={position.id.toString()}>
+                        {position.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.position_id && (
+                  <span className="text-red-500 text-xs">{errors.position_id}</span>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="department_id" className="pb-2">
+                  Departamento
+                </Label>
+                <Select
+                  value={form.department_id.toString()}
+                  onValueChange={(value) => handleSelectChange("department_id", value)}
+                >
+                  <SelectTrigger id="department_id" className="w-full">
+                    <SelectValue placeholder="Seleccione departamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((dept: any) => (
+                      <SelectItem key={dept.id} value={dept.id.toString()}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.department_id && (
+                  <span className="text-red-500 text-xs">
+                    {errors.department_id}
+                  </span>
                 )}
               </div>
             </div>
+
             <div className="flex gap-2 mt-4">
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleResetPassword}
+                onClick={editUser.handleResetPassword}
+                disabled={editUser.isResettingPassword}
               >
-                Resetear contraseña
+                {editUser.isResettingPassword ? "Reseteando..." : "Resetear contraseña"}
               </Button>
-              <Button type="submit" className="w-full md:w-auto">
-                Guardar cambios
+              <Button
+                type="submit"
+                className="w-full md:w-auto"
+                disabled={editUser.isUpdating}
+              >
+                {editUser.isUpdating ? "Guardando..." : "Guardar cambios"}
               </Button>
             </div>
           </form>
         </CardContent>
-        <CardFooter />
       </Card>
+
+      {/* Dialog de confirmación para guardar cambios */}
+      <Dialog
+        open={editUser.isUpdateDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) editUser.cancelUpdate();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar actualización</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas guardar los cambios realizados a este usuario?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={editUser.cancelUpdate}>
+              Cancelar
+            </Button>
+            <Button onClick={editUser.confirmUpdate} disabled={editUser.isUpdating}>
+              {editUser.isUpdating ? "Guardando..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmación para resetear contraseña */}
+      <Dialog
+        open={editUser.isResetPasswordDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) editUser.cancelResetPassword();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar reseteo de contraseña</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas resetear la contraseña de este usuario a su número de cédula ({userData.identity_card})?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={editUser.cancelResetPassword}>
+              Cancelar
+            </Button>
+            <Button onClick={editUser.confirmResetPassword} disabled={editUser.isResettingPassword}>
+              {editUser.isResettingPassword ? "Reseteando..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -111,6 +111,17 @@ export type UserData = {
   computer_equipment_asset_number?: string;
 };
 
+export type UpdateUserInput = {
+  full_name: string;
+  gender_id: number;
+  position_id: number;
+  department_id: number;
+};
+
+export type ResetPasswordInput = {
+  identity_card: number;
+};
+
 // Types creados en base a los endpoints de la API
 
 export type CreateRequestInput = {

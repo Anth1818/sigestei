@@ -20,7 +20,7 @@ export const ExpandableRow = ({
   user: UserData;
   expanded: boolean;
   onToggle: () => void;
-  onToggleActive: () => void;
+  onToggleActive: (identityCard: number) => void;
   children?: ReactNode;
 }) => {
 
@@ -47,7 +47,7 @@ export const ExpandableRow = ({
               variant="outline"
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleActive();
+                onToggleActive(user.identity_card);
               }}
             >
               {user.is_active ? "Desactivar" : "Activar"}
@@ -58,7 +58,7 @@ export const ExpandableRow = ({
                 e.stopPropagation();
               }}
             >
-              <Link href={`/editUser/${user.id}`}>Editar</Link>
+              <Link href={`/editUser/${user.identity_card}`}>Editar</Link>
             </Button>
           </div>
         </TableCell>

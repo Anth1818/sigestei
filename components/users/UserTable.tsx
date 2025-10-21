@@ -209,7 +209,7 @@ export default function UserTable() {
                   user={user}
                   expanded={actions.expanded === user.id}
                   onToggle={() => actions.toggleExpansion(user.id)}
-                  onToggleActive={() => actions.handleStatusChange(user.id, !user.is_active)}
+                  onToggleActive={(identityCard) => actions.handleStatusChange(identityCard)}
                 >
                   <ContentUserRow user={user} />
                 </ExpandableRow>
@@ -275,10 +275,7 @@ export default function UserTable() {
           <DialogHeader>
             <DialogTitle>Confirmar cambio de estado</DialogTitle>
             <DialogDescription>
-              {actions.pendingStatusUpdate &&
-                `¿Estás seguro de que deseas ${
-                  actions.pendingStatusUpdate.newStatus ? "activar" : "desactivar"
-                } este usuario?`}
+              ¿Estás seguro de que deseas cambiar el estado de este usuario?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

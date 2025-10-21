@@ -142,4 +142,30 @@ export const fetchAllUsers = async () => {
   return response.data;
 }
 
+export const fetchUserByIdentityCard = async (identityCard: number) => {
+  const response = await axios.get(`${API_BASE_URL}/users/identity_card/${identityCard}`, {
+    withCredentials: true,
+  });
+  return response.data;
+}
 
+export const toggleActiveUser = async (identityCard: number) => {
+  const response = await axios.put(`${API_BASE_URL}/users/toggleActive/${identityCard}`, {}, {
+    withCredentials: true,
+  });
+  return response.data;
+}
+
+export const updateUser = async (identityCard: number, data: any) => {
+  const response = await axios.put(`${API_BASE_URL}/users/update/${identityCard}`, data, {
+    withCredentials: true,
+  });
+  return response.data;
+}
+
+export const resetUserPassword = async (identityCard: number) => {
+  const response = await axios.put(`${API_BASE_URL}/users/resetPassword/${identityCard}`, {}, {
+    withCredentials: true,
+  });
+  return response.data;
+}
