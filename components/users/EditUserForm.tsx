@@ -29,7 +29,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useEditUser } from "@/hooks/useEditUser";
 import { UserData, UpdateUserInput } from "@/lib/types";
-import { getStatusColor } from "@/lib/userUtils";
+import { getStatusColor, parseRoleName } from "@/lib/userUtils";
+import { parse } from "path";
 
 const userSchema = z.object({
   full_name: z.string().min(3, "El nombre es requerido"),
@@ -43,7 +44,7 @@ interface EditUserProps {
   catalogsData: any;
 }
 
-export const EditUser = ({ userData, catalogsData }: EditUserProps) => {
+export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
   const editUser = useEditUser(userData.identity_card);
 
   const [form, setForm] = useState<UpdateUserInput>({
@@ -195,7 +196,7 @@ export const EditUser = ({ userData, catalogsData }: EditUserProps) => {
                   <SelectContent>
                     {roles.map((role: any) => (
                       <SelectItem key={role.id} value={role.id.toString()}>
-                        {role.name}
+                        {parseRoleName(role.name)}
                       </SelectItem>
                     ))}
                   </SelectContent>

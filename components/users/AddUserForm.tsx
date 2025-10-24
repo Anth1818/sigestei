@@ -3,63 +3,78 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-
+import { useAddUser } from "@/hooks/useAddUser";
+import { CreateUserInput } from "@/lib/types";
+import { parseRoleName } from "@/lib/userUtils";
 
 const userSchema = z.object({
-    email: z.string().min(3, "El usuario es requerido").email("Formato de email inválido"),
-    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
-    is_active: z.boolean(),
-    created: z.string().optional(),
-    role: z.string().min(1, "El rol es requerido"),
-    identity_card: z.string().min(7, "La cédula es requerida").regex(/^[0-9]+$/, "La cédula debe contener solo números").max(9, "La cédula no puede tener más de 9 dígitos"),
-    full_name: z.string().min(3, "El nombre es requerido"),
-    status: z.boolean(),
-    gender: z.string().min(1, "El género es requerido"),
-    position: z.string().optional(),
-    department: z.string().optional(),
+  full_name: z.string().min(3, "El nombre es requerido"),
+  identity_card: z.number().min(1000000, "Cédula inválida"),
+  email: z.string().min(3, "El email es requerido").email("Formato de email inválido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  gender_id: z.number().min(1, "El género es requerido"),
+  position_id: z.number().min(1, "El cargo es requerido"),
+  department_id: z.number().min(1, "El departamento es requerido"),
+  role_id: z.number().min(1, "El rol es requerido"),
 });
 
-type UserFormData = z.infer<typeof userSchema>;
+interface AddUserFormProps {
+  catalogsData: any;
+}
 
-export const AddUserForm = () => {
+export const AddUserForm = ({ catalogsData }: AddUserFormProps) => {
+  const addUser = useAddUser();
+
   const {
     control,
     handleSubmit,
-    reset,
-    formState: { errors, isSubmitting }
-  } = useForm<UserFormData>({
+    formState: { errors },
+  } = useForm<CreateUserInput>({
     resolver: zodResolver(userSchema),
     defaultValues: {
+      full_name: "",
+      identity_card: 0,
       email: "",
       password: "",
-      is_active: true,
-      created: "",
-      role: "",
-      identity_card: "",
-      full_name: "",
-      status: true,
-      gender: "",
-      position: "",
-      department: "",
-    }
+      gender_id: 0,
+      position_id: 0,
+      department_id: 0,
+      role_id: 0,
+    },
   });
 
-  const onSubmit = async (data: UserFormData) => {
-    try {
-      // Simulación de envío exitoso
-      alert(`✅ Usuario creado exitosamente!\n\nDatos:\n- Nombre: ${data.full_name}\n- Email: ${data.email}\n- Cédula: ${data.identity_card}\n- Rol: ${data.role}\n- Estado: ${data.is_active ? 'Activo' : 'Inactivo'}`);
-      
-      // Limpiar formulario después del envío exitoso
-      reset();
-    } catch (error) {
-      console.error("Error al registrar usuario:", error);
-    }
+  const genders = catalogsData?.genders || [];
+  const positions = catalogsData?.positions || [];
+  const departments = catalogsData?.departments || [];
+  const roles = catalogsData?.roles || [];
+
+  const onSubmit = (data: CreateUserInput) => {
+    addUser.handleCreateUser(data);
   };
 
   return (
@@ -70,10 +85,16 @@ export const AddUserForm = () => {
         </CardHeader>
         <Separator />
         <CardContent>
-          <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form
+            className="flex flex-col gap-5"
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="identity_card" className="pb-2">Cédula</Label>
+                <Label htmlFor="identity_card" className="pb-2">
+                  Cédula
+                </Label>
                 <Controller
                   name="identity_card"
                   control={control}
@@ -81,17 +102,25 @@ export const AddUserForm = () => {
                     <Input
                       {...field}
                       id="identity_card"
-                      type="text"
-                      maxLength={9}
+                      type="number"
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))}
                       placeholder="Ingrese cédula"
                       required
                     />
                   )}
                 />
-                {errors.identity_card && <span className="text-red-500 text-xs">{errors.identity_card.message}</span>}
+                {errors.identity_card && (
+                  <span className="text-red-500 text-xs">
+                    {errors.identity_card.message}
+                  </span>
+                )}
               </div>
+
               <div>
-                <Label htmlFor="full_name" className="pb-2">Nombre completo</Label>
+                <Label htmlFor="full_name" className="pb-2">
+                  Nombre completo
+                </Label>
                 <Controller
                   name="full_name"
                   control={control}
@@ -104,10 +133,17 @@ export const AddUserForm = () => {
                     />
                   )}
                 />
-                {errors.full_name && <span className="text-red-500 text-xs">{errors.full_name.message}</span>}
+                {errors.full_name && (
+                  <span className="text-red-500 text-xs">
+                    {errors.full_name.message}
+                  </span>
+                )}
               </div>
+
               <div>
-                <Label htmlFor="email" className="pb-2">Email</Label>
+                <Label htmlFor="email" className="pb-2">
+                  Email
+                </Label>
                 <Controller
                   name="email"
                   control={control}
@@ -121,10 +157,15 @@ export const AddUserForm = () => {
                     />
                   )}
                 />
-                {errors.email && <span className="text-red-500 text-xs">{errors.email.message}</span>}
+                {errors.email && (
+                  <span className="text-red-500 text-xs">{errors.email.message}</span>
+                )}
               </div>
+
               <div>
-                <Label htmlFor="password" className="pb-2">Contraseña</Label>
+                <Label htmlFor="password" className="pb-2">
+                  Contraseña
+                </Label>
                 <Controller
                   name="password"
                   control={control}
@@ -138,107 +179,175 @@ export const AddUserForm = () => {
                     />
                   )}
                 />
-                {errors.password && <span className="text-red-500 text-xs">{errors.password.message}</span>}
+                {errors.password && (
+                  <span className="text-red-500 text-xs">
+                    {errors.password.message}
+                  </span>
+                )}
               </div>
+
               <div>
-                <Label htmlFor="role" className="pb-2">Rol</Label>
+                <Label htmlFor="role_id" className="pb-2">
+                  Rol
+                </Label>
                 <Controller
-                  name="role"
+                  name="role_id"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="role" className="w-full">
+                    <Select
+                      value={field.value > 0 ? field.value.toString() : ""}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                    >
+                      <SelectTrigger id="role_id" className="w-full">
                         <SelectValue placeholder="Seleccione rol" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="User">User</SelectItem>
-                        <SelectItem value="Analyst">Analyst</SelectItem>
+                        {roles.map((role: any) => (
+                          <SelectItem key={role.id} value={role.id.toString()}>
+                            {parseRoleName(role.name)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   )}
                 />
-                {errors.role && <span className="text-red-500 text-xs">{errors.role.message}</span>}
+                {errors.role_id && (
+                  <span className="text-red-500 text-xs">{errors.role_id.message}</span>
+                )}
               </div>
+
               <div>
-                <Label htmlFor="position" className="pb-2">Cargo</Label>
+                <Label htmlFor="gender_id" className="pb-2">
+                  Género
+                </Label>
                 <Controller
-                  name="position"
+                  name="gender_id"
                   control={control}
                   render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="position"
-                      placeholder="Ingrese cargo"
-                    />
-                  )}
-                />
-              </div>
-              <div>
-                <Label htmlFor="department" className="pb-2">Departamento</Label>
-                <Controller
-                  name="department"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="department"
-                      placeholder="Ingrese departamento"
-                    />
-                  )}
-                />
-              </div>
-              <div>
-                <Label htmlFor="gender" className="pb-2">Género</Label>
-                <Controller
-                  name="gender"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="gender" className="w-full">
+                    <Select
+                      value={field.value > 0 ? field.value.toString() : ""}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                    >
+                      <SelectTrigger id="gender_id" className="w-full">
                         <SelectValue placeholder="Seleccione género" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="M">Masculino</SelectItem>
-                        <SelectItem value="F">Femenino</SelectItem>
+                        {genders.map((gender: any) => (
+                          <SelectItem key={gender.id} value={gender.id.toString()}>
+                            {gender.name === "M" ? "Masculino" : "Femenino"}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   )}
                 />
-                {errors.gender && <span className="text-red-500 text-xs">{errors.gender.message}</span>}
+                {errors.gender_id && (
+                  <span className="text-red-500 text-xs">{errors.gender_id.message}</span>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="position_id" className="pb-2">
+                  Cargo
+                </Label>
+                <Controller
+                  name="position_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value > 0 ? field.value.toString() : ""}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                    >
+                      <SelectTrigger id="position_id" className="w-full">
+                        <SelectValue placeholder="Seleccione cargo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {positions.map((position: any) => (
+                          <SelectItem key={position.id} value={position.id.toString()}>
+                            {position.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.position_id && (
+                  <span className="text-red-500 text-xs">{errors.position_id.message}</span>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="department_id" className="pb-2">
+                  Departamento
+                </Label>
+                <Controller
+                  name="department_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value > 0 ? field.value.toString() : ""}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                    >
+                      <SelectTrigger id="department_id" className="w-full">
+                        <SelectValue placeholder="Seleccione departamento" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map((dept: any) => (
+                          <SelectItem key={dept.id} value={dept.id.toString()}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.department_id && (
+                  <span className="text-red-500 text-xs">
+                    {errors.department_id.message}
+                  </span>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Controller
-                name="is_active"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <input
-                    id="is_active"
-                    type="checkbox"
-                    checked={value}
-                    onChange={onChange}
-                    className="accent-primary"
-                  />
-                )}
-              />
-              <Label htmlFor="is_active">Activo</Label>
+
+            <div className="flex justify-end mt-4">
+              <Button
+                type="submit"
+                className="w-full md:w-auto"
+                disabled={addUser.isCreating}
+              >
+                {addUser.isCreating ? "Registrando..." : "Registrar usuario"}
+              </Button>
             </div>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-end">
-          <Button 
-            type="submit" 
-            onClick={handleSubmit(onSubmit)} 
-            className="w-full md:w-auto"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Registrando..." : "Registrar usuario"}
-          </Button>
-        </CardFooter>
       </Card>
+
+      {/* Dialog de confirmación */}
+      <Dialog
+        open={addUser.isDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) addUser.cancelCreate();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar registro</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas crear este usuario?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={addUser.cancelCreate}>
+              Cancelar
+            </Button>
+            <Button onClick={addUser.confirmCreate} disabled={addUser.isCreating}>
+              {addUser.isCreating ? "Creando..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
- }
+};
 
 export default AddUserForm;

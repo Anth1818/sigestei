@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import LayoutSideBar from "@/layouts/LayoutSideBar";
-import { EditUser } from "@/components/users/EditUser";
+import { EditUserForm } from "@/components/users/EditUserForm";
 import { ButtonNavigate } from "@/components/shared/ButtonToNavigate";
 import { ArrowBigLeft } from "lucide-react";
 import { fetchUserByIdentityCard, fetchCatalogs } from "@/api/api";
@@ -80,7 +80,7 @@ export default function EditUserPage() {
       >
         Volver a usuarios
       </ButtonNavigate>
-      <EditUser userData={userData} catalogsData={catalogsData} />
+      <EditUserForm userData={userData} catalogsData={catalogsData} />
     </LayoutSideBar>
   );
 }

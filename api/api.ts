@@ -1,5 +1,5 @@
 import axios from "axios";
-import { CreateComputerEquipmentInput, CreateRequestInput, CreateRequestPayload} from "@/lib/types";
+import { CreateComputerEquipmentInput, CreateRequestInput, CreateRequestPayload, CreateUserInput} from "@/lib/types";
 import { ComputerEquipmentResponse } from "@/lib/types";
 
 const API_BASE_URL = "http://localhost:3001/api"; // Ajusta el puerto si tu backend usa otro
@@ -134,6 +134,13 @@ export const updateEquipmentData = async (id: number, data: Partial<ComputerEqui
 
 
 // USERS
+
+export const createUser = async (data: CreateUserInput) => {
+  const response = await axios.post(`${API_BASE_URL}/users/register`, data, {
+    withCredentials: true,
+  });
+  return response.data;
+}
 
 export const fetchAllUsers = async () => {
   const response = await axios.get(`${API_BASE_URL}/users`, {

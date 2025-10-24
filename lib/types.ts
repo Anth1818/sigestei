@@ -211,6 +211,17 @@ export type DashboardData = {
   };
 };
 
+export type CreateUserInput = {
+  full_name: string;
+  identity_card: number;
+  email: string;
+  password: string;
+  role_id: number;
+  position_id: number;
+  department_id: number;
+  gender_id: number;  
+};
+
 export type User = {
   id: number;
   full_name: string;
