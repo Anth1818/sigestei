@@ -61,6 +61,7 @@ export default function middleware(request: NextRequest) {
       "/addRequest",
       "/editUser",
       "/editComputerEquipment",
+      "/profile"
     ], // admin
     2: [
       "/dashboard",
@@ -68,9 +69,10 @@ export default function middleware(request: NextRequest) {
       "/editComputerEquipment",
       "/viewRequests",
       "/addRequest",
+      "/profile"
     ], // coordinador
-    3: ["/viewInventory", "/viewRequests", "/addRequest", "/editComputerEquipment"], // técnico
-    4: ["/viewRequests", "/addRequest"], // usuario final
+    3: ["/viewInventory", "/viewRequests", "/addRequest", "/editComputerEquipment, /profile"], // técnico
+    4: ["/viewRequests", "/addRequest, /profile"], // usuario final
   };
 
   const allowedRoutes = roleAccessMap[roleId] || [];
@@ -95,5 +97,6 @@ export const config = {
     "/addRequest",
     "/editUser",
     "/editComputerEquipment",
+    "/profile"
   ],
 };

@@ -20,10 +20,10 @@ export function Navigation({
   navigation,
 }: {
   navigation: {
+    role_access: number[]
     name: string
     url: string
     icon: LucideIcon
-    role_access: number[]
   }[]
 }) {
   const { isMobile } = useSidebar();

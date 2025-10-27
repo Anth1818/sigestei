@@ -104,7 +104,7 @@ export const updateRequest = async (id: number, data: Partial<CreateRequestInput
 // EQUIPMENT
 
 export const createEquipment = async (data: CreateComputerEquipmentInput) => {
-  const response = await axios.post(`${API_BASE_URL}/computer-equipment/register`, data, {
+  const response = await axios.post(`${API_BASE_URL}/computerEquipment/register`, data, {
     withCredentials: true,
   });
   return response.data;
@@ -112,21 +112,21 @@ export const createEquipment = async (data: CreateComputerEquipmentInput) => {
 
 // Obtener todos los equipos
 export const fetchAllEquipment = async () => {
-  const response = await axios.get(`${API_BASE_URL}/computer-equipment`, {
+  const response = await axios.get(`${API_BASE_URL}/computerEquipment`, {
     withCredentials: true,
   });
   return response.data;
 }
 
 export const fetchEquipmentById = async (id: number) => {
-  const response = await axios.get(`${API_BASE_URL}/computer-equipment/${id}`, {
+  const response = await axios.get(`${API_BASE_URL}/computerEquipment/${id}`, {
     withCredentials: true,
   });
   return response.data;
 }
 
 export const updateEquipmentData = async (id: number, data: Partial<ComputerEquipmentResponse>) => {
-  const response = await axios.put(`${API_BASE_URL}/computer-equipment/update/${id}`, data, {
+  const response = await axios.put(`${API_BASE_URL}/computerEquipment/update/${id}`, data, {
     withCredentials: true,
   });
   return response.data;
@@ -172,6 +172,13 @@ export const updateUser = async (identityCard: number, data: any) => {
 
 export const resetUserPassword = async (identityCard: number) => {
   const response = await axios.put(`${API_BASE_URL}/users/resetPassword/${identityCard}`, {}, {
+    withCredentials: true,
+  });
+  return response.data;
+}
+
+export const changeUserPassword = async (identityCard: number, data: { new_password: string }) => {
+  const response = await axios.put(`${API_BASE_URL}/users/changePassword/${identityCard}`, data, {
     withCredentials: true,
   });
   return response.data;

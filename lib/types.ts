@@ -122,6 +122,12 @@ export type ResetPasswordInput = {
   identity_card: number;
 };
 
+export type ChangePasswordInput = {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+};
+
 // Types creados en base a los endpoints de la API
 
 export type CreateRequestInput = {

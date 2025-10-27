@@ -1,15 +1,13 @@
-import { Home, FileText, Users, Folder, ComputerIcon } from "lucide-react";
-
+import { Home, FileText, Users, ComputerIcon } from "lucide-react";
 
 export const dataNav = {
   navigation: [
     {
-      role_access: [1, 2,],
+      role_access: [1, 2],
       name: "Dashboard",
       url: "/dashboard",
       icon: Home,
     },
-    ,
     {
       role_access: [1, 2, 3, 4],
       name: "Solicitudes",
@@ -22,21 +20,6 @@ export const dataNav = {
       url: "/viewInventory",
       icon: ComputerIcon,
     },
-    // {
-    //   role_access: [1, 2,],
-    //   name:"Reportes",
-    //   url:"reports",
-    //   icon: Folder
-    // },
-    {role_access: [1],
-      name: "Usuarios",
-      url: "/viewUsers",
-      icon: Users,
-    },
+    { role_access: [1], name: "Usuarios", url: "/viewUsers", icon: Users }
   ],
-  user: {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "/avatars/john-doe.jpg",
-  },
 };

@@ -16,7 +16,7 @@ import {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { open } = useSidebar();
 
-  const navigation = dataNav.navigation.filter(Boolean);
+  const navigation = dataNav.navigation;
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -31,14 +31,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter className="flex flex-col gap-2">
         <div className="flex justify-center">
-          <span className="text-xs">
-            {open ? `Ultima conexión: 27 de junio de 2025` : ""}
-          </span>
-        </div>
-        <div className="flex justify-center">
           <ThemeToggle />
         </div>
-        <NavUser user={dataNav.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
