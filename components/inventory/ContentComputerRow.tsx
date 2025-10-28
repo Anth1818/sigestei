@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { colorForSoonerError } from "@/lib/utils";
 
 interface ContentComputerRowProps {
   computer: ComputerEquipmentAdapted;
@@ -51,9 +52,9 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message ||
-          "Error al reasignar el equipo. Intenta nuevamente."
+        error?.message, {style: colorForSoonerError}
       );
+      
     },
   });
 

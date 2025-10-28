@@ -17,17 +17,17 @@ export function useEditUser(identityCard: number) {
     mutationFn: async (data: UpdateUserInput) => {
       return updateUser(identityCard, data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["user", identityCard] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Usuario actualizado correctamente");
+      const successMessage = data?.message || "Usuario actualizado correctamente";
+      toast.success(successMessage);
       setIsUpdateDialogOpen(false);
       setPendingUpdateData(null);
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Error al actualizar el usuario"
-      );
+      const errorMessage = error?.message || "Error al actualizar el usuario";
+      toast.error(errorMessage);
     },
   });
 
@@ -36,14 +36,14 @@ export function useEditUser(identityCard: number) {
     mutationFn: async () => {
       return resetUserPassword(identityCard);
     },
-    onSuccess: () => {
-      toast.success("Contraseña reseteada a la cédula del usuario");
+    onSuccess: (data) => {
+      const successMessage = data?.message || "Contraseña reseteada a la cédula del usuario";
+      toast.success(successMessage);
       setIsResetPasswordDialogOpen(false);
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Error al resetear la contraseña"
-      );
+      const errorMessage = error?.message || "Error al resetear la contraseña";
+      toast.error(errorMessage);
     },
   });
 

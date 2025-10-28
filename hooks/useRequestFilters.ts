@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { RequestResponse } from "@/lib/types";
+import { ParamValue } from "next/dist/server/request/params";
 
-export const useRequestFilters = (requests: RequestResponse[]) => {
-  const [searchId, setSearchId] = useState("");
+export const useRequestFilters = (requests: RequestResponse[], requestIdFromParams: string | null) => {
+  const [searchId, setSearchId] = useState(requestIdFromParams ? requestIdFromParams.toString() : "");
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");

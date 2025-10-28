@@ -41,8 +41,11 @@ import { useRequestSorting } from "@/hooks/useRequestSorting";
 import { adaptRequestData, getPriorityColor, getStatusColor } from "@/lib/requestUtils";
 import { RequestResponse } from "@/lib/types";
 import { useUserStore } from "@/hooks/useUserStore";
+import { useSearchParams } from "next/navigation";
 
 export default function RequestTable() {
+  const searchParams = useSearchParams();
+  const requestIdFromParams = searchParams.get("id");
   const user = useUserStore((state) => state.user);
   // React Query para obtener las requests
   const { data: requestsData, isLoading, error } = useQuery({
@@ -52,10 +55,10 @@ export default function RequestTable() {
 
   // Datos de la API
   const requests: RequestResponse[] = requestsData || [];
-
+  
   // Custom hooks para separar la lógica
   const sorting = useRequestSorting(requests);
-  const filters = useRequestFilters(sorting.sortedRequests);
+  const filters = useRequestFilters(sorting.sortedRequests, requestIdFromParams);
   const pagination = usePagination(filters.filteredRequests);
   const actions = useRequestActions();
 

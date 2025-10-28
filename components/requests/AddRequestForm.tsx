@@ -102,7 +102,7 @@ export default function AddRequestForm() {
 
   const createRequestMutation = useMutation({
     mutationFn: (payload: CreateRequestPayload) => createRequest(payload),
-    onSuccess: () => {
+    onSuccess: (data) => {
       
       // Invalidar queries relacionadas para refrescar datos
       queryClient.invalidateQueries({ queryKey: ["requests"] });
@@ -111,15 +111,15 @@ export default function AddRequestForm() {
       reset();
 
       // Mostrar notificación de éxito
-      toast.success("Solicitud creada exitosamente", {
+      const successMessage = data?.message || "Solicitud creada exitosamente";
+      toast.success(successMessage, {
         description: "Tu solicitud ha sido registrada y será procesada pronto.",
         duration: 4000,
       });
     },
     onError: (error: any) => {
       // Mostrar notificación de error con detalles
-      const errorMessage =
-        error?.response?.data?.message || error?.message || "Error desconocido";
+      const errorMessage = error?.message || "Error desconocido";
       toast.error("Error al crear la solicitud", {
         description: errorMessage,
         duration: 5000,

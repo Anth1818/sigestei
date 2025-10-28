@@ -15,6 +15,7 @@ import { createEquipment } from "@/api/api";
 import { toast } from "sonner";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
 import { CatalogData, CreateComputerEquipmentInput, UserData } from "@/lib/types";
+import { colorForSoonerError } from "@/lib/utils";
 
 const computerSchema = z.object({
   serial_number: z.string().min(5, "El número de serie es requerido"),
@@ -24,7 +25,8 @@ const computerSchema = z.object({
   location: z.string().min(1, "La ubicación es requerida"),
   status_id: z.string().min(1, "El estado es requerido"),
   asset_number: z.string().min(1, "El número de bien es requerido"),
-  assigned_user_id: z.string().min(1, "Debe asignar un usuario"),
+  departmentUserAssinged_id: z.string().optional(),
+  assigned_user_id: z.string().optional(),
   // Hardware specs
   cpu: z.string().min(3, "El procesador es requerido"),
   ram: z.string().min(2, "La memoria RAM es requerida"),
@@ -35,6 +37,18 @@ const computerSchema = z.object({
   os: z.string().min(3, "El sistema operativo es requerido"),
   office: z.string().min(3, "La suite de oficina es requerida"),
   antivirus: z.string().min(3, "El antivirus es requerido"),
+  software_type_id: z.string(),
+  office_suite_id: z.string(),
+  antivirus_solution_id: z.string(),
+}).superRefine((data, ctx) => {
+  // Si el estado NO es 4, el usuario es obligatorio
+  if (data.status_id !== "4" && !data.assigned_user_id && !data.departmentUserAssinged_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Debe asignar un usuario",
+      path: ["assigned_user_id"],
+    });
+  }
 });
 
 type ComputerFormData = z.infer<typeof computerSchema>;
@@ -42,15 +56,18 @@ type ComputerFormData = z.infer<typeof computerSchema>;
 interface AddComputerFormProps {
   catalogsData: CatalogData;
   currentUser: UserData | null;
- 
 }
 
-export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormProps) => {
+export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormProps) => {
   const queryClient = useQueryClient();
 
   // Estados para DepartmentUserSelector
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedStatusId, setSelectedStatusId] = useState("");
+
+  // Determinar si el usuario es opcional según el estado
+  const isUserOptional = selectedStatusId === "4";
 
   const {
     control,
@@ -68,6 +85,7 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
       location: "",
       status_id: "",
       asset_number: "",
+      departmentUserAssinged_id: "",
       assigned_user_id: "",
       cpu: "",
       ram: "",
@@ -77,25 +95,30 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
       os: "",
       office: "",
       antivirus: "",
+      software_type_id: "",
+      office_suite_id: "",
+      antivirus_solution_id: "",
     }
   });
 
   // Mutation para crear equipo
   const createMutation = useMutation({
     mutationFn: (data: CreateComputerEquipmentInput) => createEquipment(data),
-    onSuccess: () => {
-      toast.success("Equipo informático registrado exitosamente");
+    onSuccess: (data) => {
+      // Verificar si la respuesta tiene success: true o el mensaje de éxito
+      const successMessage = data?.message || "Equipo informático registrado exitosamente";
+      toast.success(successMessage);
       queryClient.invalidateQueries({ queryKey: ["computers"] });
       reset();
       setSelectedDepartmentId("");
       setSelectedUserId("");
-     
+      setSelectedStatusId("");
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          "Error al registrar el equipo. Intenta nuevamente."
-      );
+      // Ahora error.message contiene el mensaje del backend
+      const errorMessage = error?.message || "Error al registrar el equipo. Intenta nuevamente.";
+      toast.error(errorMessage,{style: colorForSoonerError});
+      
     },
   });
 
@@ -117,13 +140,15 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
         office: data.office,
         antivirus: data.antivirus,
       },
-      assigned_user_id: parseInt(data.assigned_user_id),
+      assigned_user_id: selectedUserId ? parseInt(selectedUserId) : null,
       type_id: parseInt(data.type_id),
       brand_id: parseInt(data.brand_id),
       status_id: parseInt(data.status_id),
     };
+    console.log("Equipo a crear:", equipmentData);
 
-    createMutation.mutate(equipmentData);
+    const response = createMutation.mutate(equipmentData);
+    console.log("Respuesta de la mutación:", response)
   };
 
   // Extraer catálogos (ahora recibidos como props)
@@ -131,6 +156,9 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
   const equipmentTypes = catalogsData?.computer_types || [];
   const equipmentStatuses = catalogsData?.computer_statuses || [];
   const departments = catalogsData?.departments || [];
+  const osOptions = catalogsData?.os_options || [];
+  const officeOptions = catalogsData?.office_suites || [];
+  const antivirusOptions = catalogsData?.antivirus_solutions || [];
 
   return (
     <div className="flex justify-center items-center min-h-[80vh] bg-muted/30">
@@ -289,7 +317,19 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
                     name="status_id"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select 
+                        value={field.value} 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSelectedStatusId(value);
+                          // Si cambia a estado 4, limpiar usuario asignado
+                          if (value === "4") {
+                            setSelectedUserId("");
+                            setSelectedDepartmentId("");
+                            setValue("assigned_user_id", "");
+                          }
+                        }}
+                      >
                         <SelectTrigger id="status_id" className="w-full">
                           <SelectValue placeholder="Seleccione estado" />
                         </SelectTrigger>
@@ -316,38 +356,41 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
 
             <Separator />
 
-            {/* Selector de Departamento y Usuario */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Asignación de Equipo</h3>
-              <DepartmentUserSelector
-                currentUserId={currentUser?.id}
-                currentUserRoleId={currentUser?.role_id}
-                currentUserDepartmentId={currentUser?.department_id}
-                selectedDepartmentId={selectedDepartmentId}
-                selectedUserId={selectedUserId}
-                onDepartmentChange={setSelectedDepartmentId}
-                onUserChange={(userId) => {
-                  setSelectedUserId(userId);
-                  setValue("assigned_user_id", userId);
-                }}
-                departmentLabel="Departamento del usuario"
-                userLabel="Usuario asignado"
-                departmentPlaceholder="Seleccione un departamento"
-                userPlaceholder="Seleccione un usuario"
-                userError={errors.assigned_user_id?.message}
-              />
-              <Controller
-                name="assigned_user_id"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    type="hidden"
-                    {...field}
-                    value={selectedUserId}
-                  />
-                )}
-              />
-            </div>
+            {/* Selector de Departamento y Usuario - Solo si el estado NO es 4 */}
+            {!isUserOptional && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Asignación de Equipo</h3>
+                <DepartmentUserSelector
+                  currentUserId={currentUser?.id}
+                  currentUserRoleId={currentUser?.role_id}
+                  currentUserDepartmentId={currentUser?.department_id}
+                  selectedDepartmentId={selectedDepartmentId}
+                  selectedUserId={selectedUserId}
+                  onDepartmentChange={setSelectedDepartmentId}
+                  onUserChange={(userId) => {
+                    setSelectedUserId(userId);
+                    setValue("assigned_user_id", userId);
+                  }}
+                  departmentLabel="Departamento del usuario"
+                  userLabel="Usuario asignado"
+                  departmentPlaceholder="Seleccione un departamento"
+                  userPlaceholder="Seleccione un usuario"
+                  departmentError={errors.assigned_user_id?.message}
+                  userError={errors.assigned_user_id?.message}
+                />
+                <Controller
+                  name="assigned_user_id"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="hidden"
+                      {...field}
+                      value={selectedUserId}
+                    />
+                  )}
+                />
+              </div>
+            )}
 
             <Separator />
 
@@ -455,12 +498,17 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
                           <SelectValue placeholder="Seleccione SO" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Windows 10 Pro">Windows 10 Pro</SelectItem>
-                          <SelectItem value="Windows 10 Home">Windows 10 Home</SelectItem>
-                          <SelectItem value="Windows 11 Pro">Windows 11 Pro</SelectItem>
-                          <SelectItem value="Windows 11 Home">Windows 11 Home</SelectItem>
-                          <SelectItem value="macOS">macOS</SelectItem>
-                          <SelectItem value="Ubuntu">Ubuntu</SelectItem>
+                          {osOptions.length === 0 ? (
+                            <SelectItem value="not-found" disabled>
+                              No hay opciones disponibles
+                            </SelectItem>
+                          ) : (
+                            osOptions.map((os: any) => (
+                              <SelectItem key={os.id} value={os.name}>
+                                {os.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     )}
@@ -478,12 +526,17 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
                           <SelectValue placeholder="Seleccione suite" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Microsoft Office 2019">Microsoft Office 2019</SelectItem>
-                          <SelectItem value="Microsoft Office 2021">Microsoft Office 2021</SelectItem>
-                          <SelectItem value="Microsoft Office 365">Microsoft Office 365</SelectItem>
-                          <SelectItem value="Microsoft Office 2016">Microsoft Office 2016</SelectItem>
-                          <SelectItem value="LibreOffice">LibreOffice</SelectItem>
-                          <SelectItem value="Google Workspace">Google Workspace</SelectItem>
+                          {officeOptions.length === 0 ? (
+                            <SelectItem value="not-found" disabled>
+                              No hay opciones disponibles
+                            </SelectItem>
+                          ) : (
+                            officeOptions.map((office: any) => (
+                              <SelectItem key={office.id} value={office.name}>
+                                {office.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     )}
@@ -501,12 +554,17 @@ export const AddComputerForm = ({ catalogsData, currentUser}: AddComputerFormPro
                           <SelectValue placeholder="Seleccione antivirus" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Windows Defender">Windows Defender</SelectItem>
-                          <SelectItem value="McAfee">McAfee</SelectItem>
-                          <SelectItem value="ESET NOD32">ESET NOD32</SelectItem>
-                          <SelectItem value="Avast">Avast</SelectItem>
-                          <SelectItem value="Kaspersky">Kaspersky</SelectItem>
-                          <SelectItem value="Bitdefender">Bitdefender</SelectItem>
+                          {antivirusOptions.length === 0 ? (
+                            <SelectItem value="not-found" disabled>
+                              No hay opciones disponibles
+                            </SelectItem>
+                          ) : (
+                            antivirusOptions.map((antivirus: any) => (
+                              <SelectItem key={antivirus.id} value={antivirus.name}>
+                                {antivirus.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     )}

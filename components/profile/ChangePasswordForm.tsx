@@ -64,16 +64,16 @@ export const ChangePasswordForm = ({ identityCard }: ChangePasswordFormProps) =>
       const response = await changeUserPassword(identityCard, data);
       return response;
     },
-    onSuccess: () => {
-      toast.success("Contraseña actualizada exitosamente");
+    onSuccess: (data) => {
+      const successMessage = data?.message || "Contraseña actualizada exitosamente";
+      toast.success(successMessage);
       setIsDialogOpen(false);
       setPendingData(null);
       reset();
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || "Error al cambiar la contraseña"
-      );
+      const errorMessage = error?.message || "Error al cambiar la contraseña";
+      toast.error(errorMessage);
       setIsDialogOpen(false);
       setPendingData(null);
     },

@@ -49,7 +49,8 @@ export function LoginForm({
       }
     },
     onError: (err: any) => {
-      setError(err?.response.data.message || "Error al iniciar sesión");
+      const errorMessage = err?.message || "Error al iniciar sesión";
+      setError(errorMessage);
     },
   });
 

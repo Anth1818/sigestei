@@ -70,14 +70,14 @@ export const getStatusColor = (status: string) => {
   const normalizedStatus = status.toLowerCase();
   switch (normalizedStatus) {
     case "activo":
-      return "text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs";
+      return "text-green-600 bg-green-100 px-2 py-1 font-bold rounded-full text-xs dark:bg-green-500 dark:text-white";
     case "en mantenimiento":
-      return "text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full text-xs";
+      return "text-yellow-600 bg-yellow-100 px-2 py-1 font-bold rounded-full text-xs dark:bg-yellow-600 dark:text-white";
     case "averiado":
-      return "text-orange-600 bg-orange-100 px-2 py-1 rounded-full text-xs";
+      return "text-orange-600 bg-orange-100 px-2 py-1 font-bold rounded-full text-xs dark:bg-orange-500 dark:text-white";
     case "inactivo":
-      return "text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs";
+      return "text-red-600 bg-red-100 px-2 py-1 font-bold rounded-full text-xs dark:bg-red-500 dark:text-white";
     default:
-      return "text-gray-600 bg-gray-100 px-2 py-1 rounded-full text-xs";
+      return "text-gray-600 bg-gray-100 px-2 py-1 font-bold rounded-full text-xs dark:bg-gray-500 dark:text-white";
   }
 };

@@ -20,6 +20,7 @@ import { updateEquipmentData } from "@/api/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { CatalogData, CreateComputerEquipmentInput } from "@/lib/types";
 
 const computerSchema = z.object({
   serial_number: z.string().min(5, "El número de serie es requerido"),
@@ -45,8 +46,8 @@ type ComputerFormData = z.infer<typeof computerSchema>;
 
 interface EditComputerFormProps {
   computerId: number;
-  computerData: any;
-  catalogsData: any;
+  computerData: CreateComputerEquipmentInput;
+  catalogsData: CatalogData;
 }
 
 export const EditComputerForm = ({
@@ -113,16 +114,15 @@ export const EditComputerForm = ({
           antivirus: data.antivirus,
         },
       }),
-    onSuccess: () => {
-      toast.success("Equipo actualizado correctamente");
+    onSuccess: (data) => {
+      const successMessage = data?.message || "Equipo actualizado correctamente";
+      toast.success(successMessage);
       queryClient.invalidateQueries({ queryKey: ["equipment"] });
       queryClient.invalidateQueries({ queryKey: ["computer", computerId] });
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          "Error al actualizar el equipo. Intenta nuevamente."
-      );
+      const errorMessage = error?.message || "Error al actualizar el equipo. Intenta nuevamente.";
+      toast.error(errorMessage);
     },
   });
 
@@ -135,6 +135,9 @@ export const EditComputerForm = ({
   const equipmentTypes = catalogsData?.computer_types || [];
   const equipmentStatuses = catalogsData?.computer_statuses || [];
   const departments = catalogsData?.departments || [];
+  const osOptions = catalogsData?.os_options || [];
+  const officeOptions = catalogsData?.office_suites || [];
+  const antivirusOptions = catalogsData?.antivirus_solutions || [];
 
   return (
     <div className="flex justify-center items-center min-h-[80vh] bg-muted/30">
@@ -513,12 +516,28 @@ export const EditComputerForm = ({
                     name="os"
                     control={control}
                     render={({ field }) => (
-                      <Input
-                        {...field}
-                        id="os"
-                        placeholder="Ej: Windows 11 Pro"
-                        required
-                      />
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger id="os" className="w-full">
+                          <SelectValue placeholder="Seleccione SO" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {osOptions.length === 0 ? (
+                            <SelectItem value="not-found" disabled>
+                              No hay opciones disponibles
+                            </SelectItem>
+                          ) : (
+                            osOptions.map((os: any) => (
+                              <SelectItem key={os.id} value={os.name}>
+                                {os.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                     )}
                   />
                   {errors.os && (
@@ -536,12 +555,28 @@ export const EditComputerForm = ({
                     name="office"
                     control={control}
                     render={({ field }) => (
-                      <Input
-                        {...field}
-                        id="office"
-                        placeholder="Ej: Microsoft Office 365"
-                        required
-                      />
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger id="office" className="w-full">
+                          <SelectValue placeholder="Seleccione suite" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {officeOptions.length === 0 ? (
+                            <SelectItem value="not-found" disabled>
+                              No hay opciones disponibles
+                            </SelectItem>
+                          ) : (
+                            officeOptions.map((office: any) => (
+                              <SelectItem key={office.id} value={office.name}>
+                                {office.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                     )}
                   />
                   {errors.office && (
@@ -559,12 +594,28 @@ export const EditComputerForm = ({
                     name="antivirus"
                     control={control}
                     render={({ field }) => (
-                      <Input
-                        {...field}
-                        id="antivirus"
-                        placeholder="Ej: Windows Defender"
-                        required
-                      />
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger id="antivirus" className="w-full">
+                          <SelectValue placeholder="Seleccione antivirus" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {antivirusOptions.length === 0 ? (
+                            <SelectItem value="not-found" disabled>
+                              No hay opciones disponibles
+                            </SelectItem>
+                          ) : (
+                            antivirusOptions.map((antivirus: any) => (
+                              <SelectItem key={antivirus.id} value={antivirus.name}>
+                                {antivirus.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                     )}
                   />
                   {errors.antivirus && (

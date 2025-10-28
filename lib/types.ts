@@ -109,6 +109,7 @@ export type UserData = {
   gender_name: string;
   position_name: string;
   computer_equipment_asset_number?: string;
+  computer_equipment_id?: number;
 };
 
 export type UpdateUserInput = {
@@ -406,10 +407,11 @@ export interface CreateComputerEquipmentInput {
     office: string;
     antivirus: string;
   };
-  assigned_user_id?: number | null;
+  assigned_user_id?: number | null | undefined;
   type_id: number;
   brand_id: number;
   status_id: number;
+ 
 }
 
 
@@ -457,6 +459,20 @@ export interface Technician {
   full_name: string;
 }
 
+export interface OsOption {
+  id: number;
+  name: string;
+}
+
+export interface officeSuiteOption {
+  id: number;
+  name: string;
+}
+export interface AntivirusOption {
+  id: number;
+  name: string;
+}
+
 export interface CatalogData {
   request_types: RequestType[];
   computer_brands: ComputerBrand[];
@@ -467,4 +483,7 @@ export interface CatalogData {
   positions: Position[];
   genders: Gender[];
   technicians: Technician[];
+  os_options: OsOption[];
+  office_suites: officeSuiteOption[];
+  antivirus_solutions: AntivirusOption[];
 }

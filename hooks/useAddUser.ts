@@ -15,8 +15,9 @@ export const useAddUser = () => {
 
   const createUserMutation = useMutation({
     mutationFn: (data: CreateUserInput) => createUser(data),
-    onSuccess: () => {
-      toast.success("Usuario creado exitosamente");
+    onSuccess: (data) => {
+      const successMessage = data?.message || "Usuario creado exitosamente";
+      toast.success(successMessage);
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setIsDialogOpen(false);
       setPendingUserData(null);
@@ -24,9 +25,8 @@ export const useAddUser = () => {
       router.push("/viewUsers");
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || "Error al crear el usuario"
-      );
+      const errorMessage = error?.message || "Error al crear el usuario";
+      toast.error(errorMessage);
       setIsDialogOpen(false);
       setPendingUserData(null);
     },
