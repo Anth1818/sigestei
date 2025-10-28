@@ -14,7 +14,7 @@ const protectedRoutes = [
   "/editComputerEquipment",
 ];
 
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Si la ruta es pública, permite el acceso
