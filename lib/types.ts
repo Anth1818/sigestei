@@ -395,14 +395,14 @@ export interface CreateComputerEquipmentInput {
   serial_number: string;
   model?: string | null;
   location?: string | null;
-  hardware_specs: {
+  hardware_specs?: {
     cpu: string;
     gpu: string;
     ram: string;
     network: string;
     storage: string;
   };
-  software_specs: {
+  software_specs?: {
     os: string;
     office: string;
     antivirus: string;

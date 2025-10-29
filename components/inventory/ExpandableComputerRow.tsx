@@ -29,13 +29,6 @@ export function ExpandableComputerRow({
   equipmentStatuses,
 }: ExpandableComputerRowProps) {
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   const [assigned_user_name, setAssigned_user_name] = useState(
       computer.assigned_to || ""
@@ -55,6 +48,7 @@ export function ExpandableComputerRow({
     <>
       <TableRow className="hover:bg-muted/50">
         <TableCell className="p-2 text-center">{computer.id}</TableCell>
+        <TableCell className="p-2">{computer.type}</TableCell>
         <TableCell className="p-2">{computer.asset_number}</TableCell>
         <TableCell className="p-2">{computer.model}</TableCell>
         <TableCell className="p-2">{computer.serial_number}</TableCell>
@@ -64,7 +58,7 @@ export function ExpandableComputerRow({
           </span>
         </TableCell>
         <TableCell className="p-2">{computer.location}</TableCell>
-        <TableCell className="p-2">{assigned_user_name}</TableCell>
+        <TableCell className="p-2">{computer.type === "Impresora" ? computer.location : assigned_user_name}</TableCell>
         <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
           <TooltipProvider>
             <Tooltip>

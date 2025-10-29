@@ -19,7 +19,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateEquipmentData } from "@/api/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { CatalogData, CreateComputerEquipmentInput } from "@/lib/types";
 
 const computerSchema = z.object({
@@ -30,16 +30,82 @@ const computerSchema = z.object({
   location: z.string().min(1, "La ubicación es requerida"),
   status_id: z.string().min(1, "El estado es requerido"),
   asset_number: z.string().min(1, "El número de bien es requerido"),
-  // Hardware specs
-  cpu: z.string().min(3, "El procesador es requerido"),
-  ram: z.string().min(2, "La memoria RAM es requerida"),
-  storage: z.string().min(3, "El almacenamiento es requerido"),
-  gpu: z.string().min(3, "La tarjeta gráfica es requerida"),
-  network: z.string().min(3, "Las opciones de red son requeridas"),
-  // Software
-  os: z.string().min(3, "El sistema operativo es requerido"),
-  office: z.string().min(3, "La suite de oficina es requerida"),
-  antivirus: z.string().min(3, "El antivirus es requerido"),
+  // Hardware specs - opcionales para impresoras
+  cpu: z.string().optional(),
+  ram: z.string().optional(),
+  storage: z.string().optional(),
+  gpu: z.string().optional(),
+  network: z.string().optional(),
+  // Software - opcional para impresoras
+  os: z.string().optional(),
+  office: z.string().optional(),
+  antivirus: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // Determinar si es impresora
+  // NOTA: Cambiar "3" por el ID real del tipo "Impresora" en tu base de datos
+  const isPrinter = data.type_id === "3";
+  
+  // Si NO es impresora, validar campos de hardware
+  if (!isPrinter) {
+    if (!data.cpu || data.cpu.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El procesador es requerido",
+        path: ["cpu"],
+      });
+    }
+    if (!data.ram || data.ram.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La memoria RAM es requerida",
+        path: ["ram"],
+      });
+    }
+    if (!data.storage || data.storage.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El almacenamiento es requerido",
+        path: ["storage"],
+      });
+    }
+    if (!data.gpu || data.gpu.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La tarjeta gráfica es requerida",
+        path: ["gpu"],
+      });
+    }
+    if (!data.network || data.network.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Las opciones de red son requeridas",
+        path: ["network"],
+      });
+    }
+    
+    // Validar software
+    if (!data.os || data.os.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El sistema operativo es requerido",
+        path: ["os"],
+      });
+    }
+    if (!data.office || data.office.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La suite de oficina es requerida",
+        path: ["office"],
+      });
+    }
+    if (!data.antivirus || data.antivirus.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El antivirus es requerido",
+        path: ["antivirus"],
+      });
+    }
+  }
 });
 
 type ComputerFormData = z.infer<typeof computerSchema>;
@@ -57,6 +123,15 @@ export const EditComputerForm = ({
 }: EditComputerFormProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  // Estado para rastrear el tipo de equipo seleccionado
+  const [selectedTypeId, setSelectedTypeId] = useState(
+    computerData?.type_id?.toString() || ""
+  );
+
+  // Determinar si es una impresora
+  // NOTA: Cambiar "3" por el ID real del tipo "Impresora" en tu base de datos
+  const isPrinter = selectedTypeId === "3";
 
   // Calcular defaultValues directamente desde computerData (que ya viene cargado del padre)
   const defaultValues = useMemo(() => {
@@ -84,6 +159,7 @@ export const EditComputerForm = ({
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<ComputerFormData>({
     resolver: zodResolver(computerSchema),
@@ -92,8 +168,11 @@ export const EditComputerForm = ({
 
   // Mutation para actualizar el equipo
   const updateMutation = useMutation({
-    mutationFn: (data: ComputerFormData) =>
-      updateEquipmentData(computerId, {
+    mutationFn: (data: ComputerFormData) => {
+      // Verificar si es impresora
+      const isPrinterType = data.type_id === "3";
+      
+      return updateEquipmentData(computerId, {
         serial_number: data.serial_number,
         model: data.model,
         brand_id: parseInt(data.brand_id),
@@ -101,19 +180,26 @@ export const EditComputerForm = ({
         location: data.location,
         status_id: parseInt(data.status_id),
         asset_number: data.asset_number,
-        hardware_specs: {
-          cpu: data.cpu,
-          ram: data.ram,
-          storage: data.storage,
-          gpu: data.gpu,
-          network: data.network,
-        },
-        software_specs: {
-          os: data.os,
-          office: data.office,
-          antivirus: data.antivirus,
-        },
-      }),
+        // Solo incluir hardware_specs si NO es impresora
+        ...((!isPrinterType) && {
+          hardware_specs: {
+            cpu: data.cpu || "",
+            ram: data.ram || "",
+            storage: data.storage || "",
+            gpu: data.gpu || "",
+            network: data.network || "",
+          },
+        }),
+        // Solo incluir software_specs si NO es impresora
+        ...((!isPrinterType) && {
+          software_specs: {
+            os: data.os || "",
+            office: data.office || "",
+            antivirus: data.antivirus || "",
+          },
+        }),
+      });
+    },
     onSuccess: (data) => {
       const successMessage = data?.message || "Equipo actualizado correctamente";
       toast.success(successMessage);
@@ -168,7 +254,21 @@ export const EditComputerForm = ({
                     render={({ field }) => (
                       <Select
                         value={field.value || undefined}
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSelectedTypeId(value);
+                          // Si cambia a impresora, limpiar campos de hardware/software
+                          if (value === "3") {
+                            setValue("cpu", "");
+                            setValue("ram", "");
+                            setValue("storage", "");
+                            setValue("gpu", "");
+                            setValue("network", "");
+                            setValue("os", "");
+                            setValue("office", "");
+                            setValue("antivirus", "");
+                          }
+                        }}
                         defaultValue={field.value}
                       >
                         <SelectTrigger id="type_id" className="w-full">
@@ -377,9 +477,11 @@ export const EditComputerForm = ({
               </div>
             </div>
 
-            <Separator />
+            {/* Separador solo si no es impresora */}
+            {!isPrinter && <Separator />}
 
-            {/* Especificaciones de Hardware */}
+            {/* Especificaciones de Hardware - Solo si NO es impresora */}
+            {!isPrinter && (
             <div>
               <h3 className="text-lg font-semibold mb-3">
                 Especificaciones de Hardware
@@ -501,10 +603,13 @@ export const EditComputerForm = ({
                 </div>
               </div>
             </div>
+            )}
 
-            <Separator />
+            {/* Separador solo si no es impresora */}
+            {!isPrinter && <Separator />}
 
-            {/* Especificaciones de Software */}
+            {/* Especificaciones de Software - Solo si NO es impresora */}
+            {!isPrinter && (
             <div>
               <h3 className="text-lg font-semibold mb-3">Software Instalado</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -626,6 +731,7 @@ export const EditComputerForm = ({
                 </div>
               </div>
             </div>
+            )}
 
             <Separator />
 

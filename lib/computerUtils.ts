@@ -48,19 +48,19 @@ export const adaptComputerData = (
     asset_number: apiEquipment.asset_number,
     assigned_to: getAssignedUserName(apiEquipment),
     requests: apiEquipment.requests || [],
-    assigned_user_id: apiEquipment.assigned_user_id,
+    assigned_user_id: apiEquipment?.assigned_user_id,
     type: type,
     hardware_specs: {
-      cpu: apiEquipment.hardware_specs.cpu,
-      ram: apiEquipment.hardware_specs.ram,
-      storage: apiEquipment.hardware_specs.storage,
-      gpu: apiEquipment.hardware_specs.gpu,
-      network: apiEquipment.hardware_specs.network,
+      cpu: apiEquipment?.hardware_specs?.cpu,
+      ram: apiEquipment?.hardware_specs?.ram,
+      storage: apiEquipment?.hardware_specs?.storage,
+      gpu: apiEquipment?.hardware_specs?.gpu,
+      network: apiEquipment?.hardware_specs?.network,
     },
     software: {
-      os: apiEquipment.software_specs.os,
-      office: apiEquipment.software_specs.office,
-      antivirus: apiEquipment.software_specs.antivirus,
+      os: apiEquipment?.software_specs?.os,
+      office: apiEquipment?.software_specs?.office,
+      antivirus: apiEquipment?.software_specs?.antivirus,
     },
   };
 };

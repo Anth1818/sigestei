@@ -27,22 +27,88 @@ const computerSchema = z.object({
   asset_number: z.string().min(1, "El número de bien es requerido"),
   departmentUserAssinged_id: z.string().optional(),
   assigned_user_id: z.string().optional(),
-  // Hardware specs
-  cpu: z.string().min(3, "El procesador es requerido"),
-  ram: z.string().min(2, "La memoria RAM es requerida"),
-  storage: z.string().min(3, "El almacenamiento es requerido"),
-  gpu: z.string().min(3, "La tarjeta gráfica es requerida"),
-  network: z.string().min(3, "Las opciones de red son requeridas"),
-  // Software
-  os: z.string().min(3, "El sistema operativo es requerido"),
-  office: z.string().min(3, "La suite de oficina es requerida"),
-  antivirus: z.string().min(3, "El antivirus es requerido"),
-  software_type_id: z.string(),
-  office_suite_id: z.string(),
-  antivirus_solution_id: z.string(),
+  // Hardware specs - opcionales para impresoras
+  cpu: z.string().optional(),
+  ram: z.string().optional(),
+  storage: z.string().optional(),
+  gpu: z.string().optional(),
+  network: z.string().optional(),
+  // Software - opcional para impresoras
+  os: z.string().optional(),
+  office: z.string().optional(),
+  antivirus: z.string().optional(),
+  software_type_id: z.string().optional(),
+  office_suite_id: z.string().optional(),
+  antivirus_solution_id: z.string().optional(),
 }).superRefine((data, ctx) => {
-  // Si el estado NO es 4, el usuario es obligatorio
-  if (data.status_id !== "4" && !data.assigned_user_id && !data.departmentUserAssinged_id) {
+  // Determinar si es impresora
+  // NOTA: Cambiar "3" por el ID real del tipo "Impresora" en tu base de datos
+  const isPrinter = data.type_id === "3";
+  
+  // Si NO es impresora, validar campos de hardware
+  if (!isPrinter) {
+    if (!data.cpu || data.cpu.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El procesador es requerido",
+        path: ["cpu"],
+      });
+    }
+    if (!data.ram || data.ram.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La memoria RAM es requerida",
+        path: ["ram"],
+      });
+    }
+    if (!data.storage || data.storage.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El almacenamiento es requerido",
+        path: ["storage"],
+      });
+    }
+    if (!data.gpu || data.gpu.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La tarjeta gráfica es requerida",
+        path: ["gpu"],
+      });
+    }
+    if (!data.network || data.network.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Las opciones de red son requeridas",
+        path: ["network"],
+      });
+    }
+    
+    // Validar software
+    if (!data.os || data.os.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El sistema operativo es requerido",
+        path: ["os"],
+      });
+    }
+    if (!data.office || data.office.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La suite de oficina es requerida",
+        path: ["office"],
+      });
+    }
+    if (!data.antivirus || data.antivirus.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El antivirus es requerido",
+        path: ["antivirus"],
+      });
+    }
+  }
+  
+  // Si el estado NO es 4 Y NO es impresora, el usuario es obligatorio
+  if (data.status_id !== "4" && !isPrinter && !data.assigned_user_id && !data.departmentUserAssinged_id) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Debe asignar un usuario",
@@ -65,9 +131,15 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedStatusId, setSelectedStatusId] = useState("");
+  const [selectedTypeId, setSelectedTypeId] = useState("");
 
   // Determinar si el usuario es opcional según el estado
   const isUserOptional = selectedStatusId === "4";
+  
+  // Determinar si es una impresora
+  // NOTA: Cambiar "3" por el ID real del tipo "Impresora" en tu base de datos
+  // Para verificar: SELECT id, name FROM computer_types WHERE name ILIKE '%impresora%';
+  const isPrinter = selectedTypeId === "3";
 
   const {
     control,
@@ -123,24 +195,34 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
   });
 
   const onSubmit = async (data: ComputerFormData) => {
+    // Verificar si es impresora
+    const isPrinterType = data.type_id === "3";
+    
     const equipmentData: CreateComputerEquipmentInput = {
       asset_number: data.asset_number,
       serial_number: data.serial_number,
       model: data.model,
       location: data.location,
-      hardware_specs: {
-        cpu: data.cpu,
-        gpu: data.gpu,
-        ram: data.ram,
-        network: data.network,
-        storage: data.storage,
-      },
-      software_specs: {
-        os: data.os,
-        office: data.office,
-        antivirus: data.antivirus,
-      },
-      assigned_user_id: selectedUserId ? parseInt(selectedUserId) : null,
+      // Solo incluir hardware_specs si NO es impresora
+      ...((!isPrinterType) && {
+        hardware_specs: {
+          cpu: data.cpu || "",
+          gpu: data.gpu || "",
+          ram: data.ram || "",
+          network: data.network || "",
+          storage: data.storage || "",
+        },
+      }),
+      // Solo incluir software_specs si NO es impresora
+      ...((!isPrinterType) && {
+        software_specs: {
+          os: data.os || "",
+          office: data.office || "",
+          antivirus: data.antivirus || "",
+        },
+      }),
+      // Solo asignar usuario si NO es impresora
+      assigned_user_id: isPrinterType ? null : (selectedUserId ? parseInt(selectedUserId) : null),
       type_id: parseInt(data.type_id),
       brand_id: parseInt(data.brand_id),
       status_id: parseInt(data.status_id),
@@ -179,7 +261,27 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
                     name="type_id"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select 
+                        value={field.value} 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSelectedTypeId(value);
+                          // Si cambia a impresora, limpiar campos de hardware/software
+                          if (value === "3") {
+                            setValue("cpu", "");
+                            setValue("ram", "");
+                            setValue("storage", "");
+                            setValue("gpu", "");
+                            setValue("network", "");
+                            setValue("os", "");
+                            setValue("office", "");
+                            setValue("antivirus", "");
+                            setValue("assigned_user_id", "");
+                            setSelectedDepartmentId("");
+                            setSelectedUserId("");
+                          }
+                        }}
+                      >
                         <SelectTrigger id="type_id" className="w-full">
                           <SelectValue placeholder="Seleccione tipo" />
                         </SelectTrigger>
@@ -356,8 +458,8 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
 
             <Separator />
 
-            {/* Selector de Departamento y Usuario - Solo si el estado NO es 4 */}
-            {!isUserOptional && (
+            {/* Selector de Departamento y Usuario - Solo si el estado NO es 4 Y NO es impresora */}
+            {!isUserOptional && !isPrinter && (
               <div>
                 <h3 className="text-lg font-semibold mb-3">Asignación de Equipo</h3>
                 <DepartmentUserSelector
@@ -392,9 +494,11 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
               </div>
             )}
 
-            <Separator />
+            {/* Separador solo si no es impresora */}
+            {!isPrinter && <Separator />}
 
-            {/* Especificaciones de Hardware */}
+            {/* Especificaciones de Hardware - Solo si NO es impresora */}
+            {!isPrinter && (
             <div>
               <h3 className="text-lg font-semibold mb-3">Especificaciones de Hardware</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -480,10 +584,13 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
                 </div>
               </div>
             </div>
+            )}
 
-            <Separator />
+            {/* Separador solo si no es impresora */}
+            {!isPrinter && <Separator />}
 
-            {/* Software */}
+            {/* Software - Solo si NO es impresora */}
+            {!isPrinter && (
             <div>
               <h3 className="text-lg font-semibold mb-3">Software</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -573,6 +680,7 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
                 </div>
               </div>
             </div>
+            )}
           </form>
         </CardContent>
         <CardFooter className="flex justify-end">

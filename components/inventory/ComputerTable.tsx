@@ -79,6 +79,10 @@ export default function ComputerTable() {
       field: "id",
     },
     {
+      label: "Tipo",
+      field: "type",
+    },
+    {
       label: "Número de bien",
       field: "asset_number",
     },
