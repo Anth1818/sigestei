@@ -42,7 +42,6 @@ const computerSchema = z.object({
   antivirus_solution_id: z.string().optional(),
 }).superRefine((data, ctx) => {
   // Determinar si es impresora
-  // NOTA: Cambiar "3" por el ID real del tipo "Impresora" en tu base de datos
   const isPrinter = data.type_id === "3";
   
   // Si NO es impresora, validar campos de hardware
@@ -107,14 +106,15 @@ const computerSchema = z.object({
     }
   }
   
+  // Validar asignación de usuario
   // Si el estado NO es 4 Y NO es impresora, el usuario es obligatorio
-  if (data.status_id !== "4" && !isPrinter && !data.assigned_user_id && !data.departmentUserAssinged_id) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Debe asignar un usuario",
-      path: ["assigned_user_id"],
-    });
-  }
+  // if (data.status_id !== "4" && !isPrinter && !data.assigned_user_id && !data.departmentUserAssinged_id) {
+  //   ctx.addIssue({
+  //     code: z.ZodIssueCode.custom,
+  //     message: "Debe asignar un usuario",
+  //     path: ["assigned_user_id"],
+  //   });
+  // }
 });
 
 type ComputerFormData = z.infer<typeof computerSchema>;

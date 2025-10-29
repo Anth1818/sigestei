@@ -31,6 +31,7 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
     computer.assigned_user_id?.toString() || ""
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUnlinkDialogOpen, setIsUnlinkDialogOpen] = useState(false);
 
   // Determinar si es una impresora
   // NOTA: Ajustar "Impresora" según el nombre exacto en tu base de datos
@@ -41,7 +42,7 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
     ? computer.requests
     : [];
 
-  // Mutation para actualizar el equipo
+  // Mutation para actualizar el equipo (reasignar)
   const updateEquipmentMutation = useMutation({
     mutationFn: async (newUserId: number) =>{
       const response = await updateEquipmentData(computer.id, { assigned_user_id: newUserId })
@@ -62,6 +63,24 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
     },
   });
 
+  // Mutation para desvincular usuario del equipo
+  const unlinkUserMutation = useMutation({
+    mutationFn: async () => {
+      const response = await updateEquipmentData(computer.id, { assigned_user_id: null })
+      return response
+    },
+    onSuccess: () => {
+      toast.success("Usuario desvinculado correctamente");
+      setIsUnlinkDialogOpen(false);
+      setAssigned_user_name("No asignado");
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.message, {style: colorForSoonerError}
+      );
+    },
+  });
+
   // Abrir dialog cuando hay departamento y usuario seleccionado
   const handleReassign = () => {
     if (selectedDepartmentId && selectedUserId) {
@@ -74,6 +93,16 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
     if (selectedUserId) {
       updateEquipmentMutation.mutate(parseInt(selectedUserId));
     }
+  };
+
+  // Abrir dialog de desvinculación
+  const handleUnlinkUser = () => {
+    setIsUnlinkDialogOpen(true);
+  };
+
+  // Confirmar desvinculación
+  const handleConfirmUnlink = () => {
+    unlinkUserMutation.mutate();
   };
 
   return (
@@ -123,6 +152,19 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
                   {assigned_user_name || "No asignado"}
                 </span>
               </p>
+              {assigned_user_name && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleUnlinkUser}
+                  className="mt-2"
+                  disabled={unlinkUserMutation.isPending}
+                >
+                  {unlinkUserMutation.isPending
+                    ? "Desvinculando..."
+                    : "Desvincular usuario"}
+                </Button>
+              )}
             </div>
 
             <div className="flex items-center gap-2 mb-3">
@@ -278,6 +320,50 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
                   {updateEquipmentMutation.isPending
                     ? "Procesando..."
                     : "Confirmar reasignación"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog de confirmación de desvinculación */}
+          <Dialog open={isUnlinkDialogOpen} onOpenChange={setIsUnlinkDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirmar desvinculación de usuario</DialogTitle>
+                <DialogDescription>
+                  ¿Estás seguro de que deseas desvincular al usuario actual de este equipo?
+                  El equipo quedará sin asignación.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="py-4">
+                <p className="text-sm text-gray-600">
+                  <strong>Equipo:</strong> {computer.brand} {computer.model}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Número de serie:</strong> {computer.serial_number}
+                </p>
+                <p className="text-sm text-gray-600 mt-2">
+                  <strong>Usuario actual:</strong> {assigned_user_name}
+                </p>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsUnlinkDialogOpen(false)}
+                  disabled={unlinkUserMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmUnlink}
+                  disabled={unlinkUserMutation.isPending}
+                >
+                  {unlinkUserMutation.isPending
+                    ? "Procesando..."
+                    : "Confirmar desvinculación"}
                 </Button>
               </DialogFooter>
             </DialogContent>

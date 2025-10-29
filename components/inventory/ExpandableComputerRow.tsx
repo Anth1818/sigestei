@@ -31,7 +31,7 @@ export function ExpandableComputerRow({
 
 
   const [assigned_user_name, setAssigned_user_name] = useState(
-      computer.assigned_to || ""
+      computer.assigned_to || "No asignado"
     );
 
   // Manejar el cambio de estado

@@ -361,7 +361,7 @@ export interface ComputerEquipmentResponse {
     office: string;
     antivirus: string;
   };
-  assigned_user_id: number;
+  assigned_user_id: number | null;
   type_id: number;
   brand_id: number;
   status_id: number;

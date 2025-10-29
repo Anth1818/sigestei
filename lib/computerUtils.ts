@@ -48,7 +48,7 @@ export const adaptComputerData = (
     asset_number: apiEquipment.asset_number,
     assigned_to: getAssignedUserName(apiEquipment),
     requests: apiEquipment.requests || [],
-    assigned_user_id: apiEquipment?.assigned_user_id,
+    assigned_user_id: apiEquipment?.assigned_user_id ?? 0,
     type: type,
     hardware_specs: {
       cpu: apiEquipment?.hardware_specs?.cpu,
