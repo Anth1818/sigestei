@@ -33,45 +33,46 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { ExpandableComputerRow } from "@/components/inventory/ExpandableComputerRow";
+import { ExpandableEquipmentRow } from "@/components/inventory/ExpandableEquipmentRow";
 import { fetchAllEquipment, fetchCatalogs } from "@/api/api";
-import { adaptComputerData, getStatusColor } from "@/lib/computerUtils";
-import { ComputerEquipmentAdapted, ComputerEquipmentResponse } from "@/lib/types";
-import { useComputerFilters } from "@/hooks/useComputerFilters";
-import { useComputerSorting } from "@/hooks/useComputerSorting";
-import { useComputerActions } from "@/hooks/useComputerActions";
+import { adaptEquipmentData, getStatusColor } from "@/lib/equipmentUtils";
+import { EquipmentAdapted, EquipmentResponse } from "@/lib/types";
+import { useEquipmentFilters } from "@/hooks/useEquipmentFilters";
+import { useEquipmentSorting } from "@/hooks/useEquipmentSorting";
+import { useEquipmentActions } from "@/hooks/useEquipmentActions";
 import { usePagination } from "@/hooks/usePagination";
+import type { CatalogData } from "@/lib/types";
 
-export default function ComputerTable() {
+export default function EquipmentTable() {
 
   // React Query para obtener los equipos
-  const { data: equipmentData, isLoading, error } = useQuery<ComputerEquipmentResponse[]>({
-    queryKey: ['computers'],
+  const { data: equipmentData, isLoading, error } = useQuery<EquipmentResponse[]>({
+    queryKey: ['equipments'],
     queryFn: fetchAllEquipment,
   });
 
   // Obtener catálogos para los estados
-  const { data: catalogsData } = useQuery({
+  const { data: catalogsData } = useQuery<CatalogData>({
     queryKey: ['catalogs'],
     queryFn: fetchCatalogs,
   });
 
   // Adaptar datos de la API al formato del componente
-  const adaptedComputers: ComputerEquipmentAdapted[] = useMemo(() => {
+  const adaptEquipment: EquipmentAdapted[] = useMemo(() => {
     if (!equipmentData) return [];
-    return equipmentData.map(adaptComputerData);
+    return equipmentData.map(adaptEquipmentData);
   }, [equipmentData]);
 
   // Custom hooks para separar la lógica
-  const sorting = useComputerSorting(adaptedComputers);
-  const filters = useComputerFilters(sorting.sortedComputers);
-  const pagination = usePagination(filters.filteredComputers);
-  const actions = useComputerActions();
+  const sorting = useEquipmentSorting(adaptEquipment);
+  const filters = useEquipmentFilters(sorting.sortedEquipments);
+  const pagination = usePagination(filters.filteredEquipments);
+  const actions = useEquipmentActions();
 
   // Opciones únicas para los filtros
-  const uniqueStatuses = [...new Set(adaptedComputers.map((c) => c.status).filter(Boolean))] as string[];
-  const uniqueBrands = [...new Set(adaptedComputers.map((c) => c.brand).filter(Boolean))] as string[];
-  const uniqueTypes = [...new Set(adaptedComputers.map((c) => c.type).filter(Boolean))] as string[];
+  const uniqueStatuses = [...new Set(adaptEquipment.map((c) => c.status).filter(Boolean))] as string[];
+  const uniqueBrands = [...new Set(adaptEquipment.map((c) => c.brand).filter(Boolean))] as string[];
+  const uniqueTypes = [...new Set(adaptEquipment.map((c) => c.type_name).filter(Boolean))] as string[];
 
   const columns = [
     {
@@ -85,6 +86,10 @@ export default function ComputerTable() {
     {
       label: "Número de bien",
       field: "asset_number",
+    },
+    {
+      label: "Marca",
+      field: "brand",
     },
     {
       label: "Modelo",
@@ -240,7 +245,7 @@ export default function ComputerTable() {
             {columns.map((col) => (
               <TableHead
                 key={col.field}
-                onClick={() => sorting.sortComputers(col.field)}
+                onClick={() => sorting.sortEquipments(col.field)}
                 className="cursor-pointer p-2"
               >
                 {col.label}
@@ -252,15 +257,15 @@ export default function ComputerTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {pagination.paginatedItems.map((computer: ComputerEquipmentAdapted) => (
-            <ExpandableComputerRow
-              key={computer.id}
-              computer={computer}
-              expanded={actions.expanded === computer.id}
-              onToggle={() => actions.toggleExpansion(computer.id)}
+          {pagination.paginatedItems.map((equipment: EquipmentAdapted) => (
+            <ExpandableEquipmentRow
+              key={equipment.id}
+              equipment={equipment}
+              expanded={actions.expanded === equipment.id}
+              onToggle={() => actions.toggleExpansion(equipment.id)}
               onUpdateStatus={actions.handleStatusChange}
               getStatusColor={getStatusColor}
-              equipmentStatuses={catalogsData?.computer_statuses || []}
+              equipmentStatuses={catalogsData?.equipment_statuses || []}
             />
           ))}
         </TableBody>

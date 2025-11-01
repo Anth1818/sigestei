@@ -1,53 +1,53 @@
 import { useState, useMemo } from "react";
-import { ComputerEquipmentAdapted } from "@/lib/types";
+import { EquipmentAdapted } from "@/lib/types";
 
-export const useComputerFilters = (computers: ComputerEquipmentAdapted[]) => {
+export const useEquipmentFilters = (equipments: EquipmentAdapted[]) => {
   const [searchId, setSearchId] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
 
-  const filteredComputers = useMemo(() => {
-    let filtered: ComputerEquipmentAdapted[] = computers;
+  const filteredEquipments = useMemo(() => {
+    let filtered: EquipmentAdapted[] = equipments;
 
     // Filtro por ID
     if (searchId.trim()) {
-      filtered = filtered.filter((computer: ComputerEquipmentAdapted) =>
-        computer.id.toString().includes(searchId.trim())
+      filtered = filtered.filter((equipment: EquipmentAdapted) =>
+        equipment.id.toString().includes(searchId.trim())
       );
     }
 
     // Filtro por estado
     if (statusFilter) {
       filtered = filtered.filter(
-        (computer: ComputerEquipmentAdapted) => computer.status === statusFilter
+        (equipment: EquipmentAdapted) => equipment.status === statusFilter
       );
     }
 
     // Filtro por marca
     if (brandFilter) {
       filtered = filtered.filter(
-        (computer: ComputerEquipmentAdapted) => computer.brand === brandFilter
+        (equipment: EquipmentAdapted) => equipment.brand === brandFilter
       );
     }
 
     // Filtro por tipo de equipo
     if (typeFilter) {
       filtered = filtered.filter(
-        (computer: ComputerEquipmentAdapted) => computer.type === typeFilter
+        (equipment: EquipmentAdapted) => equipment.type_name === typeFilter
       );
     }
 
     // Filtro por ubicación
     if (locationFilter) {
-      filtered = filtered.filter((computer: ComputerEquipmentAdapted) =>
+      filtered = filtered.filter((computer: EquipmentAdapted) =>
         computer.location.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
 
     return filtered;
-  }, [computers, searchId, statusFilter, brandFilter, typeFilter, locationFilter]);
+  }, [equipments, searchId, statusFilter, brandFilter, typeFilter, locationFilter]);
 
   const clearFilters = () => {
     setSearchId("");
@@ -68,7 +68,7 @@ export const useComputerFilters = (computers: ComputerEquipmentAdapted[]) => {
     setLocationFilter,
     typeFilter,
     setTypeFilter,
-    filteredComputers,
+    filteredEquipments,
     clearFilters,
   };
 };

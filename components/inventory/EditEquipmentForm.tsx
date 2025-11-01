@@ -20,9 +20,9 @@ import { updateEquipmentData } from "@/api/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { CatalogData, CreateComputerEquipmentInput } from "@/lib/types";
+import { CatalogData, CreateEquipmentInput } from "@/lib/types";
 
-const computerSchema = z.object({
+const equipmentSchema = z.object({
   serial_number: z.string().min(5, "El número de serie es requerido"),
   model: z.string().min(1, "El modelo es requerido"),
   brand_id: z.string().min(1, "La marca es requerida"),
@@ -108,34 +108,35 @@ const computerSchema = z.object({
   }
 });
 
-type ComputerFormData = z.infer<typeof computerSchema>;
+type EquipmentFormData = z.infer<typeof equipmentSchema>;
 
-interface EditComputerFormProps {
-  computerId: number;
-  computerData: CreateComputerEquipmentInput;
+interface EditEquipmentFormProps {
+  equipmentId: number;
+  equipmentData: CreateEquipmentInput;
   catalogsData: CatalogData;
 }
 
-export const EditComputerForm = ({
-  computerId,
-  computerData,
+export const EditEquipmentForm = ({
+  equipmentId,
+  equipmentData,
   catalogsData,
-}: EditComputerFormProps) => {
+}: EditEquipmentFormProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
+ 
 
   // Estado para rastrear el tipo de equipo seleccionado
   const [selectedTypeId, setSelectedTypeId] = useState(
-    computerData?.type_id?.toString() || ""
+    equipmentData?.type_id?.toString() || ""
   );
 
   // Determinar si es una impresora
   // NOTA: Cambiar "3" por el ID real del tipo "Impresora" en tu base de datos
   const isPrinter = selectedTypeId === "3";
 
-  // Calcular defaultValues directamente desde computerData (que ya viene cargado del padre)
+  // Calcular defaultValues directamente desde equipmentData (que ya viene cargado del padre)
   const defaultValues = useMemo(() => {
-    const equipment = computerData;
+    const equipment = equipmentData;
 
     return {
       serial_number: equipment?.serial_number || "",
@@ -145,34 +146,34 @@ export const EditComputerForm = ({
       location: equipment?.location || "",
       status_id: equipment?.status_id?.toString() || "",
       asset_number: equipment?.asset_number || "",
-      cpu: equipment?.hardware_specs?.cpu || "",
-      ram: equipment?.hardware_specs?.ram || "",
-      storage: equipment?.hardware_specs?.storage || "",
-      gpu: equipment?.hardware_specs?.gpu || "",
-      network: equipment?.hardware_specs?.network || "",
-      os: equipment?.software_specs?.os || "",
-      office: equipment?.software_specs?.office || "",
-      antivirus: equipment?.software_specs?.antivirus || "",
+      cpu: equipment?.specifications?.hardware?.cpu || "",
+      ram: equipment?.specifications?.hardware?.ram || "",
+      storage: equipment?.specifications?.hardware?.storage || "",
+      gpu: equipment?.specifications?.hardware?.gpu || "",
+      network: equipment?.specifications?.hardware?.network || "",
+      os: equipment?.specifications?.software?.os || "",
+      office: equipment?.specifications?.software?.office || "",
+      antivirus: equipment?.specifications?.software?.antivirus || "",
     };
-  }, [computerData]);
+  }, [equipmentData]);
 
   const {
     control,
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<ComputerFormData>({
-    resolver: zodResolver(computerSchema),
+  } = useForm<EquipmentFormData>({
+    resolver: zodResolver(equipmentSchema),
     defaultValues,
   });
 
   // Mutation para actualizar el equipo
   const updateMutation = useMutation({
-    mutationFn: (data: ComputerFormData) => {
+    mutationFn: (data: EquipmentFormData) => {
       // Verificar si es impresora
       const isPrinterType = data.type_id === "3";
-      
-      return updateEquipmentData(computerId, {
+
+      return updateEquipmentData(equipmentId, {
         serial_number: data.serial_number,
         model: data.model,
         brand_id: parseInt(data.brand_id),
@@ -204,7 +205,7 @@ export const EditComputerForm = ({
       const successMessage = data?.message || "Equipo actualizado correctamente";
       toast.success(successMessage);
       queryClient.invalidateQueries({ queryKey: ["equipment"] });
-      queryClient.invalidateQueries({ queryKey: ["computer", computerId] });
+      queryClient.invalidateQueries({ queryKey: ["equipment", equipmentId] });
     },
     onError: (error: any) => {
       const errorMessage = error?.message || "Error al actualizar el equipo. Intenta nuevamente.";
@@ -212,14 +213,14 @@ export const EditComputerForm = ({
     },
   });
 
-  const onSubmit = async (data: ComputerFormData) => {
+  const onSubmit = async (data: EquipmentFormData) => {
     updateMutation.mutate(data);
   };
 
   // Extraer catálogos
-  const equipmentBrands = catalogsData?.computer_brands || [];
-  const equipmentTypes = catalogsData?.computer_types || [];
-  const equipmentStatuses = catalogsData?.computer_statuses || [];
+  const equipmentBrands = catalogsData?.equipment_brands || [];
+  const equipmentTypes = catalogsData?.equipment_types || [];
+  const equipmentStatuses = catalogsData?.equipment_statuses || [];
   const departments = catalogsData?.departments || [];
   const osOptions = catalogsData?.os_options || [];
   const officeOptions = catalogsData?.office_suites || [];

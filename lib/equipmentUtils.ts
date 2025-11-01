@@ -35,7 +35,6 @@ export const adaptEquipmentData = (
 ): EquipmentAdapted => {
   const brand = getBrandName(apiEquipment);
   const type = getTypeName(apiEquipment);
-  const requestsLinked = apiEquipment.requests || [];
 
   return {
     id: apiEquipment.id,
@@ -48,8 +47,7 @@ export const adaptEquipmentData = (
     status_id: apiEquipment.status_id,
     asset_number: apiEquipment.asset_number,
     assigned_to: getAssignedUserName(apiEquipment),
-    requests: requestsLinked, // Mantener compatibilidad
-    requests_linked: requestsLinked, // Nueva propiedad con nombre más descriptivo
+    requests_linked: apiEquipment.requests_linked || [],
     assigned_user_id: apiEquipment?.assigned_user_id ?? null,
     type_name: type,
     hardware_specs: apiEquipment.specifications?.hardware ? {

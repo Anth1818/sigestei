@@ -6,32 +6,32 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
-import { ContentComputerRow } from "./ContentComputerRow";
-import { ComputerEquipmentAdapted } from "@/lib/types";
+import { ContentEquipmentRow } from "./ContentEquipmentRow";
+import { EquipmentAdapted } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";
 
-interface ExpandableComputerRowProps {
-  computer: ComputerEquipmentAdapted;
+interface ExpandableEquipmentRowProps {
+  equipment: EquipmentAdapted;
   expanded: boolean;
   onToggle: () => void;
-  onUpdateStatus: (computerId: number, newStatusId: number, newStatusName: string) => void;
+  onUpdateStatus: (equipmentId: number, newStatusId: number, newStatusName: string) => void;
   getStatusColor: (status: string) => string;
   equipmentStatuses: Array<{ id: number; name: string }>;
 }
 
-export function ExpandableComputerRow({
-  computer,
+export function ExpandableEquipmentRow({
+  equipment,
   expanded,
   onToggle,
   onUpdateStatus,
   getStatusColor,
   equipmentStatuses,
-}: ExpandableComputerRowProps) {
+}: ExpandableEquipmentRowProps) {
 
 
   const [assigned_user_name, setAssigned_user_name] = useState(
-      computer.assigned_to || "No asignado"
+      equipment.assigned_to || "No asignado"
     );
 
   // Manejar el cambio de estado
@@ -40,32 +40,33 @@ export function ExpandableComputerRow({
       (status) => status.id.toString() === statusId
     );
     if (selectedStatus) {
-      onUpdateStatus(computer.id, selectedStatus.id, selectedStatus.name);
+      onUpdateStatus(equipment.id, selectedStatus.id, selectedStatus.name);
     }
   };
 
   return (
     <>
       <TableRow className="hover:bg-muted/50">
-        <TableCell className="p-2 text-center">{computer.id}</TableCell>
-        <TableCell className="p-2">{computer.type}</TableCell>
-        <TableCell className="p-2">{computer.asset_number}</TableCell>
-        <TableCell className="p-2">{computer.model}</TableCell>
-        <TableCell className="p-2">{computer.serial_number}</TableCell>
+        <TableCell className="p-2 text-center">{equipment.id}</TableCell>
+        <TableCell className="p-2">{equipment.type_name}</TableCell>
+        <TableCell className="p-2">{equipment.asset_number}</TableCell>
+        <TableCell className="p-2">{equipment.brand}</TableCell>
+        <TableCell className="p-2">{equipment.model}</TableCell>
+        <TableCell className="p-2">{equipment.serial_number}</TableCell>
         <TableCell className="p-2">
-          <span className={getStatusColor(computer.status)}>
-            {computer.status}
+          <span className={getStatusColor(equipment.status)}>
+            {equipment.status}
           </span>
         </TableCell>
-        <TableCell className="p-2">{computer.location}</TableCell>
-        <TableCell className="p-2">{computer.type === "Impresora" ? computer.location : assigned_user_name}</TableCell>
+        <TableCell className="p-2">{equipment.location}</TableCell>
+        <TableCell className="p-2">{equipment.type_name === "Impresora" ? equipment.location : assigned_user_name}</TableCell>
         <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div>
                   <Select
-                    value={computer.status_id?.toString()}
+                    value={equipment.status_id?.toString()}
                     onValueChange={handleStatusChange}
                   >
                     <SelectTrigger className="h-8 w-full">
@@ -91,7 +92,7 @@ export function ExpandableComputerRow({
               e.stopPropagation();
             }}
           >
-            <Link href={`/editComputerEquipment/${computer.id}`}>Editar</Link>
+            <Link href={`/editEquipment/${equipment.id}`}>Editar</Link>
           </Button>
         </TableCell>
         <TableCell className="p-2">
@@ -108,7 +109,7 @@ export function ExpandableComputerRow({
       <AnimatePresence initial={false}>
         {expanded && (
           <TableRow>
-            <TableCell colSpan={9} className="p-4 bg-muted/30">
+            <TableCell colSpan={11} className="p-4 bg-muted/30">
               <motion.div
                 initial="collapsed"
                 animate="open"
@@ -119,7 +120,7 @@ export function ExpandableComputerRow({
                 }}
                 transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
               >
-                <ContentComputerRow computer={computer} assigned_user_name={assigned_user_name} setAssigned_user_name={setAssigned_user_name} />
+                <ContentEquipmentRow equipment={equipment} assigned_user_name={assigned_user_name} setAssigned_user_name={setAssigned_user_name} />
               </motion.div>
             </TableCell>
           </TableRow>

@@ -243,7 +243,7 @@ export type User = {
   department: string;
   position: string;
   role: string;
-  computer_equipment?: ComputerEquipment[];
+  equipment?: Equipment[];
 };
 
 export type HardwareSpecs = {
@@ -260,7 +260,7 @@ export type SoftwareSpecs = {
   antivirus: string;
 };
 
-export type ComputerEquipment = {
+export type Equipment = {
   id: number;
   asset_number: string;
   serial_number: string;
@@ -300,21 +300,21 @@ export type RequestResponse = {
   requester_id: number;
   beneficiary_id: number;
   technician_id: number;
-  computer_equipment_id: number;
+  equipment_id: number;
   type_id: number;
   status_id: number;
   priority_id: number;
   users_requests_beneficiary_idTousers: User;
   users_requests_requester_idTousers: User;
   users_requests_technician_idTousers: User;
-  computer_equipment: ComputerEquipment;
+  equipment: EquipmentAdapted;
   request_priorities: RequestPriority;
   request_statuses: RequestStatus;
   request_types: RequestType;
 };
 
 // Tipo para el formato que espera el componente ExpandableComputerRow
-export interface ComputerEquipmentAdapted {
+export interface EquipmentAdapted {
   id: number;
   name: string;
   serial_number: string;
@@ -325,87 +325,81 @@ export interface ComputerEquipmentAdapted {
   status_id: number;
   asset_number: string;
   assigned_to: string;
-  requests: number[];
-  type: string;
-  assigned_user_id: number;
+  requests_linked: number[]; // IDs de las solicitudes asociadas con el equipo
+  type_name: string;
+  assigned_user_id: number | null;
   hardware_specs: {
     cpu: string;
     ram: string;
     storage: string;
     gpu: string;
     network: string;
-  };
+  } | undefined;
   software: {
     os: string;
     office: string;
     antivirus: string;
-  };
+  } | undefined;
+  type_id?: number;
 }
 
 // Tipos para la respuesta de la API de equipos informáticos
-export interface ComputerEquipmentResponse {
+export interface EquipmentResponse {
   id: number;
   asset_number: string;
   serial_number: string;
   model: string;
   location: string;
-  hardware_specs: {
-    cpu: string;
-    gpu: string;
-    ram: string;
-    network: string;
-    storage: string;
-  };
-  software_specs: {
-    os: string;
-    office: string;
-    antivirus: string;
-  };
-  assigned_user_id: number | null;
   type_id: number;
   brand_id: number;
   status_id: number;
-  users?: {
-    id: number;
-    full_name: string;
-    identity_card: number;
-    email: string;
-    role_id: number;
-    position_id: number;
-    gender_id: number;
-    department_id: number;
+  department_id: number | null;
+  assigned_user_id: number | null;
+  specifications: {
+    hardware: {
+      cpu: string;
+      gpu: string;
+      ram: string;
+      network: string;
+      storage: string;
+    };
+    software: {
+      os: string;
+      office: string;
+      antivirus: string;
+    };
+    office_suite_id: number | null;
+    software_type_id: number | null;
+    antivirus_solution_id: number | null;
   };
-  requests?: number[];
-  equipment_brands?: {
-    id: number;
-    name: string;
-  };
-  equipment_statuses?: {
-    id: number;
-    name: string;
-  };
-  equipment_types?: {
-    id: number;
-    name: string;
-  };
+  type_name: string;
+  brand_name: string;
+  status_name: string;
+  department_name: string | null;
+  assigned_user_name: string | null;
+  assigned_user_email: string | null;
+  assigned_user_identity_card: number | null;
+  requests_linked?: number[];
 }
 
-export interface CreateComputerEquipmentInput {
+export interface CreateEquipmentInput {
   asset_number: string;
   serial_number: string;
   model?: string | null;
   location?: string | null;
-  hardware_specs?: {
-    cpu: string;
-    gpu: string;
-    ram: string;
-    network: string;
-    storage: string;
-  };
-  software_specs?: {
-    os: string;
-    office: string;
-    antivirus: string;
+  specifications?: {
+    hardware: {
+      cpu: string;
+      gpu: string;
+      ram: string;
+      network: string;
+      storage: string;
+    };
+    software: {
+      os: string;
+      office: string;
+      antivirus: string;
+    };
   };
   assigned_user_id?: number | null | undefined;
   type_id: number;
@@ -418,17 +412,17 @@ export interface CreateComputerEquipmentInput {
 
 //Catalogs types 
 
-export interface ComputerBrand {
+export interface EquipmentBrand {
   id: number;
   name: string;
 }
 
-export interface ComputerStatus {
+export interface EquipmentStatus {
   id: number;
   name: string;
 }
 
-export interface ComputerType {
+export interface EquipmentType {
   id: number;
   name: string;
 }
@@ -475,9 +469,9 @@ export interface AntivirusOption {
 
 export interface CatalogData {
   request_types: RequestType[];
-  computer_brands: ComputerBrand[];
-  computer_statuses: ComputerStatus[];
-  computer_types: ComputerType[];
+  equipment_brands: EquipmentBrand[];
+  equipment_statuses: EquipmentStatus[];
+  equipment_types: EquipmentType[];
   roles: Role[];
   departments: Department[];
   positions: Position[];

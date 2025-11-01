@@ -3,11 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateEquipmentData } from "@/api/api";
 import { toast } from "sonner";
 
-export const useComputerActions = () => {
+export const useEquipmentActions = () => {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{
-    computerId: number;
+    equipmentId: number;
     newStatusId: number;
     newStatusName: string;
   } | null>(null);
@@ -20,10 +20,10 @@ export const useComputerActions = () => {
 
   // Mutation para actualizar el status
   const updateStatusMutation = useMutation({
-    mutationFn: ({ computerId, statusId }: { computerId: number; statusId: number }) =>
-      updateEquipmentData(computerId, { status_id: statusId }),
+    mutationFn: ({ equipmentId, statusId }: { equipmentId: number; statusId: number }) =>
+      updateEquipmentData(equipmentId, { status_id: statusId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["computers"] });
+      queryClient.invalidateQueries({ queryKey: ["equipments"] });
       toast.success("Estado del equipo actualizado correctamente");
       setIsStatusDialogOpen(false);
       setPendingStatusUpdate(null);
@@ -38,11 +38,11 @@ export const useComputerActions = () => {
 
   // Manejar solicitud de cambio de status (abre dialog)
   const handleStatusChange = (
-    computerId: number,
+    equipmentId: number,
     newStatusId: number,
     newStatusName: string
   ) => {
-    setPendingStatusUpdate({ computerId, newStatusId, newStatusName });
+    setPendingStatusUpdate({ equipmentId, newStatusId, newStatusName });
     setIsStatusDialogOpen(true);
   };
 
@@ -50,7 +50,7 @@ export const useComputerActions = () => {
   const confirmStatusUpdate = () => {
     if (pendingStatusUpdate) {
       updateStatusMutation.mutate({
-        computerId: pendingStatusUpdate.computerId,
+        equipmentId: pendingStatusUpdate.equipmentId,
         statusId: pendingStatusUpdate.newStatusId,
       });
     }

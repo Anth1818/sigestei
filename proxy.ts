@@ -11,7 +11,7 @@ const protectedRoutes = [
   "/addUser",
   "/addRequest",
   "/editUser",
-  "/editComputerEquipment",
+  "/editEquipment",
 ];
 
 export default function proxy(request: NextRequest) {
@@ -60,19 +60,19 @@ export default function proxy(request: NextRequest) {
       "/addUser",
       "/addRequest",
       "/editUser",
-      "/editComputerEquipment",
+      "/editEquipment",
       "/profile"
     ], // admin
     2: [
       "/dashboard",
       "/viewInventory",
-      "/editComputerEquipment",
+      "/editEquipment",
       "/viewRequests",
       "/addRequest",
       "/profile"
     ], // coordinador
-    3: ["/viewInventory", "/viewRequests", "/addRequest", "/editComputerEquipment, /profile"], // técnico
-    4: ["/viewRequests", "/addRequest, /profile"], // usuario final
+    3: ["/viewInventory", "/viewRequests", "/addRequest", "/editEquipment", "/profile"], // técnico
+    4: ["/viewRequests", "/addRequest", "/profile"], // usuario final
   };
 
   const allowedRoutes = roleAccessMap[roleId] || [];
@@ -96,7 +96,7 @@ export const config = {
     "/addUser",
     "/addRequest",
     "/editUser",
-    "/editComputerEquipment",
+    "/editEquipment",
     "/profile"
   ],
 };

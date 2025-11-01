@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { ComputerEquipmentAdapted } from "@/lib/types";
+import { EquipmentAdapted } from "@/lib/types";
 
 type SortColumn = "id" | "asset_number" | "model" | "serial_number" | "status" | "location" | "assigned_to";
 type SortDirection = "asc" | "desc";
 
-export const useComputerSorting = (computers: ComputerEquipmentAdapted[]) => {
+export const useEquipmentSorting = (equipments: EquipmentAdapted[]) => {
   const [currentSort, setCurrentSort] = useState<{
     column: SortColumn | null;
     direction: SortDirection;
   }>({ column: null, direction: "asc" });
 
-  const sortComputers = (field: string) => {
+  const sortEquipments = (field: string) => {
     const newDirection =
       currentSort?.column === field && currentSort.direction === "asc"
         ? "desc"
@@ -25,11 +25,11 @@ export const useComputerSorting = (computers: ComputerEquipmentAdapted[]) => {
     return currentSort.direction === "asc" ? "ChevronUp" : "ChevronDown";
   };
 
-  const sortedComputers = [...computers].sort((a, b) => {
+  const sortedEquipments = [...equipments].sort((a, b) => {
     if (!currentSort.column) return 0;
 
-    const aValue = a[currentSort.column as keyof ComputerEquipmentAdapted];
-    const bValue = b[currentSort.column as keyof ComputerEquipmentAdapted];
+    const aValue = a[currentSort.column as keyof EquipmentAdapted];
+    const bValue = b[currentSort.column as keyof EquipmentAdapted];
 
     if (aValue === null || aValue === undefined) return 1;
     if (bValue === null || bValue === undefined) return -1;
@@ -49,8 +49,8 @@ export const useComputerSorting = (computers: ComputerEquipmentAdapted[]) => {
 
   return {
     currentSort,
-    sortComputers,
+    sortEquipments,
     renderSortIcon,
-    sortedComputers,
+    sortedEquipments,
   };
 };

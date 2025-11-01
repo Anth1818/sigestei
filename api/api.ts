@@ -1,11 +1,11 @@
 import axios from "axios";
 import {
-  CreateComputerEquipmentInput,
+  CreateEquipmentInput,
   CreateRequestInput,
   CreateRequestPayload,
   CreateUserInput,
 } from "@/lib/types";
-import { ComputerEquipmentResponse } from "@/lib/types";
+import { EquipmentResponse } from "@/lib/types";
 
 const API_BASE_URL = "http://localhost:3001/api"; // Ajusta el puerto si tu backend usa otro
 
@@ -390,10 +390,10 @@ export const updateRequest = async (
 
 // EQUIPMENT
 
-export const createEquipment = async (data: CreateComputerEquipmentInput) => {
+export const createEquipment = async (data: CreateEquipmentInput) => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/computerEquipment/register`,
+      `${API_BASE_URL}/equipment/register`,
       data,
       {
         withCredentials: true,
@@ -442,7 +442,7 @@ export const createEquipment = async (data: CreateComputerEquipmentInput) => {
 // Obtener todos los equipos
 export const fetchAllEquipment = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/computerEquipment`, {
+    const response = await axios.get(`${API_BASE_URL}/equipment`, {
       withCredentials: true,
     });
 
@@ -480,7 +480,7 @@ export const fetchAllEquipment = async () => {
 
 export const fetchEquipmentById = async (id: number) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/computerEquipment/${id}`, {
+    const response = await axios.get(`${API_BASE_URL}/equipment/${id}`, {
       withCredentials: true,
     });
 
@@ -518,11 +518,11 @@ export const fetchEquipmentById = async (id: number) => {
 
 export const updateEquipmentData = async (
   id: number,
-  data: Partial<ComputerEquipmentResponse>
+  data: Partial<EquipmentResponse>
 ) => {
   try {
     const response = await axios.put(
-      `${API_BASE_URL}/computerEquipment/update/${id}`,
+      `${API_BASE_URL}/equipment/update/${id}`,
       data,
       {
         withCredentials: true,

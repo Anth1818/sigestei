@@ -14,7 +14,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createEquipment } from "@/api/api";
 import { toast } from "sonner";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
-import { CatalogData, CreateComputerEquipmentInput, UserData } from "@/lib/types";
+import { CatalogData, CreateEquipmentInput, UserData } from "@/lib/types";
 import { colorForSoonerError } from "@/lib/utils";
 
 const computerSchema = z.object({
@@ -175,7 +175,7 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
 
   // Mutation para crear equipo
   const createMutation = useMutation({
-    mutationFn: (data: CreateComputerEquipmentInput) => createEquipment(data),
+    mutationFn: (data: CreateEquipmentInput) => createEquipment(data),
     onSuccess: (data) => {
       // Verificar si la respuesta tiene success: true o el mensaje de éxito
       const successMessage = data?.message || "Equipo informático registrado exitosamente";
@@ -198,7 +198,7 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
     // Verificar si es impresora
     const isPrinterType = data.type_id === "3";
     
-    const equipmentData: CreateComputerEquipmentInput = {
+    const equipmentData: CreateEquipmentInput = {
       asset_number: data.asset_number,
       serial_number: data.serial_number,
       model: data.model,
@@ -234,9 +234,9 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
   };
 
   // Extraer catálogos (ahora recibidos como props)
-  const equipmentBrands = catalogsData?.computer_brands || [];
-  const equipmentTypes = catalogsData?.computer_types || [];
-  const equipmentStatuses = catalogsData?.computer_statuses || [];
+  const equipmentBrands = catalogsData?.equipment_brands|| [];
+  const equipmentTypes = catalogsData?.equipment_types || [];
+  const equipmentStatuses = catalogsData?.equipment_statuses || [];
   const departments = catalogsData?.departments || [];
   const osOptions = catalogsData?.os_options || [];
   const officeOptions = catalogsData?.office_suites || [];

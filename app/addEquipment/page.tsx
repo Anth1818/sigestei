@@ -1,17 +1,15 @@
 "use client";
 
-import AddComputerForm from "@/components/inventory/AddComputerForm";
+import AddComputerForm from "@/components/inventory/AddEquipmentForm";
 import { ButtonNavigate } from "@/components/shared/ButtonToNavigate";
 import LayoutSideBar from "@/layouts/LayoutSideBar";
 import { ArrowBigLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCatalogs } from "@/api/api";
 import { useUserStore } from "@/hooks/useUserStore";
-import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function AddComputerEquipmentPage() {
-  const router = useRouter();
+export default function AddEquipmentPage() {
   const { user } = useUserStore();
 
   // Obtener catálogos

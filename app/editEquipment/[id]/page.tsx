@@ -1,21 +1,21 @@
 "use client";
 
 import LayoutSideBar from "@/layouts/LayoutSideBar";
-import { EditComputerForm } from "@/components/inventory/EditComputerForm";
+import { EditEquipmentForm } from "@/components/inventory/EditEquipmentForm";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { fetchEquipmentById, fetchCatalogs } from "@/api/api";
 import { ButtonNavigate } from "@/components/shared/ButtonToNavigate";
 import { ArrowBigLeft } from "lucide-react";
 
-export default function EditComputerEquipmentPage() {
+export default function EditEquipmentPage() {
   const params = useParams();
-  const computerId = params.id as string;
+  const equipmentId = params.id as string;
 
   // Obtener datos del equipo
-  const { data: computerData, isLoading: isLoadingComputer } = useQuery({
-    queryKey: ["computer", parseInt(computerId)],
-    queryFn: () => fetchEquipmentById(parseInt(computerId)),
+  const { data: equipmentData, isLoading: isLoadingEquipment } = useQuery({
+    queryKey: ["equipment", parseInt(equipmentId)],
+    queryFn: () => fetchEquipmentById(parseInt(equipmentId)),
   });
 
   // Obtener catálogos
@@ -25,7 +25,7 @@ export default function EditComputerEquipmentPage() {
   });
 
   // Mostrar loading mientras se cargan los datos
-  if (isLoadingComputer || isLoadingCatalogs) {
+  if (isLoadingEquipment || isLoadingCatalogs) {
     return (
       <LayoutSideBar>
         <div className="container mx-auto p-6">
@@ -38,7 +38,7 @@ export default function EditComputerEquipmentPage() {
   }
 
   // Mostrar error si no se encuentra el equipo
-  if (!computerData) {
+  if (!equipmentData) {
     return (
       <LayoutSideBar>
         <div className="container mx-auto p-6">
@@ -60,9 +60,9 @@ export default function EditComputerEquipmentPage() {
         >
           Volver al inventario
         </ButtonNavigate>
-        <EditComputerForm
-          computerId={parseInt(computerId)}
-          computerData={computerData}
+        <EditEquipmentForm
+          equipmentId={parseInt(equipmentId)}
+          equipmentData={equipmentData}
           catalogsData={catalogsData}
         />
       </div>

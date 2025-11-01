@@ -3,8 +3,8 @@ import { useState } from "react";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
 import { useUserStore } from "@/hooks/useUserStore";
 import Link from "next/link";
-import { ComputerEquipmentAdapted } from "@/lib/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { EquipmentAdapted } from "@/lib/types";
+import { useMutation } from "@tanstack/react-query";
 import { updateEquipmentData } from "@/api/api";
 import { toast } from "sonner";
 import {
@@ -18,42 +18,41 @@ import {
 import { Button } from "@/components/ui/button";
 import { colorForSoonerError } from "@/lib/utils";
 
-interface ContentComputerRowProps {
-  computer: ComputerEquipmentAdapted;
+interface ContentEquipmentRowProps {
+  equipment: EquipmentAdapted;
   assigned_user_name: string;
   setAssigned_user_name: (name: string) => void;
 }
 
-const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_name }: ContentComputerRowProps) => {
+const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_name }: ContentEquipmentRowProps) => {
   const user = useUserStore((state) => state.user);
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(
-    computer.assigned_user_id?.toString() || ""
+    equipment.assigned_user_id?.toString() || ""
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUnlinkDialogOpen, setIsUnlinkDialogOpen] = useState(false);
 
-  // Determinar si es una impresora
-  // NOTA: Ajustar "Impresora" según el nombre exacto en tu base de datos
-  const isPrinter = computer.type?.toLowerCase().includes("impresora");
+  // Determinar si es una impresora usando type_name o type_id = 3
+  const isPrinter = equipment.type_name?.toLowerCase().includes("impresora") || equipment.type_id === 3;
 
   // Extraer los IDs de requests asociados
-  const associatedRequests = Array.isArray(computer.requests)
-    ? computer.requests
-    : [];
+  const associatedRequests = equipment.requests_linked || [];
+    
 
   // Mutation para actualizar el equipo (reasignar)
   const updateEquipmentMutation = useMutation({
     mutationFn: async (newUserId: number) =>{
-      const response = await updateEquipmentData(computer.id, { assigned_user_id: newUserId })
+      const response = await updateEquipmentData(equipment.id, { assigned_user_id: newUserId })
       return response
     },
     onSuccess: (response) => {
+      console.log(response);
       toast.success("Equipo reasignado correctamente");
       setIsDialogOpen(false);
       setSelectedDepartmentId("");
       setSelectedUserId("");
-      setAssigned_user_name(response.data.users.full_name);
+      setAssigned_user_name(response.data.assigned_user_name || "No asignado");
     },
     onError: (error: any) => {
       toast.error(
@@ -66,7 +65,7 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
   // Mutation para desvincular usuario del equipo
   const unlinkUserMutation = useMutation({
     mutationFn: async () => {
-      const response = await updateEquipmentData(computer.id, { assigned_user_id: null })
+      const response = await updateEquipmentData(equipment.id, { assigned_user_id: null })
       return response
     },
     onSuccess: () => {
@@ -218,7 +217,7 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
                       <Link
                         href={`/viewRequests?id=${requestId}`}
                         target="_blank"
-                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2"
+                        className="text-sm text-blue-600 hover:text-blue-800 dark:text-white hover:underline flex items-center gap-2"
                       >
                         <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
                         Solicitud #{requestId}
@@ -244,20 +243,20 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
                 </h5>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   <div>
-                    <strong>CPU:</strong> {computer.hardware_specs?.cpu}
+                    <strong>CPU:</strong> {equipment.hardware_specs?.cpu}
                   </div>
                   <div>
-                    <strong>RAM:</strong> {computer.hardware_specs?.ram}
+                    <strong>RAM:</strong> {equipment.hardware_specs?.ram}
                   </div>
                   <div>
                     <strong>Almacenamiento:</strong>{" "}
-                    {computer.hardware_specs?.storage}
+                    {equipment.hardware_specs?.storage}
                   </div>
                   <div>
-                    <strong>GPU:</strong> {computer.hardware_specs?.gpu}
+                    <strong>GPU:</strong> {equipment.hardware_specs?.gpu}
                   </div>
                   <div>
-                    <strong>Red:</strong> {computer.hardware_specs?.network}
+                    <strong>Red:</strong> {equipment.hardware_specs?.network}
                   </div>
                 </div>
               </div>
@@ -268,13 +267,13 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
                 </h5>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   <div>
-                    <strong>Sistema Operativo:</strong> {computer.software?.os}
+                    <strong>Sistema Operativo:</strong> {equipment.software?.os}
                   </div>
                   <div>
-                    <strong>Suite de Oficina:</strong> {computer.software?.office}
+                    <strong>Suite de Oficina:</strong> {equipment.software?.office}
                   </div>
                   <div>
-                    <strong>Antivirus:</strong> {computer.software?.antivirus}
+                    <strong>Antivirus:</strong> {equipment.software?.antivirus}
                   </div>
                 </div>
               </div>
@@ -294,14 +293,14 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
 
               <div className="py-4">
                 <p className="text-sm text-gray-600">
-                  <strong>Equipo:</strong> {computer.brand} {computer.model}
+                  <strong>Equipo:</strong> {equipment.brand} {equipment.model}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>Número de serie:</strong> {computer.serial_number}
+                  <strong>Número de serie:</strong> {equipment.serial_number}
                 </p>
                 <p className="text-sm text-gray-600 mt-2">
                   <strong>Asignación actual:</strong>{" "}
-                  {computer.assigned_to || "No asignado"}
+                  {equipment.assigned_to || "No asignado"}
                 </p>
               </div>
 
@@ -338,10 +337,10 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
 
               <div className="py-4">
                 <p className="text-sm text-gray-600">
-                  <strong>Equipo:</strong> {computer.brand} {computer.model}
+                  <strong>Equipo:</strong> {equipment.brand} {equipment.model}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>Número de serie:</strong> {computer.serial_number}
+                  <strong>Número de serie:</strong> {equipment.serial_number}
                 </p>
                 <p className="text-sm text-gray-600 mt-2">
                   <strong>Usuario actual:</strong> {assigned_user_name}
@@ -374,4 +373,4 @@ const ContentComputerRow = ({ computer, assigned_user_name, setAssigned_user_nam
   );
 };
 
-export { ContentComputerRow };
+export { ContentEquipmentRow };
