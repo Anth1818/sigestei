@@ -10,7 +10,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { fetchCatalogs, fetchAllUsersByDepartment } from "@/api/api";
+import { fetchCatalogs, fetchAllUsersEnabledToGetSupportByDepartment } from "@/api/api";
 import { UserData } from "@/lib/types";
 
 interface DepartmentUserSelectorProps {
@@ -83,7 +83,7 @@ export function DepartmentUserSelector({
       if (!departmentIdToFetch) {
         return [];
       }
-      return await fetchAllUsersByDepartment(departmentIdToFetch);
+      return await fetchAllUsersEnabledToGetSupportByDepartment(departmentIdToFetch);
     },
     enabled: !!departmentIdToFetch,
   });

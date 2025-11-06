@@ -2,6 +2,7 @@ import { Computer, FileText, User, MessageSquare } from "lucide-react"
 import { Request } from "@/lib/types";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCatalogs, updateRequest } from "@/api/api";
@@ -16,6 +17,10 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
   const [assignedTo, setAssignedTo] = useState(request.assigned_to);
   const [comments_technician, setCommentsTechnician] = useState(request.comments_technician || "");
   
+  // Estados para el diálogo de confirmación de técnico
+  const [isTechnicianDialogOpen, setIsTechnicianDialogOpen] = useState(false);
+  const [pendingTechnician, setPendingTechnician] = useState<{ name: string; id: number } | null>(null);
+  
   // Obtener catálogos que incluyen técnicos
   const { data: catalogs, isLoading: catalogsLoading } = useQuery({
     queryKey: ['catalogs'],
@@ -27,13 +32,20 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
   
   const queryClient = useQueryClient();
 
-  // Mutation para actualizar el técnico asignado
+  // Mutation para actualizar el técnico asignado (y estado si es necesario)
   const updateTechnicianMutation = useMutation({
-    mutationFn: ({ id, technicianId }: { id: number; technicianId: number }) =>
-      updateRequest(id, { technician_id: technicianId }),
-    onSuccess: () => {
+    mutationFn: ({ id, technicianId, statusId }: { id: number; technicianId: number; statusId?: number }) => {
+      const updateData: any = { technician_id: technicianId };
+      if (statusId) {
+        updateData.status_id = statusId;
+      }
+      return updateRequest(id, updateData);
+    },
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
-      toast.success("Técnico asignado correctamente");
+      const actionText = assignedTo ? "reasignado" : "asignado";
+      const statusText = variables.statusId === 2 ? " y el estado cambió a 'En Proceso'" : "";
+      toast.success(`Técnico ${actionText} correctamente${statusText}`);
     },
     onError: (error: any) => {
       toast.error(error?.message || "Error al asignar técnico");
@@ -59,13 +71,40 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
     return technician?.id || 0;
   };
 
-  // Handler para cambio de técnico
+  // Handler para cambio de técnico - muestra el diálogo de confirmación
   const handleTechnicianChange = (technicianName: string) => {
     const technicianId = getTechnicianIdByName(technicianName);
     if (technicianId) {
-      updateTechnicianMutation.mutate({ id: request.id, technicianId });
-      setAssignedTo(technicianName);
+      setPendingTechnician({ name: technicianName, id: technicianId });
+      setIsTechnicianDialogOpen(true);
     }
+  };
+
+  // Confirmar asignación/reasignación de técnico
+  const confirmTechnicianAssignment = () => {
+    if (pendingTechnician) {
+      const isReassignment = !!assignedTo;
+      const isPending = request.status === "Pendiente";
+      
+      // Si es asignación nueva (no reasignación) y el estado es "Pendiente", cambiar a "En Proceso"
+      const statusId = !isReassignment && isPending ? 2 : undefined;
+      
+      updateTechnicianMutation.mutate({ 
+        id: request.id, 
+        technicianId: pendingTechnician.id,
+        statusId 
+      });
+      
+      setAssignedTo(pendingTechnician.name);
+      setIsTechnicianDialogOpen(false);
+      setPendingTechnician(null);
+    }
+  };
+
+  // Cancelar asignación de técnico
+  const cancelTechnicianAssignment = () => {
+    setIsTechnicianDialogOpen(false);
+    setPendingTechnician(null);
   };
   
   const isCompletedOrCancelled = request.status === "Completada" || request.status === "Cancelada";
@@ -117,7 +156,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
         <div className="grid grid-cols-2 gap-4 items-center">
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm text-gray-400">
-              Asignado a:
+              {assignedTo ? "Reasignar a:" : "Asignar a:"}
             </span>
             <Select
               value={assignedTo}
@@ -125,7 +164,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               disabled={updateTechnicianMutation.isPending}
             >
               <SelectTrigger className="h-7 min-w-[180px] w-auto">
-                <SelectValue placeholder="Asignar tecnicos" />
+                <SelectValue placeholder={assignedTo ? "Reasignar técnico" : "Asignar técnico"} />
               </SelectTrigger>
               <SelectContent>
                 {catalogsLoading ? (
@@ -188,13 +227,19 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
       </div>
     </div>
 
-    {/* Información del Equipo Principal */}
+    {/* Información del Equipo Principal (del solicitante) */}
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-3">
         <Computer className="h-5 w-5 text-purple-600" />
-        <h4 className="font-semibold text-lg">
-          Equipo Principal
-        </h4>
+        {request.equipment.type_name === "Impresora" ? (  
+            <h4 className="font-semibold text-lg">
+              Características de la impresora
+            </h4>
+        ) : (
+            <h4 className="font-semibold text-lg">
+              Equipo Principal del solicitante
+            </h4>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -241,7 +286,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
         <div className="flex items-center gap-2 mb-3">
           <User className="h-5 w-5 text-orange-600" />
           <h4 className="font-semibold text-lg">
-            Beneficiario Final
+            Beneficiario Final {request.third_party ? "(El que recibe soporte)" : ""}
           </h4>
         </div>
 
@@ -383,6 +428,63 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
 
       </div>
     </div>
+
+    {/* Dialog de confirmación para asignación/reasignación de técnico */}
+    <Dialog open={isTechnicianDialogOpen} onOpenChange={cancelTechnicianAssignment}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {assignedTo ? "Confirmar reasignación de técnico" : "Confirmar asignación de técnico"}
+          </DialogTitle>
+          <DialogDescription>
+            {assignedTo 
+              ? "¿Estás seguro de que deseas reasignar esta solicitud a otro técnico?" 
+              : "¿Estás seguro de que deseas asignar un técnico a esta solicitud?"}
+          </DialogDescription>
+        </DialogHeader>
+
+        {pendingTechnician && (
+          <div className="py-4 space-y-3">
+            <div className="text-sm">
+              <strong>Técnico:</strong>{" "}
+              <span className="text-blue-600 dark:text-blue-400">{pendingTechnician.name}</span>
+            </div>
+            
+            {assignedTo && (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <strong>Técnico actual:</strong> {assignedTo}
+              </div>
+            )}
+            
+            {!assignedTo && request.status === "Pendiente" && (
+              <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+                ℹ️ El estado de la solicitud cambiará automáticamente a <strong>"En Proceso"</strong>
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={cancelTechnicianAssignment}
+            disabled={updateTechnicianMutation.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={confirmTechnicianAssignment}
+            disabled={updateTechnicianMutation.isPending}
+          >
+            {updateTechnicianMutation.isPending
+              ? "Procesando..."
+              : assignedTo 
+                ? "Confirmar reasignación" 
+                : "Confirmar asignación"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 }
 export default ContentRequestRow;

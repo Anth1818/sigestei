@@ -86,7 +86,7 @@ export function ExpandableRequestRow({
         <TableCell className="p-2">{request.user.full_name}</TableCell>
         <TableCell className="p-2">
           <div className="flex items-center gap-1">
-            {beneficiaryName}
+            {request.equipment?.type_name === "Impresora" ? request.equipment?.location : beneficiaryName}
             {isThirdParty && (
               <span className="bg-blue-100 text-blue-700 px-1 py-0.5 rounded text-xs">
                 Tercero

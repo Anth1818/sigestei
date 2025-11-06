@@ -221,6 +221,47 @@ export const fetchAllUsersByAllDepartments = async () => {
   }
 };
 
+export const fetchAllUsersEnabledToGetSupportByDepartment = async (departmentId: number) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/users/allUsersEnabledToGetSupport/department/${departmentId}`,
+      {
+        withCredentials: true,
+      }
+    );
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener usuarios habilitados para soporte",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener usuarios habilitados para soporte";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener usuarios habilitados para soporte",
+    };
+  }
+};
+
 // Obtener todos los usuarios de un departamento específico
 export const fetchAllUsersByDepartment = async (departmentId: number) => {
   try {

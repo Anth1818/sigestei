@@ -234,12 +234,15 @@ export default function RequestTable() {
 
           {actions.pendingStatusUpdate && (
             <div className="py-4">
-              <p className="text-sm text-gray-600">
-                <strong>Nuevo estado:</strong> {actions.pendingStatusUpdate.newStatus}
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                <strong>Nuevo estado:</strong>{" "}
+                <span className={getStatusColor(actions.pendingStatusUpdate.newStatus)}>
+                  {actions.pendingStatusUpdate.newStatus}
+                </span>
               </p>
               {(actions.pendingStatusUpdate.newStatus === "Completada" ||
                 actions.pendingStatusUpdate.newStatus === "Cancelada") && (
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-gray-300 mt-2">
                   Se registrará automáticamente la fecha de resolución.
                 </p>
               )}
@@ -278,7 +281,7 @@ export default function RequestTable() {
 
           {actions.pendingPriorityUpdate && (
             <div className="py-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 <strong>Nueva prioridad:</strong>{" "}
                 <span className={getPriorityColor(actions.pendingPriorityUpdate.newPriority)}>
                   {actions.pendingPriorityUpdate.newPriority}
