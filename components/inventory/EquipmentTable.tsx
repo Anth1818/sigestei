@@ -81,7 +81,7 @@ export default function EquipmentTable() {
     },
     {
       label: "Tipo",
-      field: "type",
+      field: "type_name",
     },
     {
       label: "Número de bien",
@@ -239,7 +239,7 @@ export default function EquipmentTable() {
       </div>
 
 
-      <Table>
+      <Table className="w-full">
         <TableHeader>
           <TableRow>
             {columns.map((col) => (

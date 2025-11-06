@@ -50,17 +50,19 @@ export const adaptEquipmentData = (
     requests_linked: apiEquipment.requests_linked || [],
     assigned_user_id: apiEquipment?.assigned_user_id ?? null,
     type_name: type,
-    hardware_specs: apiEquipment.specifications?.hardware ? {
-      cpu: apiEquipment.specifications.hardware.cpu,
-      ram: apiEquipment.specifications.hardware.ram,
-      storage: apiEquipment.specifications.hardware.storage,
-      gpu: apiEquipment.specifications.hardware.gpu,
-      network: apiEquipment.specifications.hardware.network,
-    } : undefined,
-    software: apiEquipment.specifications?.software ? {
-      os: apiEquipment.specifications.software.os,
-      office: apiEquipment.specifications.software.office,
-      antivirus: apiEquipment.specifications.software.antivirus,
+    specifications: apiEquipment.specifications ? {
+      hardware: {
+        cpu: apiEquipment.specifications.hardware?.cpu,
+        ram: apiEquipment.specifications.hardware?.ram,
+        storage: apiEquipment.specifications.hardware?.storage,
+        gpu: apiEquipment.specifications.hardware?.gpu,
+        network: apiEquipment.specifications.hardware?.network,
+      },
+      software: {
+        os: apiEquipment.specifications.software?.os,
+        office: apiEquipment.specifications.software?.office,
+        antivirus: apiEquipment.specifications.software?.antivirus,
+      },
     } : undefined,
   };
 };
@@ -80,4 +82,5 @@ export const getStatusColor = (status: string) => {
     default:
       return "text-gray-600 bg-gray-100 px-2 py-1 font-bold rounded-full text-xs dark:bg-gray-500 dark:text-white";
   }
-};
+}; 
+

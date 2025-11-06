@@ -26,15 +26,16 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchCatalogs, createRequest } from "@/api/api";
+import { fetchCatalogs, createRequest, fetchAllEquipment } from "@/api/api";
 import { useUserStore } from "@/hooks/useUserStore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { CreateRequestPayload } from "@/lib/types";
 import { toast } from "sonner";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
 
 const requestSchema = z
   .object({
+    equipment_type: z.string().min(1, "El tipo de equipo es requerido"),
     request_category: z
       .string()
       .min(1, "La categoría de solicitud es requerida"),
@@ -45,13 +46,28 @@ const requestSchema = z
     isForThirdParty: z.boolean(),
     selectedDepartmentId: z.string().optional(),
     selectedThirdPartyId: z.string().optional(),
+    selectedEquipmentId: z.string().optional(), // Para impresoras
   })
   .superRefine((data, ctx) => {
-    if (data.isForThirdParty && !data.selectedThirdPartyId) {
+    // Si es para tercero (y no es impresora), debe seleccionar un usuario
+    if (
+      data.isForThirdParty &&
+      data.equipment_type !== "3" &&
+      !data.selectedThirdPartyId
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Debes seleccionar un usuario beneficiario",
         path: ["selectedThirdPartyId"],
+      });
+    }
+
+    // Si es impresora, debe seleccionar un equipo
+    if (data.equipment_type === "3" && !data.selectedEquipmentId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Debes seleccionar una impresora",
+        path: ["selectedEquipmentId"],
       });
     }
   });
@@ -61,10 +77,12 @@ type RequestFormData = z.infer<typeof requestSchema>;
 export default function AddRequestForm() {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
-  
+
   // Estados para el selector de departamento y usuario (fuera del form)
-  const [selectedDepartmentIdState, setSelectedDepartmentIdState] = useState("");
+  const [selectedDepartmentIdState, setSelectedDepartmentIdState] =
+    useState("");
   const [selectedUserIdState, setSelectedUserIdState] = useState("");
+  const [selectedEquipmentType, setSelectedEquipmentType] = useState("");
 
   const {
     control,
@@ -76,15 +94,21 @@ export default function AddRequestForm() {
   } = useForm<RequestFormData>({
     resolver: zodResolver(requestSchema),
     defaultValues: {
+      equipment_type: "",
       request_category: "",
       description: "",
       isForThirdParty: false,
       selectedDepartmentId: "",
       selectedThirdPartyId: "",
+      selectedEquipmentId: "",
     },
   });
 
   const isForThirdParty = watch("isForThirdParty");
+  const equipmentType = watch("equipment_type");
+
+  // Determinar si es una impresora (type_id = 3)
+  const isPrinter = equipmentType === "3";
 
   // Obtener catálogos (incluye categorías)
   const { data: catalogs, isLoading: catalogsLoading } = useQuery({
@@ -93,6 +117,39 @@ export default function AddRequestForm() {
   });
 
   const categories = catalogs?.request_types || [];
+  const equipmentTypes = catalogs?.equipment_types || [];
+
+  // Obtener todos los equipos para filtrar las impresoras
+  const { data: allEquipment, isLoading: equipmentLoading } = useQuery({
+    queryKey: ["equipment"],
+    queryFn: fetchAllEquipment,
+    enabled: isPrinter, // Solo cargar cuando sea impresora
+  });
+
+  // Filtrar impresoras según el rol del usuario
+  const printers = useMemo(() => {
+    if (!allEquipment || !user) return [];
+
+    // Filtrar solo impresoras (type_id = 3)
+    const allPrinters = allEquipment.filter(
+      (equipment: any) => equipment.type_id === 3
+    );
+
+    // Si es usuario normal (role_id = 4), filtrar por departamento
+    // Si es admin (role_id = 1) coordinator (role_id = 2) o técnico (role_id = 3), mostrar todas
+    if (user.role_id === 4) {
+      return allPrinters.filter(
+        (printer: any) =>
+          printer.department_name?.toLowerCase() ===
+            user.department_name?.toLowerCase() ||
+          printer.location?.toLowerCase() ===
+            user.department_name?.toLowerCase()
+      );
+    }
+
+    // Admin, coordinator o técnico: mostrar todas las impresoras
+    return allPrinters;
+  }, [allEquipment, user]);
 
   // Sincronizar estados externos con el formulario
   useEffect(() => {
@@ -103,7 +160,6 @@ export default function AddRequestForm() {
   const createRequestMutation = useMutation({
     mutationFn: (payload: CreateRequestPayload) => createRequest(payload),
     onSuccess: (data) => {
-      
       // Invalidar queries relacionadas para refrescar datos
       queryClient.invalidateQueries({ queryKey: ["requests"] });
 
@@ -136,19 +192,32 @@ export default function AddRequestForm() {
       return;
     }
 
+    // Determinar si la solicitud es para una impresora
+    const isForPrinter = data.equipment_type === "3";
+
     const requestPayload: CreateRequestPayload = {
       description: data.description,
       requester_id: user.id,
-      beneficiary_id: data.isForThirdParty
+      // Si es impresora, beneficiary_id es null (la impresora pertenece al departamento)
+      // Si es para tercero, usar el ID del tercero
+      // Si es para el usuario actual, usar su ID
+      beneficiary_id: isForPrinter
+        ? null
+        : data.isForThirdParty
         ? data.selectedThirdPartyId
           ? Number(data.selectedThirdPartyId)
           : null
         : user.id,
-      computer_equipment_id: user?.computer_equipment_id ?? 0 ,
+      // Si es impresora, usar el ID de la impresora seleccionada
+      // Si no, usar el equipo del usuario o del beneficiario
+      equipment_id: isForPrinter
+        ? Number(data.selectedEquipmentId)
+        : user?.equipment_id ?? 0,
       type_id: Number(data.request_category),
     };
 
     createRequestMutation.mutate(requestPayload);
+   
   };
 
   return (
@@ -159,47 +228,99 @@ export default function AddRequestForm() {
         </CardHeader>
         <Separator />
         <CardContent>
-          {/* Selección: Para mí o para tercero */}
-          <div className="mb-6">
-            <Label className="block mb-2">
-              ¿La solicitud es para ti o para un tercero?
+          {/* Select de tipo de equipo */}
+          <div className="pb-4">
+            <Label htmlFor="equipment_type" className="pb-2">
+              Tipo de equipo
             </Label>
-            <div className="flex flex-col gap-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Controller
-                  name="isForThirdParty"
-                  control={control}
-                  render={({ field: { value, onChange } }) => (
-                    <input
-                      type="radio"
-                      name="beneficiary"
-                      checked={!value}
-                      onChange={() => onChange(false)}
-                    />
-                  )}
-                />
-                Para mí
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Controller
-                  name="isForThirdParty"
-                  control={control}
-                  render={({ field: { value, onChange } }) => (
-                    <input
-                      type="radio"
-                      name="beneficiary"
-                      checked={value}
-                      onChange={() => onChange(true)}
-                    />
-                  )}
-                />
-                Para un tercero
-              </label>
-            </div>
+            <Controller
+              name="equipment_type"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    setSelectedEquipmentType(value);
+                    // Limpiar selección de impresora si cambia el tipo
+                    if (value !== "3") {
+                      setValue("selectedEquipmentId", "");
+                    }
+                  }}
+                >
+                  <SelectTrigger id="equipment_type" className="w-full">
+                    <SelectValue placeholder="Selecciona el tipo de equipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {catalogsLoading ? (
+                      <SelectItem value="loading" disabled>
+                        Cargando tipos...
+                      </SelectItem>
+                    ) : equipmentTypes.length === 0 ? (
+                      <SelectItem value="not-found" disabled>
+                        No hay tipos disponibles
+                      </SelectItem>
+                    ) : (
+                      equipmentTypes.map((type: any) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.equipment_type && (
+              <span className="text-red-500 text-xs">
+                {errors.equipment_type.message}
+              </span>
+            )}
           </div>
 
-          {/* Selector de Departamento y Usuario para terceros */}
-          {isForThirdParty && (
+          {/* Selección: Para mí o para tercero (solo si NO es impresora) */}
+          {!isPrinter && (
+            <div className="mb-6">
+              <Label className="block mb-2">
+                ¿La solicitud es para ti o para un tercero?
+              </Label>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Controller
+                    name="isForThirdParty"
+                    control={control}
+                    render={({ field: { value, onChange } }) => (
+                      <input
+                        type="radio"
+                        name="beneficiary"
+                        checked={!value}
+                        onChange={() => onChange(false)}
+                      />
+                    )}
+                  />
+                  Para mí
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Controller
+                    name="isForThirdParty"
+                    control={control}
+                    render={({ field: { value, onChange } }) => (
+                      <input
+                        type="radio"
+                        name="beneficiary"
+                        checked={value}
+                        onChange={() => onChange(true)}
+                      />
+                    )}
+                  />
+                  Para un tercero
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Selector de Departamento y Usuario para terceros (solo si NO es impresora) */}
+          {isForThirdParty && !isPrinter && (
             <DepartmentUserSelector
               currentUserId={user?.id}
               currentUserRoleId={user?.role_id}
@@ -223,6 +344,80 @@ export default function AddRequestForm() {
             className="flex flex-col gap-5"
             onSubmit={handleSubmit(onSubmit)}
           >
+            {/* Selector de impresora (solo si es tipo impresora) */}
+            {isPrinter && (
+              <div>
+                <Label htmlFor="selectedEquipmentId" className="pb-2">
+                  Selecciona la impresora
+                </Label>
+
+                {/* Mensaje informativo para usuarios normales */}
+                {user?.role_id === 3 && (
+                  <p className="text-sm text-gray-600 mb-2">
+                    Solo se muestran las impresoras de tu departamento (
+                    {user.department_name})
+                  </p>
+                )}
+
+                <Controller
+                  name="selectedEquipmentId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={!equipmentLoading && printers.length === 0}
+                    >
+                      <SelectTrigger
+                        id="selectedEquipmentId"
+                        className="w-full"
+                      >
+                        <SelectValue placeholder="Selecciona una impresora" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {equipmentLoading ? (
+                          <SelectItem value="loading" disabled>
+                            Cargando impresoras...
+                          </SelectItem>
+                        ) : printers.length === 0 ? (
+                          <SelectItem value="not-found" disabled>
+                            {user?.role_id === 3
+                              ? `No hay impresoras disponibles en tu departamento (${user.department_name})`
+                              : "No hay impresoras disponibles en el sistema"}
+                          </SelectItem>
+                        ) : (
+                          printers.map((printer: any) => (
+                            <SelectItem
+                              key={printer.id}
+                              value={printer.id.toString()}
+                            >
+                              {printer.brand_name} {printer.model} -{" "}
+                              {printer.location}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+
+                {/* Mensaje de error si no hay impresoras disponibles */}
+                {!equipmentLoading && printers.length === 0 && (
+                  <p className="text-sm text-red-600 mt-2">
+                    {user?.role_id === 3
+                      ? "No puedes crear una solicitud para impresora porque no hay impresoras registradas en tu departamento. Contacta al administrador."
+                      : "No hay impresoras registradas en el sistema. Registra una impresora primero."}
+                  </p>
+                )}
+
+                {errors.selectedEquipmentId && (
+                  <span className="text-red-500 text-xs">
+                    {errors.selectedEquipmentId.message}
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Select de categoría */}
             <div>
               <div className="flex gap-1">

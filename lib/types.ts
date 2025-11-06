@@ -6,7 +6,7 @@ export type SortColumnUser = {
 export type Request = {
   id: number;
   user_id: number; // ID del usuario que crea la solicitud
-  computer_equipment_id: number; // Equipo relacionado con la solicitud
+  equipment_id: number; // Equipo relacionado con la solicitud
   request_date: string;
   resolution_date?: string | Date | null;
   status: "Pendiente" | "En proceso" | "Completada" | "Cancelada";
@@ -26,11 +26,12 @@ export type Request = {
   };
 
   // Equipo principal de la solicitud
-  computer_equipment: {
+ equipment: {
     asset_number: number | string;
     location: string;
     serial_number: string;
     model: string;
+    type_name?: string;
   };
 
   // Si es para tercero, datos del beneficiario final
@@ -42,13 +43,14 @@ export type Request = {
     position: string;
 
     // Equipo del beneficiario final (para historial de incidencias)
-    computer_equipment: {
+    equipment: {
       id: number;
       asset_number: number | string;
       serial_number: string;
       model: string;
       brand?: string;
       location?: string;
+     
     };
   };
 };
@@ -58,33 +60,10 @@ export type CreateRequestPayload = {
   description: string;
   requester_id: number;
   beneficiary_id?: number | null;
-  computer_equipment_id: number;
+  equipment_id: number;
   type_id: number;
 };
 
-// Tipo para historial de incidencias por equipo
-export type EquipmentIncidentHistory = {
-  equipment_id: number;
-  equipment_info: {
-    name: string;
-    serial_number: string;
-    model: string;
-    owner: {
-      full_name: string;
-      identity_card: number;
-      department: string;
-    };
-  };
-  incidents: {
-    request_id: number;
-    incident_date: string;
-    request_type: string;
-    description: string;
-    status: string;
-    requestor_name: string;
-    is_for_owner: boolean; // true si fue solicitado por el dueño del equipo
-  }[];
-};
 
 export type SortColumnRequest = {
   column: keyof Request | "requestor_name" | "beneficiary_name";
@@ -108,8 +87,8 @@ export type UserData = {
   role_name: string;
   gender_name: string;
   position_name: string;
-  computer_equipment_asset_number?: string;
-  computer_equipment_id?: number;
+  equipment_asset_number?: string;
+  equipment_id?: number;
 };
 
 export type UpdateUserInput = {
@@ -296,21 +275,105 @@ export type RequestResponse = {
   description: string;
   request_date: string;
   resolution_date: string | null;
-  comments_technician: string;
+  comments_technician: string | null;
   requester_id: number;
-  beneficiary_id: number;
-  technician_id: number;
+  beneficiary_id: number | null;
+  technician_id: number | null;
   equipment_id: number;
+  type_equipment_id: number; // ID del tipo de equipo
   type_id: number;
   status_id: number;
   priority_id: number;
-  users_requests_beneficiary_idTousers: User;
-  users_requests_requester_idTousers: User;
-  users_requests_technician_idTousers: User;
-  equipment: EquipmentAdapted;
-  request_priorities: RequestPriority;
-  request_statuses: RequestStatus;
-  request_types: RequestType;
+  users_requests_beneficiary_idTousers: {
+    id: number;
+    full_name: string;
+    identity_card: number;
+    email: string;
+    is_active: boolean;
+    role_id: number;
+    position_id: number;
+    department_id: number;
+    gender_id: number;
+    created_at: string;
+    equipment?: any[];
+    position: string;
+    department: string;
+    gender: string;
+    role: string;
+  } | null;
+  users_requests_requester_idTousers: {
+    id: number;
+    full_name: string;
+    identity_card: number;
+    email: string;
+    is_active: boolean;
+    role_id: number;
+    position_id: number;
+    department_id: number;
+    gender_id: number;
+    created_at: string;
+    position: string;
+    department: string;
+    gender: string;
+    role: string;
+  };
+  users_requests_technician_idTousers: {
+    id: number;
+    full_name: string;
+    identity_card: number;
+    email: string;
+    is_active: boolean;
+    role_id: number;
+    position_id: number;
+    department_id: number;
+    gender_id: number;
+    created_at: string;
+    position: string;
+    department: string;
+    gender: string;
+    role: string;
+  } | null;
+  equipment: {
+    id: number;
+    asset_number: string;
+    serial_number: string;
+    model: string;
+    location: string;
+    type_id: number;
+    brand_id: number;
+    status_id: number;
+    department_id: number | null;
+    assigned_user_id: number | null;
+    specifications: {
+      hardware: {
+        cpu: string;
+        gpu: string;
+        ram: string;
+        network: string;
+        storage: string;
+      };
+      software: {
+        os: string;
+        office: string;
+        antivirus: string;
+      };
+    };
+    type_name: string;
+    brand_name: string;
+    status_name: string;
+  };
+  request_priorities: {
+    id: number;
+    name: string;
+  };
+  request_statuses: {
+    id: number;
+    name: string;
+  };
+  request_types: {
+    id: number;
+    name: string;
+  };
 };
 
 // Tipo para el formato que espera el componente ExpandableComputerRow
@@ -328,19 +391,22 @@ export interface EquipmentAdapted {
   requests_linked: number[]; // IDs de las solicitudes asociadas con el equipo
   type_name: string;
   assigned_user_id: number | null;
-  hardware_specs: {
+  specifications?: EquipmentSpecifications;
+} 
+ 
+export interface EquipmentSpecifications {
+  hardware: {
     cpu: string;
-    ram: string;
-    storage: string;
     gpu: string;
+    ram: string;
     network: string;
-  } | undefined;
+    storage: string;
+  };
   software: {
     os: string;
     office: string;
     antivirus: string;
-  } | undefined;
-  type_id?: number;
+  };
 }
 
 // Tipos para la respuesta de la API de equipos informáticos

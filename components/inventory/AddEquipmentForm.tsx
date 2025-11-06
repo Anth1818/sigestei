@@ -461,7 +461,7 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
             {/* Selector de Departamento y Usuario - Solo si el estado NO es 4 Y NO es impresora */}
             {!isUserOptional && !isPrinter && (
               <div>
-                <h3 className="text-lg font-semibold mb-3">Asignación de Equipo</h3>
+                <h3 className="text-lg font-semibold mb-3">Asignación de Equipo <span className="text-sm font-normal">(Opcional)</span></h3>
                 <DepartmentUserSelector
                   currentUserId={currentUser?.id}
                   currentUserRoleId={currentUser?.role_id}

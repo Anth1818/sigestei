@@ -204,7 +204,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               Modelo:
             </span>
             <p className="text-sm">
-              {request.computer_equipment.model}
+              {request.equipment.model}
             </p>
           </div>
         </div>
@@ -213,7 +213,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             N° Serie:
           </span>
           <p className="text-sm">
-            {request.computer_equipment.serial_number}
+            {request.equipment.serial_number}
           </p>
         </div>
       </div>
@@ -222,7 +222,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
           N° de Bien:
         </span>
         <p className="text-sm">
-          {request.computer_equipment.asset_number || "N/A"}
+          {request.equipment.asset_number || "N/A"}
         </p>
       </div>
       <div>
@@ -230,7 +230,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
           Ubicación:
         </span>
         <p className="text-sm">
-          {request.computer_equipment.location || "N/A"}
+          {request.equipment.location || "N/A"}
         </p>
       </div>
     </div>
@@ -301,14 +301,14 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               <div>
                 <span className="text-gray-700">Modelo:</span>
                 <p>
-                  {request.third_party.computer_equipment.model}
+                  {request.third_party.equipment.model}
                 </p>
               </div>
               <div>
                 <span className="text-gray-700">N° Serie:</span>
                 <p>
                   {
-                    request.third_party.computer_equipment
+                    request.third_party.equipment
                       .serial_number
                   }
                 </p>
@@ -318,15 +318,14 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                   N° de Bien:
                 </span>
                 <p className="text-sm">
-                  {request.third_party.computer_equipment.asset_number}
+                  {request.third_party.equipment.asset_number}
                 </p>
               </div>
               <div>
                 <span className="text-gray-700">Ubicación:</span>
                 <p>
                   {
-                    request.third_party.computer_equipment
-                      .location
+                    request.third_party.equipment.location
                   }
                 </p>
               </div>

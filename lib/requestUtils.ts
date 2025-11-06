@@ -21,7 +21,7 @@ export const adaptRequestData = (apiRequest: RequestResponse): Request => {
   return {
     id: apiRequest.id,
     user_id: apiRequest.requester_id,
-    computer_equipment_id: apiRequest.computer_equipment_id,
+    equipment_id: apiRequest.equipment_id,
     request_date: apiRequest.request_date,
     resolution_date: apiRequest.resolution_date
       ? new Date(apiRequest.resolution_date)
@@ -48,11 +48,12 @@ export const adaptRequestData = (apiRequest: RequestResponse): Request => {
       position:
         apiRequest.users_requests_requester_idTousers?.position || "N/A",
     },
-    computer_equipment: {
-      asset_number: apiRequest.computer_equipment?.asset_number || 0,
-      location: apiRequest.computer_equipment?.location || "N/A",
-      serial_number: apiRequest.computer_equipment?.serial_number || "N/A",
-      model: apiRequest.computer_equipment?.model || "N/A",
+    equipment: {
+      asset_number: apiRequest.equipment?.asset_number || 0,
+      location: apiRequest.equipment?.location || "N/A",
+      serial_number: apiRequest.equipment?.serial_number || "N/A",
+      model: apiRequest.equipment?.model || "N/A",
+      type_name: apiRequest.equipment?.type_name || "N/A",
     },
     // Si el beneficiario es diferente al solicitante, se considera tercero
     third_party:
@@ -67,27 +68,27 @@ export const adaptRequestData = (apiRequest: RequestResponse): Request => {
             department:
               apiRequest.users_requests_beneficiary_idTousers.department,
             position: apiRequest.users_requests_beneficiary_idTousers.position,
-            computer_equipment: apiRequest.users_requests_beneficiary_idTousers
-              .computer_equipment?.[0]
+            equipment: apiRequest.users_requests_beneficiary_idTousers
+              .equipment?.[0]
               ? {
                   id:
                     Number(
                       apiRequest.users_requests_beneficiary_idTousers
-                        .computer_equipment[0].asset_number
+                        .equipment[0].asset_number
                     ) || 0,
                   asset_number:
                     apiRequest.users_requests_beneficiary_idTousers
-                      .computer_equipment[0].asset_number ?? 0,
+                      .equipment[0].asset_number ?? 0,
                   serial_number:
                     apiRequest.users_requests_beneficiary_idTousers
-                      .computer_equipment[0].serial_number ?? "",
+                      .equipment[0].serial_number ?? "",
                   model:
                     apiRequest.users_requests_beneficiary_idTousers
-                      .computer_equipment[0].model ?? "",
+                      .equipment[0].model ?? "",
                   brand: "N/A",
                   location:
                     apiRequest.users_requests_beneficiary_idTousers
-                      .computer_equipment[0].location ?? "N/A",
+                      .equipment[0].location ?? "N/A",
                 }
               : {
                   id: 0,

@@ -65,6 +65,7 @@ export default function RequestTable() {
   const columns = [
     { label: "ID", field: "id" },
     { label: "Tipo", field: "request_type" },
+    { label: "Equipo", field: "equipment" },
     { label: "Prioridad", field: "priority" },
     { label: "Estado", field: "status" },
     { label: "Solicitante", field: "requestor_name" },

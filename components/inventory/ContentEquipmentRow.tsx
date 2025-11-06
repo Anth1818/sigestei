@@ -33,8 +33,8 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUnlinkDialogOpen, setIsUnlinkDialogOpen] = useState(false);
 
-  // Determinar si es una impresora usando type_name o type_id = 3
-  const isPrinter = equipment.type_name?.toLowerCase().includes("impresora") || equipment.type_id === 3;
+  // Determinar si es una impresora usando type_name 
+  const isPrinter = equipment.type_name?.toLowerCase().includes("impresora");
 
   // Extraer los IDs de requests asociados
   const associatedRequests = equipment.requests_linked || [];
@@ -243,20 +243,20 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
                 </h5>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   <div>
-                    <strong>CPU:</strong> {equipment.hardware_specs?.cpu}
+                    <strong>CPU:</strong> {equipment.specifications?.hardware?.cpu}
                   </div>
                   <div>
-                    <strong>RAM:</strong> {equipment.hardware_specs?.ram}
+                    <strong>RAM:</strong> {equipment.specifications?.hardware?.ram}
                   </div>
                   <div>
                     <strong>Almacenamiento:</strong>{" "}
-                    {equipment.hardware_specs?.storage}
+                    {equipment.specifications?.hardware?.storage}
                   </div>
                   <div>
-                    <strong>GPU:</strong> {equipment.hardware_specs?.gpu}
+                    <strong>GPU:</strong> {equipment.specifications?.hardware?.gpu}
                   </div>
                   <div>
-                    <strong>Red:</strong> {equipment.hardware_specs?.network}
+                    <strong>Red:</strong> {equipment.specifications?.hardware?.network}
                   </div>
                 </div>
               </div>
@@ -267,13 +267,13 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
                 </h5>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   <div>
-                    <strong>Sistema Operativo:</strong> {equipment.software?.os}
+                    <strong>Sistema Operativo:</strong> {equipment.specifications?.software?.os}
                   </div>
                   <div>
-                    <strong>Suite de Oficina:</strong> {equipment.software?.office}
+                    <strong>Suite de Oficina:</strong> {equipment.specifications?.software?.office}
                   </div>
                   <div>
-                    <strong>Antivirus:</strong> {equipment.software?.antivirus}
+                    <strong>Antivirus:</strong> {equipment.specifications?.software?.antivirus}
                   </div>
                 </div>
               </div>

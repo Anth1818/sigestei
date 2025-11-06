@@ -74,6 +74,7 @@ export function ExpandableRequestRow({
       <TableRow className="hover:bg-muted/50">
         <TableCell className="p-2 text-center">{request.id}</TableCell>
         <TableCell className="p-2">{request.request_type}</TableCell>
+        <TableCell className="p-2">{request.equipment?.type_name}</TableCell>
         <TableCell className={`p-2 ${getPriorityColor(request.priority)}`}>
           {request.priority}
         </TableCell>
