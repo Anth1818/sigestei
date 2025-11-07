@@ -30,10 +30,13 @@ import { Separator } from "@/components/ui/separator";
 import { useEditUser } from "@/hooks/useEditUser";
 import { UserData, UpdateUserInput } from "@/lib/types";
 import { getStatusColor, parseRoleName } from "@/lib/userUtils";
-import { parse } from "path";
+
 
 const userSchema = z.object({
+  identity_card: z.number().min(1000000, "La cédula debe tener al menos 7 dígitos"),
   full_name: z.string().min(3, "El nombre es requerido"),
+  email: z.string().email("Email inválido"),
+  role_id: z.number().min(1, "El rol es requerido"),
   gender_id: z.number().min(1, "El género es requerido"),
   position_id: z.number().min(1, "El cargo es requerido"),
   department_id: z.number().min(1, "El departamento es requerido"),
@@ -47,8 +50,11 @@ interface EditUserProps {
 export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
   const editUser = useEditUser(userData.identity_card);
 
-  const [form, setForm] = useState<UpdateUserInput>({
+  const [form, setForm] = useState({
+    identity_card: userData.identity_card,
     full_name: userData.full_name,
+    email: userData.email,
+    role_id: userData.role_id,
     gender_id: userData.gender_id,
     position_id: userData.position_id,
     department_id: userData.department_id,
@@ -59,7 +65,10 @@ export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
   // Actualizar form cuando cambia userData
   useEffect(() => {
     setForm({
+      identity_card: userData.identity_card,
       full_name: userData.full_name,
+      email: userData.email,
+      role_id: userData.role_id,
       gender_id: userData.gender_id,
       position_id: userData.position_id,
       department_id: userData.department_id,
@@ -73,14 +82,23 @@ export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // Si el campo es identity_card, convertir a número
+    if (name === "identity_card") {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value === "" ? 0 : Number(value),
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleSelectChange = (name: keyof UpdateUserInput, value: string) => {
+  const handleSelectChange = (name: string, value: string) => {
     setForm((prev) => ({
       ...prev,
       [name]: Number(value),
@@ -134,10 +152,17 @@ export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
                 <Input
                   id="identity_card"
                   name="identity_card"
-                  type="text"
-                  value={userData.identity_card}
-                  disabled
+                  type="number"
+                  value={form.identity_card}
+                  onChange={handleChange}
+                  placeholder="Ingrese número de cédula"
+                  required
                 />
+                {errors.identity_card && (
+                  <span className="text-red-500 text-xs">
+                    {errors.identity_card}
+                  </span>
+                )}
               </div>
 
               <div>
@@ -167,9 +192,16 @@ export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
                   id="email"
                   name="email"
                   type="email"
-                  value={userData.email}
-                  disabled
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="Ingrese correo electrónico"
+                  required
                 />
+                {errors.email && (
+                  <span className="text-red-500 text-xs">
+                    {errors.email}
+                  </span>
+                )}
               </div>
 
               <div>
@@ -186,12 +218,15 @@ export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
               </div>
 
               <div>
-                <Label htmlFor="role" className="pb-2">
+                <Label htmlFor="role_id" className="pb-2">
                   Rol
                 </Label>
-                <Select value={userData.role_id.toString()} disabled>
-                  <SelectTrigger id="role" className="w-full">
-                    <SelectValue />
+                <Select
+                  value={form.role_id.toString()}
+                  onValueChange={(value) => handleSelectChange("role_id", value)}
+                >
+                  <SelectTrigger id="role_id" className="w-full">
+                    <SelectValue placeholder="Seleccione rol" />
                   </SelectTrigger>
                   <SelectContent>
                     {roles.map((role: any) => (
@@ -201,6 +236,9 @@ export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.role_id && (
+                  <span className="text-red-500 text-xs">{errors.role_id}</span>
+                )}
               </div>
 
               <div>

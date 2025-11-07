@@ -13,10 +13,8 @@ interface ContentRequestRowProps {
 }
 
 const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
-  console.log(request)
-  const [assignedTo, setAssignedTo] = useState(request.assigned_to);
+  const [assignedTo, setAssignedTo] = useState(request.assigned_to === "N/A" ? "" : request.assigned_to);
   const [comments_technician, setCommentsTechnician] = useState(request.comments_technician || "");
-  
   // Estados para el diálogo de confirmación de técnico
   const [isTechnicianDialogOpen, setIsTechnicianDialogOpen] = useState(false);
   const [pendingTechnician, setPendingTechnician] = useState<{ name: string; id: number } | null>(null);
@@ -34,12 +32,13 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
 
   // Mutation para actualizar el técnico asignado (y estado si es necesario)
   const updateTechnicianMutation = useMutation({
-    mutationFn: ({ id, technicianId, statusId }: { id: number; technicianId: number; statusId?: number }) => {
+    mutationFn: async ({ id, technicianId, statusId }: { id: number; technicianId: number; statusId?: number }) => {
       const updateData: any = { technician_id: technicianId };
       if (statusId) {
         updateData.status_id = statusId;
       }
-      return updateRequest(id, updateData);
+      const response = await updateRequest(id, updateData);
+      return response
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
@@ -83,14 +82,13 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
   // Confirmar asignación/reasignación de técnico
   const confirmTechnicianAssignment = () => {
     if (pendingTechnician) {
-      const isReassignment = !!assignedTo;
       const isPending = request.status === "Pendiente";
-      
-      // Si es asignación nueva (no reasignación) y el estado es "Pendiente", cambiar a "En Proceso"
-      const statusId = !isReassignment && isPending ? 2 : undefined;
-      
-      updateTechnicianMutation.mutate({ 
-        id: request.id, 
+
+      // cambio de estado a "en proceso" si esta pending
+      const statusId = isPending ? 2 : undefined;
+
+      updateTechnicianMutation.mutate({
+        id: request.id,
         technicianId: pendingTechnician.id,
         statusId 
       });
@@ -157,6 +155,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm text-gray-400">
               {assignedTo ? "Reasignar a:" : "Asignar a:"}
+              
             </span>
             <Select
               value={assignedTo}

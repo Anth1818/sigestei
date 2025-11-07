@@ -15,6 +15,7 @@ export function useEditUser(identityCard: number) {
   // Mutation para actualizar usuario
   const updateUserMutation = useMutation({
     mutationFn: async (data: UpdateUserInput) => {
+      // Usamos la cédula original (identityCard) para identificar al usuario
       return updateUser(identityCard, data);
     },
     onSuccess: (data) => {

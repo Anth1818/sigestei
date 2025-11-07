@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   Select,
@@ -10,8 +11,9 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { fetchCatalogs, fetchAllUsersEnabledToGetSupportByDepartment } from "@/api/api";
+import { fetchCatalogs, fetchAllUsersEnabledToGetSupportByDepartment, fetchAllUsersByDepartment } from "@/api/api";
 import { UserData } from "@/lib/types";
+
 
 interface DepartmentUserSelectorProps {
   // Usuario autenticado
@@ -59,6 +61,12 @@ export function DepartmentUserSelector({
   departmentError,
   userError,
 }: DepartmentUserSelectorProps) {
+
+  // Leer la ruta actual
+  const pathname = usePathname();
+  
+  // Determinar si estamos en el módulo de inventario
+  const isInventoryModule = pathname?.includes("/viewInventory") || pathname?.includes("/addEquipment") || pathname?.includes("/editEquipment");
   
   // Obtener catálogos (incluye departamentos)
   const { data: catalogs, isLoading: catalogsLoading } = useQuery({
@@ -76,14 +84,21 @@ export function DepartmentUserSelector({
       ? Number(selectedDepartmentId)
       : null;
 
-  // Obtener usuarios del departamento
+  // Obtener usuarios del departamento usando la función correcta según el módulo
   const { data: departmentUsers, isLoading: departmentUsersLoading } = useQuery({
-    queryKey: ["departmentUsers", departmentIdToFetch],
+    queryKey: ["departmentUsers", departmentIdToFetch, isInventoryModule],
     queryFn: async () => {
       if (!departmentIdToFetch) {
         return [];
       }
-      return await fetchAllUsersEnabledToGetSupportByDepartment(departmentIdToFetch);
+      
+      // Si estamos en inventario, usar fetchAllUsersByDepartment (todos los usuarios)
+      // Si no, usar fetchAllUsersEnabledToGetSupportByDepartment (solo habilitados para soporte)
+      if (isInventoryModule) {
+        return await fetchAllUsersByDepartment(departmentIdToFetch);
+      } else {
+        return await fetchAllUsersEnabledToGetSupportByDepartment(departmentIdToFetch);
+      }
     },
     enabled: !!departmentIdToFetch,
   });

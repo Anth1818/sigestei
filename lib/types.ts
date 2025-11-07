@@ -92,7 +92,10 @@ export type UserData = {
 };
 
 export type UpdateUserInput = {
+  identity_card: number;
   full_name: string;
+  email: string;
+  role_id: number;
   gender_id: number;
   position_id: number;
   department_id: number;
