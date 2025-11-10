@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { Request } from "@/lib/types";
+import { ChevronDown, ChevronRight, History } from "lucide-react";
+import { Request, RequestAuditHistory } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -12,6 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -19,6 +28,8 @@ import {
 } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
 import ContentRequestRow from "./ContentRequestRow";
+import RequestAuditDetail from "@/components/audit/RequestAuditDetail";
+import { fetchRequestAudit } from "@/api/api";
 import { useUserStore } from "@/hooks/useUserStore";
 
 interface ExpandableRequestRowProps {
@@ -42,9 +53,17 @@ export function ExpandableRequestRow({
   onUpdatePriority,
   getPriorityColor,
   getStatusColor,
-  
 }: ExpandableRequestRowProps) {
   const user = useUserStore((state) => state.user);
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
+
+  // Query para obtener el historial de auditoría
+  const { data: auditHistory, isLoading: isLoadingAudit } =
+    useQuery<RequestAuditHistory>({
+      queryKey: ["request-audit", request.id],
+      queryFn: () => fetchRequestAudit(request.id),
+      enabled: isAuditOpen,
+    });
 
   // Handlers que llaman a los callbacks del padre (que abrirán los diálogos)
   const handleStatusChange = (newStatus: string) => {
@@ -86,7 +105,9 @@ export function ExpandableRequestRow({
         <TableCell className="p-2">{request.user.full_name}</TableCell>
         <TableCell className="p-2">
           <div className="flex items-center gap-1">
-            {request.equipment?.type_name === "Impresora" ? request.equipment?.location : beneficiaryName}
+            {request.equipment?.type_name === "Impresora"
+              ? request.equipment?.location
+              : beneficiaryName}
             {isThirdParty && (
               <span className="bg-blue-100 text-blue-700 px-1 py-0.5 rounded text-xs">
                 Tercero
@@ -97,67 +118,101 @@ export function ExpandableRequestRow({
         <TableCell className="p-2">
           {formatDate(request.request_date)}
         </TableCell>
-        { user?.role_id != 4 &&
-        <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Select
-                    value={request.status}
-                    onValueChange={handleStatusChange}
+        {user?.role_id != 4 && (
+          <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Select
+                      value={request.status}
+                      onValueChange={handleStatusChange}
+                    >
+                      <SelectTrigger className="h-8 w-full mb-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Pendiente">Pendiente</SelectItem>
+                        <SelectItem value="En proceso">En proceso</SelectItem>
+                        <SelectItem value="Completada">Completada</SelectItem>
+                        <SelectItem value="Cancelada">Cancelada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  Cambiar estado de la solicitud
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Select
+                      value={request.priority}
+                      onValueChange={handlePriorityChange}
+                    >
+                      <SelectTrigger className="h-8 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Alta">Alta</SelectItem>
+                        <SelectItem value="Media">Media</SelectItem>
+                        <SelectItem value="Baja">Baja</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  Cambiar prioridad de la solicitud
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </TableCell>
+        )}
+        <TableCell className="p-2 flex gap-1">
+          {(user?.role_id === 1 || user?.role_id === 2) && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsAuditOpen(true)}
                   >
-                    <SelectTrigger className="h-8 w-full mb-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                     <SelectItem value="Pendiente">Pendiente</SelectItem>
-                     <SelectItem value="En proceso">En proceso</SelectItem>
-                     <SelectItem value="Completada">Completada</SelectItem>
-                      <SelectItem value="Cancelada">Cancelada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                Cambiar estado de la solicitud
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Select
-                    value={request.priority}
-                    onValueChange={handlePriorityChange}
-                  >
-                    <SelectTrigger className="h-8 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Alta">Alta</SelectItem>
-                      <SelectItem value="Media">Media</SelectItem>
-                      <SelectItem value="Baja">Baja</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                Cambiar prioridad de la solicitud
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </TableCell>
-        }
-        <TableCell className="p-2">
-          <Button variant="ghost" size="sm" onClick={onToggle}>
-            {expanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
+                    <History className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  Ver historial de cambios
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {expanded ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={onToggle}>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Contraer</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={onToggle}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Expandir</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </TableCell>
       </TableRow>
 
@@ -181,6 +236,24 @@ export function ExpandableRequestRow({
           </TableRow>
         )}
       </AnimatePresence>
+
+      {/* Diálogo de Historial de Auditoría */}
+      <Dialog open={isAuditOpen} onOpenChange={setIsAuditOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Historial de Auditoría - Solicitud #{request.id}
+            </DialogTitle>
+            <DialogDescription>
+              Historial completo de cambios y asignaciones de esta solicitud
+            </DialogDescription>
+          </DialogHeader>
+          {isLoadingAudit && (
+            <div className="text-center py-8">Cargando historial...</div>
+          )}
+          {auditHistory && <RequestAuditDetail auditHistory={auditHistory} />}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

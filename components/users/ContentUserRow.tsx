@@ -35,10 +35,10 @@ export const ContentUserRow = ({ user }: ContentUserRowProps) => {
           </p>
         </div>
       )}
-      {user.computer_equipment_asset_number && (
+      {user.equipment_asset_number && (
         <div>
           <p className="text-sm text-muted-foreground">Número de bien del equipo asignado</p>
-          <p className="font-medium">ID: {user.computer_equipment_asset_number}</p>
+          <p className="font-medium">ID: {user.equipment_asset_number}</p>
         </div>
       )}
     </div>

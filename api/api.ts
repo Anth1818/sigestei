@@ -891,3 +891,247 @@ export const changeUserPassword = async (
     };
   }
 };
+
+// AUDIT
+
+// Obtener historial de una solicitud específica
+export const fetchRequestAudit = async (requestId: number) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/audit/requests/${requestId}`,
+      { withCredentials: true }
+    );
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener el historial de la solicitud",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener el historial de la solicitud";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener el historial de la solicitud",
+    };
+  }
+};
+
+// Obtener historial de un equipo específico
+export const fetchEquipmentAudit = async (equipmentId: number) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/audit/equipment/${equipmentId}`,
+      { withCredentials: true }
+    );
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener el historial del equipo",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener el historial del equipo";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener el historial del equipo",
+    };
+  }
+};
+
+// Obtener historial de logins de un usuario
+export const fetchUserLogins = async (userId: number, limit?: number) => {
+  try {
+    const url = limit
+      ? `${API_BASE_URL}/audit/users/${userId}/logins?limit=${limit}`
+      : `${API_BASE_URL}/audit/users/${userId}/logins`;
+
+    const response = await axios.get(url, { withCredentials: true });
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener el historial de logins",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener el historial de logins";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener el historial de logins",
+    };
+  }
+};
+
+// Obtener historial de cambios de un usuario
+export const fetchUserChanges = async (userId: number) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/audit/users/${userId}/changes`,
+      { withCredentials: true }
+    );
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener el historial de cambios del usuario",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener el historial de cambios del usuario";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener el historial de cambios del usuario",
+    };
+  }
+};
+
+// Obtener cambios recientes del sistema
+export const fetchRecentAudits = async (limit?: number) => {
+  try {
+    const url = limit
+      ? `${API_BASE_URL}/audit/recent?limit=${limit}`
+      : `${API_BASE_URL}/audit/recent`;
+
+    const response = await axios.get(url, { withCredentials: true });
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener los cambios recientes",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener los cambios recientes";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener los cambios recientes",
+    };
+  }
+};
+
+// Obtener estadísticas de auditoría
+export const fetchAuditStatistics = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/audit/statistics`, {
+      withCredentials: true,
+    });
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener las estadísticas de auditoría",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener las estadísticas de auditoría";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener las estadísticas de auditoría",
+    };
+  }
+};
+

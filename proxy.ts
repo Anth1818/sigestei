@@ -12,6 +12,7 @@ const protectedRoutes = [
   "/addRequest",
   "/editUser",
   "/editEquipment",
+  "/audit",
 ];
 
 export default function proxy(request: NextRequest) {
@@ -61,7 +62,8 @@ export default function proxy(request: NextRequest) {
       "/addRequest",
       "/editUser",
       "/editEquipment",
-      "/profile"
+      "/profile",
+      "/audit"
     ], // admin
     2: [
       "/dashboard",
@@ -69,7 +71,8 @@ export default function proxy(request: NextRequest) {
       "/editEquipment",
       "/viewRequests",
       "/addRequest",
-      "/profile"
+      "/profile",
+      "/audit"
     ], // coordinador
     3: ["/viewInventory", "/viewRequests", "/addRequest", "/editEquipment", "/profile"], // técnico
     4: ["/viewRequests", "/addRequest", "/profile"], // usuario final
@@ -97,6 +100,7 @@ export const config = {
     "/addRequest",
     "/editUser",
     "/editEquipment",
-    "/profile"
+    "/profile",
+    "/audit"
   ],
 };

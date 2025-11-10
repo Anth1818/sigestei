@@ -1,12 +1,13 @@
-import { FileText, User, ListChecks, Users } from "lucide-react";
+import { FileText, User, ListChecks, Users, History } from "lucide-react";
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
 import { useUserStore } from "@/hooks/useUserStore";
 import Link from "next/link";
-import { EquipmentAdapted } from "@/lib/types";
-import { useMutation } from "@tanstack/react-query";
-import { updateEquipmentData } from "@/api/api";
+import { EquipmentAdapted, EquipmentAuditHistory } from "@/lib/types";
+import { updateEquipmentData, fetchEquipmentAudit } from "@/api/api";
 import { toast } from "sonner";
+import EquipmentAuditDetail from "@/components/audit/EquipmentAuditDetail";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,14 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUnlinkDialogOpen, setIsUnlinkDialogOpen] = useState(false);
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
+
+  // Query para obtener el historial de auditoría
+  const { data: auditHistory, isLoading: isLoadingAudit } = useQuery<EquipmentAuditHistory>({
+    queryKey: ["equipment-audit", equipment.id],
+    queryFn: () => fetchEquipmentAudit(equipment.id),
+    enabled: isAuditOpen,
+  });
 
   // Determinar si es una impresora usando type_name 
   const isPrinter = equipment.type_name?.toLowerCase().includes("impresora");
@@ -196,6 +205,18 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
                 {updateEquipmentMutation.isPending
                   ? "Procesando..."
                   : "Reasignar equipo"}
+              </Button>
+            )}
+
+            {/* Botón para ver historial - Solo admin y manager */}
+            {(user?.role_id === 1 || user?.role_id === 2) && (
+              <Button
+                onClick={() => setIsAuditOpen(true)}
+                variant="outline"
+                className="w-full mt-2 gap-2"
+              >
+                <History className="h-4 w-4" />
+                Ver historial de cambios
               </Button>
             )}
 
@@ -367,10 +388,26 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          {/* Dialog de historial de auditoría */}
+          <Dialog open={isAuditOpen} onOpenChange={setIsAuditOpen}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Historial de Auditoría - Equipo #{equipment.id}</DialogTitle>
+                <DialogDescription>
+                  Historial completo de cambios y asignaciones de este equipo
+                </DialogDescription>
+              </DialogHeader>
+              {isLoadingAudit && (
+                <div className="text-center py-8">Cargando historial...</div>
+              )}
+              {auditHistory && <EquipmentAuditDetail auditHistory={auditHistory} />}
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>
   );
 };
 
-export { ContentEquipmentRow };
+export default ContentEquipmentRow;

@@ -550,3 +550,80 @@ export interface CatalogData {
   office_suites: officeSuiteOption[];
   antivirus_solutions: AntivirusOption[];
 }
+
+// AUDIT TYPES
+
+export interface AuditUser {
+  id: number;
+  full_name: string;
+  email: string;
+}
+
+export interface AuditLog {
+  id: number;
+  entity_type: "request" | "equipment" | "user";
+  entity_id: number;
+  change_type: string;
+  field_name: string;
+  old_value: string;
+  new_value: string;
+  changed_by_id: number;
+  changed_at: string;
+  comments: string | null;
+  changed_by: AuditUser;
+}
+
+export interface TechnicianAssignment {
+  id: number;
+  request_id: number;
+  technician_id: number;
+  previous_technician_id: number | null;
+  assigned_by_id: number;
+  assigned_at: string;
+  reason: string;
+  technician: AuditUser;
+  previous_technician: AuditUser | null;
+  assigned_by: AuditUser;
+}
+
+export interface EquipmentAssignment {
+  id: number;
+  equipment_id: number;
+  user_id: number;
+  previous_user_id: number | null;
+  location: string;
+  previous_location: string | null;
+  assigned_by_id: number;
+  assigned_at: string;
+  reason: string;
+  user: AuditUser;
+  previous_user: AuditUser | null;
+  assigned_by: AuditUser;
+}
+
+export interface LoginHistory {
+  id: number;
+  user_id: number;
+  login_at: string;
+  ip_address: string;
+  user_agent: string;
+  success: boolean;
+  failure_reason: string | null;
+}
+
+export interface RequestAuditHistory {
+  general_changes: AuditLog[];
+  technician_assignments: TechnicianAssignment[];
+}
+
+export interface EquipmentAuditHistory {
+  general_changes: AuditLog[];
+  assignments: EquipmentAssignment[];
+}
+
+export interface AuditStatistics {
+  request_changes: number;
+  equipment_changes: number;
+  user_changes: number;
+  total_logins: number;
+}

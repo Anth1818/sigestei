@@ -1,4 +1,4 @@
-import { Home, FileText, Users, ComputerIcon } from "lucide-react";
+import { Home, FileText, Users, ComputerIcon, Shield } from "lucide-react";
 
 export const dataNav = {
   navigation: [
@@ -20,6 +20,7 @@ export const dataNav = {
       url: "/viewInventory",
       icon: ComputerIcon,
     },
-    { role_access: [1], name: "Usuarios", url: "/viewUsers", icon: Users }
+    { role_access: [1], name: "Usuarios", url: "/viewUsers", icon: Users },
+    { role_access: [1, 2], name: "Auditoría", url: "/audit", icon: Shield },
   ],
 };

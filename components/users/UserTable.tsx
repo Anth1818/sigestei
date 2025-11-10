@@ -41,8 +41,8 @@ import { useUserSorting } from "@/hooks/useUserSorting";
 import { useUserActions } from "@/hooks/useUserActions";
 import { usePagination } from "@/hooks/usePagination";
 import { ContentUserRow } from "./ContentUserRow";
-import { parse } from "path";
-import { parseRoleName } from "@/lib/userUtils";
+
+
 
 export default function UserTable() {
   // React Query para obtener los usuarios
@@ -121,7 +121,7 @@ export default function UserTable() {
             <SelectItem value="all">Todos los roles</SelectItem>
             {uniqueRoles.map((role) => (
               <SelectItem key={role} value={role}>
-                {parseRoleName(role)}
+                {role}
               </SelectItem>
             ))}
           </SelectContent>

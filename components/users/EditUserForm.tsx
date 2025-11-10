@@ -28,8 +28,8 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useEditUser } from "@/hooks/useEditUser";
-import { UserData, UpdateUserInput } from "@/lib/types";
-import { getStatusColor, parseRoleName } from "@/lib/userUtils";
+import { UserData } from "@/lib/types";
+import { getStatusColor} from "@/lib/userUtils";
 
 
 const userSchema = z.object({
@@ -231,7 +231,7 @@ export const EditUserForm = ({ userData, catalogsData }: EditUserProps) => {
                   <SelectContent>
                     {roles.map((role: any) => (
                       <SelectItem key={role.id} value={role.id.toString()}>
-                        {parseRoleName(role.name)}
+                        {role.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

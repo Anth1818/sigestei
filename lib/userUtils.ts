@@ -1,17 +1,3 @@
-export const parseRoleName = (roleName: string) => {
-  switch (roleName) {
-    case "admin":
-      return "Administrador";
-    case "manager":
-      return "Coordinador";
-    case "technician":
-      return "Técnico";
-    case "user":
-      return "Usuario";
-    default:
-      return roleName;
-  }
-};
 
 export const getStatusColor = (isActive: boolean): string => {
   return isActive

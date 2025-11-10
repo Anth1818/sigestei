@@ -6,7 +6,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
-import { ContentEquipmentRow } from "./ContentEquipmentRow";
+import  ContentEquipmentRow  from "./ContentEquipmentRow";
 import { EquipmentAdapted } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";

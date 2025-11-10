@@ -30,7 +30,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useAddUser } from "@/hooks/useAddUser";
 import { CreateUserInput } from "@/lib/types";
-import { parseRoleName } from "@/lib/userUtils";
+
 
 const userSchema = z.object({
   full_name: z.string().min(3, "El nombre es requerido"),
@@ -204,7 +204,7 @@ export const AddUserForm = ({ catalogsData }: AddUserFormProps) => {
                       <SelectContent>
                         {roles.map((role: any) => (
                           <SelectItem key={role.id} value={role.id.toString()}>
-                            {parseRoleName(role.name)}
+                            {role.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

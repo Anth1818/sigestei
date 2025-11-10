@@ -5,7 +5,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { UserData } from "@/lib/types";
-import { getStatusColor, parseRoleName } from "@/lib/userUtils";
+import { getStatusColor} from "@/lib/userUtils";
 import { Mail, IdCard, Briefcase, Building2, Calendar, UserCircle } from "lucide-react";
 
 interface UserCardProps {
@@ -84,7 +84,7 @@ export const UserCard = ({ userData }: UserCardProps) => {
               <span className="font-medium">Rol</span>
             </div>
             <span>
-              {parseRoleName(userData.role_name)}
+              {userData.role_name}
             </span>
           </div>
 
@@ -133,13 +133,13 @@ export const UserCard = ({ userData }: UserCardProps) => {
           )}
 
           {/* Equipo Asignado */}
-          {userData.computer_equipment_asset_number && (
+          {userData.equipment_asset_number && (
             <div className="space-y-2 md:col-span-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
                 <span className="font-medium">Equipo Asignado</span>
               </div>
-              <p className="text-lg">{userData.computer_equipment_asset_number}</p>
+              <p className="text-lg">{userData.equipment_asset_number}</p>
             </div>
           )}
         </div>
