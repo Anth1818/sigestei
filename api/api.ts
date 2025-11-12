@@ -7,7 +7,7 @@ import {
 } from "@/lib/types";
 import { EquipmentResponse } from "@/lib/types";
 
-const API_BASE_URL = "http://localhost:3001/api"; // Ajustar el puerto segun el backend
+const API_BASE_URL =  process.env.PRODAPI || process.env.LOCALAPI;
 
 // AUTHENTICATION
 
