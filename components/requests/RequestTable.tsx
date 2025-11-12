@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { ExpandableRequestRow } from "./ExpandableRequestRow";
 import { RequestFilters } from "./RequestFilters";
-import { fetchRequests } from "@/api/api";
+import { fecthAllRequestByUser, fetchRequests } from "@/api/api";
 import { useRequestFilters } from "@/hooks/useRequestFilters";
 import { usePagination } from "@/hooks/usePagination";
 import { useRequestActions } from "@/hooks/useRequestActions";
@@ -47,10 +47,17 @@ export default function RequestTable() {
   const searchParams = useSearchParams();
   const requestIdFromParams = searchParams.get("id");
   const user = useUserStore((state) => state.user);
+
+  const fecthDependsOnUserRole = () => {
+    if (user?.role_id === 4 || user?.role_id === 3) {
+      return fecthAllRequestByUser(user.id);
+    }
+    return fetchRequests();
+  };
   // React Query para obtener las requests
   const { data: requestsData, isLoading, error } = useQuery({
     queryKey: ['requests'],
-    queryFn: fetchRequests,
+    queryFn: fecthDependsOnUserRole,
   });
 
   // Datos de la API

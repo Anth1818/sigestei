@@ -118,7 +118,7 @@ export function ExpandableRequestRow({
         <TableCell className="p-2">
           {formatDate(request.request_date)}
         </TableCell>
-        {user?.role_id != 4 && (
+        {(user?.role_id !== 4) && (
           <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
             <TooltipProvider>
               <Tooltip>
@@ -145,6 +145,7 @@ export function ExpandableRequestRow({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            {  user?.role_id !== 3 && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -168,7 +169,7 @@ export function ExpandableRequestRow({
                   Cambiar prioridad de la solicitud
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider>
+            </TooltipProvider>)}
           </TableCell>
         )}
         <TableCell className="p-2 flex gap-1">
@@ -194,8 +195,8 @@ export function ExpandableRequestRow({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={onToggle}>
-                    <ChevronDown className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" onClick={onToggle} >
+                    <ChevronDown className="h-4 w-4 " />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">Contraer</TooltipContent>

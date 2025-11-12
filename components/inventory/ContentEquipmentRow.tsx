@@ -25,7 +25,11 @@ interface ContentEquipmentRowProps {
   setAssigned_user_name: (name: string) => void;
 }
 
-const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_name }: ContentEquipmentRowProps) => {
+const ContentEquipmentRow = ({
+  equipment,
+  assigned_user_name,
+  setAssigned_user_name,
+}: ContentEquipmentRowProps) => {
   const user = useUserStore((state) => state.user);
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(
@@ -36,24 +40,26 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
   const [isAuditOpen, setIsAuditOpen] = useState(false);
 
   // Query para obtener el historial de auditoría
-  const { data: auditHistory, isLoading: isLoadingAudit } = useQuery<EquipmentAuditHistory>({
-    queryKey: ["equipment-audit", equipment.id],
-    queryFn: () => fetchEquipmentAudit(equipment.id),
-    enabled: isAuditOpen,
-  });
+  const { data: auditHistory, isLoading: isLoadingAudit } =
+    useQuery<EquipmentAuditHistory>({
+      queryKey: ["equipment-audit", equipment.id],
+      queryFn: () => fetchEquipmentAudit(equipment.id),
+      enabled: isAuditOpen,
+    });
 
-  // Determinar si es una impresora usando type_name 
+  // Determinar si es una impresora usando type_name
   const isPrinter = equipment.type_name?.toLowerCase().includes("impresora");
 
   // Extraer los IDs de requests asociados
   const associatedRequests = equipment.requests_linked || [];
-    
 
   // Mutation para actualizar el equipo (reasignar)
   const updateEquipmentMutation = useMutation({
-    mutationFn: async (newUserId: number) =>{
-      const response = await updateEquipmentData(equipment.id, { assigned_user_id: newUserId })
-      return response
+    mutationFn: async (newUserId: number) => {
+      const response = await updateEquipmentData(equipment.id, {
+        assigned_user_id: newUserId,
+      });
+      return response;
     },
     onSuccess: (response) => {
       console.log(response);
@@ -64,18 +70,17 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
       setAssigned_user_name(response.data.assigned_user_name || "No asignado");
     },
     onError: (error: any) => {
-      toast.error(
-        error?.message, {style: colorForSoonerError}
-      );
-      
+      toast.error(error?.message, { style: colorForSoonerError });
     },
   });
 
   // Mutation para desvincular usuario del equipo
   const unlinkUserMutation = useMutation({
     mutationFn: async () => {
-      const response = await updateEquipmentData(equipment.id, { assigned_user_id: null })
-      return response
+      const response = await updateEquipmentData(equipment.id, {
+        assigned_user_id: null,
+      });
+      return response;
     },
     onSuccess: () => {
       toast.success("Usuario desvinculado correctamente");
@@ -83,9 +88,7 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
       setAssigned_user_name("No asignado");
     },
     onError: (error: any) => {
-      toast.error(
-        error?.message, {style: colorForSoonerError}
-      );
+      toast.error(error?.message, { style: colorForSoonerError });
     },
   });
 
@@ -221,33 +224,37 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
             )}
 
             {/* Lista de solicitudes asociadas */}
-            <div className="mt-6">
-              <div className="flex items-center gap-2 mb-3">
-                <ListChecks className="h-5 w-5 text-purple-600" />
-                <h4 className="font-semibold text-lg">Solicitudes asociadas</h4>
-              </div>
+            {user?.role_id !== 3 && user?.role_id !== 4 && (
+              <div className="mt-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <ListChecks className="h-5 w-5 text-purple-600" />
+                  <h4 className="font-semibold text-lg">
+                    Solicitudes asociadas
+                  </h4>
+                </div>
 
-              {associatedRequests.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">
-                  No hay solicitudes asociadas a este equipo
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {associatedRequests.map((requestId: number) => (
-                    <li key={requestId}>
-                      <Link
-                        href={`/viewRequests?id=${requestId}`}
-                        target="_blank"
-                        className="text-sm text-blue-600 hover:text-blue-800 dark:text-white hover:underline flex items-center gap-2"
-                      >
-                        <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
-                        Solicitud #{requestId}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                {associatedRequests.length === 0 ? (
+                  <p className="text-sm text-gray-500 italic">
+                    No hay solicitudes asociadas a este equipo
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {associatedRequests.map((requestId: number) => (
+                      <li key={requestId}>
+                        <Link
+                          href={`/viewRequests?id=${requestId}`}
+                          target="_blank"
+                          className="text-sm text-blue-600 hover:text-blue-800 dark:text-white hover:underline flex items-center gap-2"
+                        >
+                          <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                          Solicitud #{requestId}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Columna derecha: Especificaciones Técnicas */}
@@ -264,20 +271,24 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
                 </h5>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   <div>
-                    <strong>CPU:</strong> {equipment.specifications?.hardware?.cpu}
+                    <strong>CPU:</strong>{" "}
+                    {equipment.specifications?.hardware?.cpu}
                   </div>
                   <div>
-                    <strong>RAM:</strong> {equipment.specifications?.hardware?.ram}
+                    <strong>RAM:</strong>{" "}
+                    {equipment.specifications?.hardware?.ram}
                   </div>
                   <div>
                     <strong>Almacenamiento:</strong>{" "}
                     {equipment.specifications?.hardware?.storage}
                   </div>
                   <div>
-                    <strong>GPU:</strong> {equipment.specifications?.hardware?.gpu}
+                    <strong>GPU:</strong>{" "}
+                    {equipment.specifications?.hardware?.gpu}
                   </div>
                   <div>
-                    <strong>Red:</strong> {equipment.specifications?.hardware?.network}
+                    <strong>Red:</strong>{" "}
+                    {equipment.specifications?.hardware?.network}
                   </div>
                 </div>
               </div>
@@ -288,13 +299,16 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
                 </h5>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   <div>
-                    <strong>Sistema Operativo:</strong> {equipment.specifications?.software?.os}
+                    <strong>Sistema Operativo:</strong>{" "}
+                    {equipment.specifications?.software?.os}
                   </div>
                   <div>
-                    <strong>Suite de Oficina:</strong> {equipment.specifications?.software?.office}
+                    <strong>Suite de Oficina:</strong>{" "}
+                    {equipment.specifications?.software?.office}
                   </div>
                   <div>
-                    <strong>Antivirus:</strong> {equipment.specifications?.software?.antivirus}
+                    <strong>Antivirus:</strong>{" "}
+                    {equipment.specifications?.software?.antivirus}
                   </div>
                 </div>
               </div>
@@ -308,7 +322,8 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
                 <DialogTitle>Confirmar reasignación de equipo</DialogTitle>
                 <DialogDescription>
                   ¿Estás seguro de que deseas reasignar este equipo al usuario
-                  seleccionado? Esta acción actualizará el registro de asignación.
+                  seleccionado? Esta acción actualizará el registro de
+                  asignación.
                 </DialogDescription>
               </DialogHeader>
 
@@ -346,13 +361,16 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
           </Dialog>
 
           {/* Dialog de confirmación de desvinculación */}
-          <Dialog open={isUnlinkDialogOpen} onOpenChange={setIsUnlinkDialogOpen}>
+          <Dialog
+            open={isUnlinkDialogOpen}
+            onOpenChange={setIsUnlinkDialogOpen}
+          >
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Confirmar desvinculación de usuario</DialogTitle>
                 <DialogDescription>
-                  ¿Estás seguro de que deseas desvincular al usuario actual de este equipo?
-                  El equipo quedará sin asignación.
+                  ¿Estás seguro de que deseas desvincular al usuario actual de
+                  este equipo? El equipo quedará sin asignación.
                 </DialogDescription>
               </DialogHeader>
 
@@ -393,7 +411,9 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
           <Dialog open={isAuditOpen} onOpenChange={setIsAuditOpen}>
             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Historial de Auditoría - Equipo #{equipment.id}</DialogTitle>
+                <DialogTitle>
+                  Historial de Auditoría - Equipo #{equipment.id}
+                </DialogTitle>
                 <DialogDescription>
                   Historial completo de cambios y asignaciones de este equipo
                 </DialogDescription>
@@ -401,7 +421,9 @@ const ContentEquipmentRow = ({ equipment, assigned_user_name, setAssigned_user_n
               {isLoadingAudit && (
                 <div className="text-center py-8">Cargando historial...</div>
               )}
-              {auditHistory && <EquipmentAuditDetail auditHistory={auditHistory} />}
+              {auditHistory && (
+                <EquipmentAuditDetail auditHistory={auditHistory} />
+              )}
             </DialogContent>
           </Dialog>
         </>
