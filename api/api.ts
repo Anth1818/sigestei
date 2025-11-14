@@ -7,7 +7,8 @@ import {
 } from "@/lib/types";
 import { EquipmentResponse } from "@/lib/types";
 
-const API_BASE_URL =  process.env.PRODAPI || process.env.LOCALAPI;
+
+const API_BASE_URL = process.env.PRODAPI || "http://localhost:3001/api";
 
 // AUTHENTICATION
 
