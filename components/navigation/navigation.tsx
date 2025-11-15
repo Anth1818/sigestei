@@ -43,7 +43,7 @@ export function Navigation({
         {filteredNavigation.map((item) => {
           return (
             <SidebarMenuItem key={item.name} >
-              <SidebarMenuButton asChild className={`${ pathname === item.url ? 'bg-blue-200 dark:bg-gray-700 rounded-sm' : ''} hover:bg-blue-200 dark:hover:bg-gray-700`}>
+              <SidebarMenuButton asChild className={`${ pathname === item.url ? 'bg-blue-200 dark:bg-gray-700 theme-blue:bg-blue-700 theme-violet:bg-purple-700 rounded-sm' : ''} hover:bg-blue-200 dark:hover:bg-gray-700 theme-blue:hover:bg-blue-700 theme-violet:hover:bg-purple-700`}>
                 <Link href={item.url} >
                   <item.icon />
                   <span>{item.name}</span>

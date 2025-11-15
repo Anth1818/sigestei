@@ -21,7 +21,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <h2
-          className={`text-xl font-bold text-center text-gray-800 dark:text-white pt-2 ${open ? "text-[30px]" : "text-[8px]"}`}
+          className={`text-xl font-bold text-center text-gray-800 dark:text-white theme-blue:text-white theme-violet:text-white pt-2 ${open ? "text-[30px]" : "text-[8px]"}`}
         >
           {open ? "SIGESTEI" : "S I G E S T E I"}
         </h2>

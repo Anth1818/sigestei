@@ -15,6 +15,7 @@ export function ClientProviders({ children }: { children: ReactNode }) {
         defaultTheme="system"
         enableSystem
         disableTransitionOnChange
+        themes={["light", "dark", "theme-blue", "theme-violet"]}
       >
         {children}
       </ThemeProvider>

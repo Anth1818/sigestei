@@ -177,7 +177,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             <div className="w-full">
               <textarea
                 defaultValue={request.description}
-                className="text-sm mt-1 p-2 bg-white dark:text-black rounded border h-48 w-sm md:w-md scroll-auto resize-none"
+                className="text-sm mt-1 p-2 bg-white dark:text-black theme-blue:text-black theme-violet:text-black rounded border h-48 w-sm md:w-md scroll-auto resize-none"
                 disabled
               ></textarea>
             </div>
@@ -353,7 +353,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             </div>
 
             {/* Equipo del Beneficiario */}
-            <div className="mt-4 p-3 bg-white dark:text-black rounded border">
+            <div className="mt-4 p-3 bg-white dark:text-black theme-blue:text-black theme-violet:text-black rounded border">
               <div className="flex items-center gap-2 mb-2">
                 <Computer className="h-4 w-4 text-orange-600" />
                 <span className="font-medium text-sm">
