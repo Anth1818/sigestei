@@ -25,7 +25,10 @@ interface RequestFiltersProps {
   uniqueStatuses: string[];
   uniquePriorities: string[];
   uniqueTypes: string[];
+  uniqueTechnicians: string[];
   onPageReset: () => void;
+  technicianFilter: string;
+  setTechnicianFilter: (value: string) => void;
 }
 
 export function RequestFilters({
@@ -37,6 +40,8 @@ export function RequestFilters({
   setPriorityFilter,
   typeFilter,
   setTypeFilter,
+  technicianFilter,
+  setTechnicianFilter,
   dateFilterType,
   setDateFilterType,
   dateRange,
@@ -45,6 +50,7 @@ export function RequestFilters({
   uniqueStatuses,
   uniquePriorities,
   uniqueTypes,
+  uniqueTechnicians,
   onPageReset,
 }: RequestFiltersProps) {
   return (
@@ -64,6 +70,28 @@ export function RequestFilters({
           className="border rounded px-2 py-1 text-sm w-full"
           placeholder="ID de solicitud"
         />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium block mb-1">Técnicos:</label>
+        <Select
+          value={technicianFilter}
+          onValueChange={(value) => {
+            setTechnicianFilter(value);
+            onPageReset();
+          }}
+        >
+          <SelectTrigger className="h-8 w-full">
+            <SelectValue placeholder="Todos" />
+          </SelectTrigger>
+          <SelectContent>
+            {uniqueTechnicians.map((technician) => (
+              <SelectItem key={technician} value={technician}>
+                {technician}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>

@@ -137,6 +137,8 @@ export default function RequestTable() {
             typeFilter={filters.typeFilter}
             setTypeFilter={filters.setTypeFilter}
             dateFilterType={filters.dateFilterType}
+            technicianFilter={filters.technicianFilter}
+            setTechnicianFilter={filters.setTechnicianFilter}
             setDateFilterType={filters.setDateFilterType}
             dateRange={filters.dateRange}
             setDateRange={filters.setDateRange}
@@ -144,6 +146,7 @@ export default function RequestTable() {
             uniqueStatuses={uniqueStatuses}
             uniquePriorities={uniquePriorities}
             uniqueTypes={uniqueTypes}
+            uniqueTechnicians={uniqueTechnicians}
             onPageReset={() => pagination.setCurrentPage(1)}
           />
                    

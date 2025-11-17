@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { RequestResponse } from "@/lib/types";
-import { ParamValue } from "next/dist/server/request/params";
+
 
 export const useRequestFilters = (requests: RequestResponse[], requestIdFromParams: string | null) => {
   const [searchId, setSearchId] = useState(requestIdFromParams ? requestIdFromParams.toString() : "");
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [technicianFilter, setTechnicianFilter] = useState("");
   const [dateFilterType, setDateFilterType] = useState<"creation" | "resolution">("creation");
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined;
@@ -20,6 +21,7 @@ export const useRequestFilters = (requests: RequestResponse[], requestIdFromPara
   const getStatusName = (request: RequestResponse) => request.request_statuses?.name || "";
   const getPriorityName = (request: RequestResponse) => request.request_priorities?.name || "";
   const getTypeName = (request: RequestResponse) => request.request_types?.name || "";
+  const getTechnicianName = (request: RequestResponse) => request.users_requests_technician_idTousers?.full_name || "";
 
   // Filtros aplicados
   const filteredRequests = useMemo(() => {
@@ -47,6 +49,12 @@ export const useRequestFilters = (requests: RequestResponse[], requestIdFromPara
       filtered = filtered.filter((request) => getTypeName(request) === typeFilter);
     }
 
+    // Filtro por técnico asignado
+    if (technicianFilter) {
+      filtered = filtered.filter((request) => 
+       getTechnicianName(request) === technicianFilter
+   );
+    }
     // Filtro por rango de fechas
     if (dateRange.from || dateRange.to) {
       filtered = filtered.filter((request) => {
@@ -84,13 +92,14 @@ export const useRequestFilters = (requests: RequestResponse[], requestIdFromPara
     }
 
     return filtered;
-  }, [requests, searchId, statusFilter, priorityFilter, typeFilter, dateFilterType, dateRange]);
+  }, [requests, searchId, statusFilter, priorityFilter, typeFilter, dateFilterType, dateRange, technicianFilter]);
 
   const clearFilters = () => {
     setSearchId("");
     setStatusFilter("");
     setPriorityFilter("");
     setTypeFilter("");
+    setTechnicianFilter("");
     setDateFilterType("creation");
     setDateRange({ from: undefined, to: undefined });
   };
@@ -109,6 +118,8 @@ export const useRequestFilters = (requests: RequestResponse[], requestIdFromPara
     dateRange,
     setDateRange,
     filteredRequests,
+    technicianFilter,
+    setTechnicianFilter,
     clearFilters,
   };
 };
