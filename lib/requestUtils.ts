@@ -120,13 +120,13 @@ export const getPriorityColor = (priority: string) => {
 export const getStatusColor = (status: string) => {
   switch (status) {
     case "Pendiente":
-      return "text-orange-600 bg-orange-100 px-2 py-1 rounded-full font-bold text-xs dark:bg-orange-500 dark:text-white theme-blue:bg-orange-900/80 theme-blue:text-orange-100 theme-violet:bg-orange-900/80 theme-violet:text-orange-100";
+      return "text-orange-600 bg-orange-100 px-2 py-1 rounded-full font-bold text-xs dark:bg-orange-500 dark:text-white theme-blue:bg-orange-900/80 theme-blue:text-orange-100 theme-violet:bg-orange-900/80 theme-violet:text-orange-100 theme-orange:bg-orange-900/80 theme-orange:text-orange-100";
     case "En proceso":
-      return "text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-bold text-xs dark:bg-blue-500 dark:text-white theme-blue:bg-blue-900/80 theme-blue:text-blue-100 theme-violet:bg-blue-900/80 theme-violet:text-purple-100";
+      return "text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-bold text-xs dark:bg-blue-500 dark:text-white theme-blue:bg-blue-900/80 theme-blue:text-blue-100 theme-violet:bg-blue-900/80 theme-violet:text-purple-100 theme-orange:bg-blue-900/80 theme-orange:text-blue-100";
     case "Completada":
-      return "text-green-600 bg-green-100 px-2 py-1 rounded-full font-bold text-xs dark:bg-green-500 dark:text-white theme-blue:bg-green-900/80 theme-blue:text-green-100 theme-violet:bg-green-900/80 theme-violet:text-green-100";
+      return "text-green-600 bg-green-100 px-2 py-1 rounded-full font-bold text-xs dark:bg-green-500 dark:text-white theme-blue:bg-green-900/80 theme-blue:text-green-100 theme-violet:bg-green-900/80 theme-violet:text-green-100 theme-orange:bg-green-900/80 theme-orange:text-green-100";
     case "Cancelada":
-      return "text-red-600 bg-red-100 px-2 py-1 rounded-full font-bold text-xs dark:bg-red-500 dark:text-white theme-blue:bg-red-900/80 theme-blue:text-red-100 theme-violet:bg-red-900/80 theme-violet:text-red-100";
+      return "text-red-600 bg-red-100 px-2 py-1 rounded-full font-bold text-xs dark:bg-red-500 dark:text-white theme-blue:bg-red-900/80 theme-blue:text-red-100 theme-violet:bg-red-900/80 theme-violet:text-red-100 theme-orange:bg-red-900/80 theme-orange:text-red-100";
     default:
       return "";
   }

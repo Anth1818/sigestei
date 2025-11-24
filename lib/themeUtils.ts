@@ -92,22 +92,26 @@ export const commonThemeClasses = {
     active: cn(
       "text-green-600 bg-green-100 dark:text-white dark:bg-green-900",
       "theme-blue:bg-green-900/80 theme-blue:text-green-100",
-      "theme-violet:bg-green-900/80 theme-violet:text-green-100"
+      "theme-violet:bg-green-900/80 theme-violet:text-green-100",
+      "theme-orange:bg-green-900/80 theme-orange:text-green-100"
     ),
     inactive: cn(
       "text-red-600 bg-red-100 dark:text-white dark:bg-red-900",
       "theme-blue:bg-red-900/80 theme-blue:text-red-100",
-      "theme-violet:bg-red-900/80 theme-violet:text-red-100"
+      "theme-violet:bg-red-900/80 theme-violet:text-red-100",
+      "theme-orange:bg-red-900/80 theme-orange:text-red-100"
     ),
     pending: cn(
       "text-orange-600 bg-orange-100 dark:text-white dark:bg-orange-900",
       "theme-blue:bg-orange-900/80 theme-blue:text-orange-100",
-      "theme-violet:bg-orange-900/80 theme-violet:text-orange-100"
+      "theme-violet:bg-orange-900/80 theme-violet:text-orange-100",
+      "theme-orange:bg-orange-900/80 theme-orange:text-orange-100"
     ),
     success: cn(
       "text-green-600 bg-green-100 dark:text-white dark:bg-green-900",
       "theme-blue:bg-green-900/80 theme-blue:text-green-100",
-      "theme-violet:bg-green-900/80 theme-violet:text-green-100"
+      "theme-violet:bg-green-900/80 theme-violet:text-green-100",
+      "theme-orange:bg-green-900/80 theme-orange:text-green-100"
     ),
   },
 } as const;
@@ -144,49 +148,56 @@ export function getStatusBadgeClass(
       "text-green-600 bg-green-100",
       "dark:text-white dark:bg-green-900",
       "theme-blue:bg-green-900/80 theme-blue:text-green-100",
-      "theme-violet:bg-green-900/80 theme-violet:text-green-100"
+      "theme-violet:bg-green-900/80 theme-violet:text-green-100",
+      "theme-orange:bg-green-900/80 theme-orange:text-green-100"
     ),
     inactive: cn(
       baseClass,
       "text-red-600 bg-red-100",
       "dark:text-white dark:bg-red-900",
       "theme-blue:bg-red-900/80 theme-blue:text-red-100",
-      "theme-violet:bg-red-900/80 theme-violet:text-red-100"
+      "theme-violet:bg-red-900/80 theme-violet:text-red-100",
+      "theme-orange:bg-red-900/80 theme-orange:text-red-100"
     ),
     pending: cn(
       baseClass,
       "text-orange-600 bg-orange-100",
       "dark:text-white dark:bg-orange-900",
       "theme-blue:bg-orange-900/80 theme-blue:text-orange-100",
-      "theme-violet:bg-orange-900/80 theme-violet:text-orange-100"
+      "theme-violet:bg-orange-900/80 theme-violet:text-orange-100",
+      "theme-orange:bg-orange-900/80 theme-orange:text-orange-100"
     ),
     success: cn(
       baseClass,
       "text-green-600 bg-green-100",
       "dark:text-white dark:bg-green-900",
       "theme-blue:bg-green-900/80 theme-blue:text-green-100",
-      "theme-violet:bg-green-900/80 theme-violet:text-green-100"
+      "theme-violet:bg-green-900/80 theme-violet:text-green-100",
+      "theme-orange:bg-green-900/80 theme-orange:text-green-100"
     ),
     error: cn(
       baseClass,
       "text-red-600 bg-red-100",
       "dark:text-white dark:bg-red-900",
       "theme-blue:bg-red-900/80 theme-blue:text-red-100",
-      "theme-violet:bg-red-900/80 theme-violet:text-red-100"
+      "theme-violet:bg-red-900/80 theme-violet:text-red-100",
+      "theme-orange:bg-red-900/80 theme-orange:text-red-100"
     ),
     warning: cn(
       baseClass,
       "text-yellow-600 bg-yellow-100",
       "dark:text-white dark:bg-yellow-900",
       "theme-blue:bg-yellow-900/80 theme-blue:text-yellow-100",
-      "theme-violet:bg-yellow-900/80 theme-violet:text-yellow-100"
+      "theme-violet:bg-yellow-900/80 theme-violet:text-yellow-100",
+      "theme-orange:bg-yellow-900/80 theme-orange:text-yellow-100"
     ),
     info: cn(
       baseClass,
       "text-blue-600 bg-blue-100",
       "dark:text-white dark:bg-blue-900",
       "theme-blue:bg-blue-900/80 theme-blue:text-blue-100",
-      "theme-violet:bg-blue-900/80 theme-violet:text-purple-100"
+      "theme-violet:bg-blue-900/80 theme-violet:text-purple-100",
+      "theme-orange:bg-blue-900/80 theme-orange:text-blue-100"
     ),
   };
   

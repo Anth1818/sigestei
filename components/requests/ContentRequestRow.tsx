@@ -177,7 +177,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             <div className="w-full">
               <textarea
                 defaultValue={request.description}
-                className="text-sm mt-1 p-2 bg-white dark:text-black theme-blue:text-black theme-violet:text-black rounded border h-48 w-sm md:w-md scroll-auto resize-none"
+                className="text-sm mt-1 p-2 bg-white dark:text-black theme-blue:text-black theme-violet:text-black theme-orange:text-black rounded border h-48 w-sm md:w-md scroll-auto resize-none"
                 disabled
               ></textarea>
             </div>

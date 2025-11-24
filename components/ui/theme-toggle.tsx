@@ -51,6 +51,10 @@ export function ThemeToggle() {
           <div className="mr-2 h-4 w-4 rounded-full bg-violet-600" />
           Violeta
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("theme-orange")}>
+          <div className="mr-2 h-4 w-4 rounded-full bg-orange-600" />
+          Naranja Oscuro
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
