@@ -54,7 +54,7 @@ export function RequestFilters({
   onPageReset,
 }: RequestFiltersProps) {
   return (
-    <div className="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
+    <div className="mb-4 grid grid-cols-1 md:grid-cols-5 gap-2">
       <div>
         <label htmlFor="search-id" className="text-sm font-medium block mb-1">
           Buscar por ID:

@@ -1,4 +1,4 @@
-import { RequestResponse, Request } from "@/lib/types";
+import { RequestResponse, RequestAdapted } from "@/lib/types";
 
 // Funciones auxiliares para extraer datos de la API
 export const getRequesterName = (request: RequestResponse) =>
@@ -17,7 +17,7 @@ export const getTypeName = (request: RequestResponse) =>
   request.request_types?.name || "N/A";
 
 // Función para convertir RequestResponse al formato esperado por ExpandableRequestRow
-export const adaptRequestData = (apiRequest: RequestResponse): Request => {
+export const adaptRequestData = (apiRequest: RequestResponse): RequestAdapted => {
   return {
     id: apiRequest.id,
     user_id: apiRequest.requester_id,

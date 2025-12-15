@@ -30,6 +30,7 @@ export const getCatalogs = async (): Promise<CatalogData> => {
       os_options: [],
       office_suites: [],
       antivirus_solutions: [],
+      request_statuses: [],
     };
   }
 };
@@ -60,27 +61,6 @@ export const CHANGE_TYPE_NAMES: Record<string, string> = {
   identity_card_changed: "Cédula cambiada",
   email_changed: "Correo electrónico cambiado",
   full_name_changed: "Nombre completo cambiado",
-};
-
-// Funciones para parsear IDs con catálogos
-
-// Parsear estado de solicitud
-export const parseRequestStatus = async (statusId: string | number): Promise<string> => {
-  const catalogs = await getCatalogs();
-  const id = typeof statusId === "string" ? parseInt(statusId) : statusId;
-  const status = catalogs.equipment_statuses.find((s) => s.id === id);
-  return status?.name || `Estado #${statusId}`;
-};
-
-// Parsear prioridad de solicitud
-export const parseRequestPriority = async (priorityId: string | number): Promise<string> => {
-  const priorities: Record<number, string> = {
-    1: "Alta",
-    2: "Media",
-    3: "Baja",
-  };
-  const id = typeof priorityId === "string" ? parseInt(priorityId) : priorityId;
-  return priorities[id] || `Prioridad #${priorityId}`;
 };
 
 // Parsear rol de usuario
@@ -170,7 +150,7 @@ export const FIELD_NAMES: Record<string, string> = {
   location: "Ubicación",
 };
 
-export const ParseStatusNumber = (statusId: string): string => {
+export const parseStatusNumber = (statusId: string): string => {
   switch (statusId) {
     case "1": 
         return "Pendiente";
@@ -185,7 +165,7 @@ export const ParseStatusNumber = (statusId: string): string => {
   }
 };
 
-export const ParsePriorityNumber = (priorityId: string): string => {
+export const parsePriorityNumber = (priorityId: string): string => {
   switch (priorityId) {
     case "1":
         return "Alta";
@@ -299,9 +279,9 @@ export const formatChangeValueWithCatalogs = async (
   try {
     switch (fieldName) {
       case "status_id":
-        return await parseRequestStatus(value);
+        return await parseStatusNumber(value);
       case "priority_id":
-        return await parseRequestPriority(value);
+        return await parsePriorityNumber(value);
       case "role_id":
         return await parseRole(value);
       case "department_id":

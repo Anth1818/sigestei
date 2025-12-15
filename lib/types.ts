@@ -3,7 +3,7 @@ export type SortColumnUser = {
   direccion: "asc" | "desc";
 } | null;
 
-export type Request = {
+export type RequestAdapted = {
   id: number;
   user_id: number; // ID del usuario que crea la solicitud
   equipment_id: number; // Equipo relacionado con la solicitud
@@ -549,6 +549,7 @@ export interface CatalogData {
   os_options: OsOption[];
   office_suites: officeSuiteOption[];
   antivirus_solutions: AntivirusOption[];
+  request_statuses: RequestStatus[];
 }
 
 // AUDIT TYPES

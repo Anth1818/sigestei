@@ -16,6 +16,7 @@ import {
   ArrowUpDown,
   ChevronRight,
   ChevronLeft,
+  FileDown,
 } from "lucide-react";
 import {
   Select,
@@ -42,6 +43,7 @@ import { useEquipmentSorting } from "@/hooks/useEquipmentSorting";
 import { useEquipmentActions } from "@/hooks/useEquipmentActions";
 import { usePagination } from "@/hooks/usePagination";
 import type { CatalogData } from "@/lib/types";
+import { generateEquipmentPDF, type EquipmentForPDF } from "@/lib/pdfUtils";
 
 export default function EquipmentTable() {
 
@@ -123,6 +125,28 @@ export default function EquipmentTable() {
       default:
         return <ArrowUpDown size={16} />;
     }
+  };
+
+  const handleExportPDF = () => {
+    const equipmentForPDF: EquipmentForPDF[] = filters.filteredEquipments.map(
+      (equipment) => ({
+        id: equipment.id,
+        type_name: equipment.type_name,
+        brand_name: equipment.brand,
+        model: equipment.model,
+        serial_number: equipment.serial_number,
+        status_name: equipment.status,
+        assigned_user_name: equipment.assigned_to || "Sin asignar",
+        location: equipment.location,
+        asset_number: equipment.asset_number || "N/A",
+      })
+    );
+
+    generateEquipmentPDF(equipmentForPDF, {
+      status: filters.statusFilter !== "all" ? filters.statusFilter : undefined,
+      type: filters.typeFilter !== "all" ? filters.typeFilter : undefined,
+      brand: filters.brandFilter !== "all" ? filters.brandFilter : undefined,
+    });
   };
 
   return (
@@ -236,6 +260,18 @@ export default function EquipmentTable() {
             Limpiar filtros
           </Button>
         </div>
+      </div>
+
+      {/* Botón de exportar PDF */}
+      <div className="mb-4 flex justify-end">
+        <Button
+          onClick={handleExportPDF}
+          disabled={filters.filteredEquipments.length === 0}
+          className="flex items-center gap-2"
+        >
+          <FileDown size={16} />
+          Exportar PDF
+        </Button>
       </div>
 
 

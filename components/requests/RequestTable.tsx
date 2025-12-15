@@ -15,6 +15,7 @@ import {
   ArrowUpDown,
   ChevronRight,
   ChevronLeft,
+  FileDown,
 } from "lucide-react";
 import {
   Select,
@@ -33,15 +34,25 @@ import {
 } from "@/components/ui/dialog";
 import { ExpandableRequestRow } from "./ExpandableRequestRow";
 import { RequestFilters } from "./RequestFilters";
-import { fecthAllRequestByUser, fecthAllRequestForTechnician, fetchRequests } from "@/api/api";
+import {
+  fecthAllRequestByUser,
+  fecthAllRequestForTechnician,
+  fetchRequests,
+} from "@/api/api";
 import { useRequestFilters } from "@/hooks/useRequestFilters";
 import { usePagination } from "@/hooks/usePagination";
 import { useRequestActions } from "@/hooks/useRequestActions";
 import { useRequestSorting } from "@/hooks/useRequestSorting";
-import { adaptRequestData, getPriorityColor, getStatusColor } from "@/lib/requestUtils";
+import {
+  adaptRequestData,
+  getPriorityColor,
+  getStatusColor,
+} from "@/lib/requestUtils";
 import { RequestResponse } from "@/lib/types";
 import { useUserStore } from "@/hooks/useUserStore";
 import { useSearchParams } from "next/navigation";
+import { generateRequestsPDF } from "@/lib/pdfUtils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export default function RequestTable() {
   const searchParams = useSearchParams();
@@ -50,12 +61,12 @@ export default function RequestTable() {
 
   const fecthDependsOnUserRole = () => {
     // Para las solicitudes de usuario institucional
-    if (user?.role_id === 4 ) {
+    if (user?.role_id === 4) {
       return fecthAllRequestByUser(user.id);
     }
 
     // Para las solicitudes de técnico
-    if(user?.role_id === 3) {
+    if (user?.role_id === 3) {
       return fecthAllRequestForTechnician(user.id);
     }
 
@@ -63,17 +74,24 @@ export default function RequestTable() {
     return fetchRequests();
   };
   // React Query para obtener las requests
-  const { data: requestsData, isLoading, error } = useQuery({
-    queryKey: ['requests'],
+  const {
+    data: requestsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["requests"],
     queryFn: fecthDependsOnUserRole,
   });
 
   // Datos de la API
   const requests: RequestResponse[] = requestsData || [];
-  
+
   // Custom hooks para separar la lógica
   const sorting = useRequestSorting(requests);
-  const filters = useRequestFilters(sorting.sortedRequests, requestIdFromParams);
+  const filters = useRequestFilters(
+    sorting.sortedRequests,
+    requestIdFromParams
+  );
   const pagination = usePagination(filters.filteredRequests);
   const actions = useRequestActions();
 
@@ -90,7 +108,13 @@ export default function RequestTable() {
 
   // Opciones únicas para los filtros
   // uniqueStatusesRaw para poner primero "Pendiente" y último "Cancelada"
-  const uniqueStatusesRaw = [...new Set(requests.map((r: RequestResponse) => r.request_statuses?.name).filter(Boolean))] as string[];
+  const uniqueStatusesRaw = [
+    ...new Set(
+      requests
+        .map((r: RequestResponse) => r.request_statuses?.name)
+        .filter(Boolean)
+    ),
+  ] as string[];
   const uniqueStatuses =
     uniqueStatusesRaw.length > 1
       ? [
@@ -99,9 +123,30 @@ export default function RequestTable() {
           uniqueStatusesRaw[0],
         ]
       : uniqueStatusesRaw;
-  const uniquePriorities = [...new Set(requests.map((r: RequestResponse) => r.request_priorities?.name).filter(Boolean))] as string[];
-  const uniqueTypes = [...new Set(requests.map((r: RequestResponse) => r.request_types?.name).filter(Boolean))] as string[];
-  const uniqueTechnicians = [...new Set(requests.map((r: RequestResponse) => r.users_requests_technician_idTousers?.full_name).filter(Boolean))] as string[];
+  const uniquePriorities = [
+    ...new Set(
+      requests
+        .map((r: RequestResponse) => r.request_priorities?.name)
+        .filter(Boolean)
+    ),
+  ] as string[];
+  const uniqueTypes = [
+    ...new Set(
+      requests
+        .map((r: RequestResponse) => r.request_types?.name)
+        .filter(Boolean)
+    ),
+  ] as string[];
+  const uniqueTechnicians = [
+    ...new Set(
+      requests
+        .map(
+          (r: RequestResponse) =>
+            r.users_requests_technician_idTousers?.full_name
+        )
+        .filter(Boolean)
+    ),
+  ] as string[];
 
   const renderSortIcon = (field: string) => {
     const iconName = sorting.renderSortIcon(field as any);
@@ -112,6 +157,46 @@ export default function RequestTable() {
         return <ChevronDown size={16} />;
       default:
         return <ArrowUpDown size={16} />;
+    }
+  };
+
+  // Función para generar el PDF
+  const handleExportPDF = () => {
+    generateRequestsPDF(filters.filteredRequests, {
+      status: filters.statusFilter || undefined,
+      priority: filters.priorityFilter || undefined,
+      type: filters.typeFilter || undefined,
+      dateRange: filters.dateRange
+        ? {
+            start: filters.dateRange.from,
+            end: filters.dateRange.to,
+          }
+        : undefined,
+    });
+  };
+
+  const validateDisabledOfButtonDownloadPDF = () => {
+    if (
+      !filters.searchId &&
+      !filters.statusFilter &&
+      !filters.priorityFilter &&
+      !filters.typeFilter &&
+      !filters.dateRange.to &&
+      !filters.technicianFilter
+    ) {
+      return true;
+    }
+
+    if (
+      (filters.searchId ||
+        filters.statusFilter ||
+        filters.priorityFilter ||
+        filters.typeFilter ||
+        filters.dateRange.to ||
+        filters.technicianFilter) &&
+      filters.filteredRequests.length === 0
+    ) {
+      return true;
     }
   };
 
@@ -127,7 +212,9 @@ export default function RequestTable() {
       {/* Error state */}
       {error && (
         <div className="flex justify-center items-center py-8">
-          <div className="text-lg text-red-600">Error al cargar las solicitudes</div>
+          <div className="text-lg text-red-600">
+            Error al cargar las solicitudes
+          </div>
         </div>
       )}
 
@@ -135,6 +222,7 @@ export default function RequestTable() {
       {!isLoading && !error && (
         <>
           {/* Filtros */}
+
           <RequestFilters
             searchId={filters.searchId}
             setSearchId={filters.setSearchId}
@@ -157,7 +245,40 @@ export default function RequestTable() {
             uniqueTechnicians={uniqueTechnicians}
             onPageReset={() => pagination.setCurrentPage(1)}
           />
-                   
+
+          {/* Botón de exportar PDF */}
+          <div className="flex justify-end mb-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {/* wrapper que recibe los eventos del tooltip aunque el botón esté disabled */}
+                <span
+                  className="inline-block"
+                  aria-disabled={validateDisabledOfButtonDownloadPDF()}
+                >
+                  <Button
+                    onClick={handleExportPDF}
+                    variant="outline"
+                    className="ml-4"
+                    disabled={validateDisabledOfButtonDownloadPDF()}
+                  >
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Exportar PDF
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              { validateDisabledOfButtonDownloadPDF() &&
+                <TooltipContent side="right">
+                  <span>
+                    Para exportar el PDF, aplica al menos un filtro o realiza
+                    una búsqueda.
+                    <br />
+                    <br />
+                  </span>
+                </TooltipContent>
+              }
+            </Tooltip>
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -171,7 +292,9 @@ export default function RequestTable() {
                     {renderSortIcon(col.field)}
                   </TableHead>
                 ))}
-                {user?.role_id != 4 && <TableHead className="p-2">Acciones</TableHead>}
+                {user?.role_id != 4 && (
+                  <TableHead className="p-2">Acciones</TableHead>
+                )}
                 <TableHead className="p-2"></TableHead>
               </TableRow>
             </TableHeader>
@@ -179,7 +302,8 @@ export default function RequestTable() {
               {pagination.paginatedItems.map((request) => (
                 <ExpandableRequestRow
                   key={request.id}
-                  request={adaptRequestData(request)}
+                  requestFullFromApi={request}
+                  requestAdapted={adaptRequestData(request)}
                   expanded={actions.expanded === request.id}
                   onToggle={() => actions.toggleExpansion(request.id)}
                   onUpdateStatus={actions.handleStatusChange}
@@ -195,14 +319,18 @@ export default function RequestTable() {
           </Table>
 
           <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               <p className="text-sm font-medium">Filas por página</p>
               <Select
                 value={pagination.rowsPerPage.toString()}
-                onValueChange={(value) => pagination.changeRowsPerPage(Number(value))}
+                onValueChange={(value) =>
+                  pagination.changeRowsPerPage(Number(value))
+                }
               >
                 <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue placeholder={pagination.rowsPerPage.toString()} />
+                  <SelectValue
+                    placeholder={pagination.rowsPerPage.toString()}
+                  />
                 </SelectTrigger>
                 <SelectContent side="top">
                   {[10, 25, 50, 100, 250, 500].map((pageSize) => (
@@ -212,12 +340,15 @@ export default function RequestTable() {
                   ))}
                 </SelectContent>
               </Select>
+              <p>Total de resultados: {filters.filteredRequests.length}</p>
             </div>
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => pagination.changePage(pagination.currentPage - 1)}
+                onClick={() =>
+                  pagination.changePage(pagination.currentPage - 1)
+                }
                 disabled={pagination.currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -229,7 +360,9 @@ export default function RequestTable() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => pagination.changePage(pagination.currentPage + 1)}
+                onClick={() =>
+                  pagination.changePage(pagination.currentPage + 1)
+                }
                 disabled={pagination.currentPage === pagination.totalPages}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -241,7 +374,10 @@ export default function RequestTable() {
       )}
 
       {/* Dialog de confirmación para cambio de estado */}
-      <Dialog open={actions.isStatusDialogOpen} onOpenChange={actions.cancelStatusUpdate}>
+      <Dialog
+        open={actions.isStatusDialogOpen}
+        onOpenChange={actions.cancelStatusUpdate}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar cambio de estado</DialogTitle>
@@ -254,7 +390,11 @@ export default function RequestTable() {
             <div className="py-4">
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 <strong>Nuevo estado:</strong>{" "}
-                <span className={getStatusColor(actions.pendingStatusUpdate.newStatus)}>
+                <span
+                  className={getStatusColor(
+                    actions.pendingStatusUpdate.newStatus
+                  )}
+                >
                   {actions.pendingStatusUpdate.newStatus}
                 </span>
               </p>
@@ -288,12 +428,16 @@ export default function RequestTable() {
       </Dialog>
 
       {/* Dialog de confirmación para cambio de prioridad */}
-      <Dialog open={actions.isPriorityDialogOpen} onOpenChange={actions.cancelPriorityUpdate}>
+      <Dialog
+        open={actions.isPriorityDialogOpen}
+        onOpenChange={actions.cancelPriorityUpdate}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar cambio de prioridad</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas cambiar la prioridad de esta solicitud?
+              ¿Estás seguro de que deseas cambiar la prioridad de esta
+              solicitud?
             </DialogDescription>
           </DialogHeader>
 
@@ -301,7 +445,11 @@ export default function RequestTable() {
             <div className="py-4">
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 <strong>Nueva prioridad:</strong>{" "}
-                <span className={getPriorityColor(actions.pendingPriorityUpdate.newPriority)}>
+                <span
+                  className={getPriorityColor(
+                    actions.pendingPriorityUpdate.newPriority
+                  )}
+                >
                   {actions.pendingPriorityUpdate.newPriority}
                 </span>
               </p>

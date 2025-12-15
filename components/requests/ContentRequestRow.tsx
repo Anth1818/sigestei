@@ -1,5 +1,5 @@
 import { Computer, FileText, User, MessageSquare } from "lucide-react";
-import { Request } from "@/lib/types";
+import { RequestAdapted } from "@/lib/types";
 import {
   Select,
   SelectTrigger,
@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import { useUserStore } from "@/hooks/useUserStore";
 
 interface ContentRequestRowProps {
-  request: Request;
+  request: RequestAdapted;
 }
 
 const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
@@ -196,22 +196,31 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
             </p>
           </div>
 
+          {(user?.role_id === 1 || user?.role_id === 2) && (
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-sm text-gray-400">
+                Técnico actual:
+              </span>
+              <p className="text-sm">{assignedTo || "N/A"}</p>
+            </div>
+          )}
+
           {/* Asignación/Reasignación de Técnico (no disponible para rol 4 o 3) */}
-          {(user?.role_id !== 4 && user?.role_id !== 3) && (
+          {user?.role_id !== 4 && user?.role_id !== 3 && (
             <div className="grid grid-cols-2 gap-4 items-center">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-sm text-gray-400">
                   {assignedTo ? "Reasignar a:" : "Asignar a:"}
                 </span>
                 <Select
-                  value={assignedTo}
+                  value={""}
                   onValueChange={handleTechnicianChange}
                   disabled={updateTechnicianMutation.isPending}
                 >
                   <SelectTrigger className="h-7 min-w-[180px] w-auto">
                     <SelectValue
                       placeholder={
-                        assignedTo ? "Reasignar técnico" : "Asignar técnico"
+                        assignedTo ? "Seleccionar técnico" : "Asignar técnico"
                       }
                     />
                   </SelectTrigger>

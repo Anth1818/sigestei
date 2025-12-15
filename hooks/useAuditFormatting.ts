@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCatalogs } from "@/api/api";
 import { CatalogData } from "@/lib/types";
@@ -17,7 +16,7 @@ export const useAuditFormatting = () => {
   /**
    * Formatear valor según el campo y los catálogos
    */
-  const formatValue = (fieldName: string, value: string | null): string => {
+  const formatValue = (fieldName: string, value: string | null, isRequest?: boolean): string => {
     if (value === null || value === "null") {
       return "N/A";
     }
@@ -36,7 +35,9 @@ export const useAuditFormatting = () => {
 
     switch (fieldName) {
       case "status_id": {
-        const status = catalogs.equipment_statuses.find((s) => s.id === numericValue);
+        const status = isRequest
+          ? catalogs.request_statuses.find((s) => s.id === numericValue)
+          : catalogs.equipment_statuses.find((s) => s.id === numericValue);
         return status?.name || value;
       }
       case "priority_id": {

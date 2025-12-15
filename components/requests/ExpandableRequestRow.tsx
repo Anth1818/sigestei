@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, History } from "lucide-react";
-import { Request, RequestAuditHistory } from "@/lib/types";
+import { ChevronDown, ChevronRight, History, FileDown } from "lucide-react";
+import { RequestAdapted, RequestAuditHistory, RequestResponse } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -31,9 +31,12 @@ import ContentRequestRow from "./ContentRequestRow";
 import RequestAuditDetail from "@/components/audit/RequestAuditDetail";
 import { fetchRequestAudit } from "@/api/api";
 import { useUserStore } from "@/hooks/useUserStore";
+import { generateSingleRequestPDF } from "@/lib/pdfUtils";
+import { AuditLog } from "@/lib/types";
 
 interface ExpandableRequestRowProps {
-  request: Request;
+  requestFullFromApi: RequestResponse;
+  requestAdapted: RequestAdapted;
   expanded: boolean;
   onToggle: () => void;
   onUpdateStatus: (id: number, status: string) => void;
@@ -46,7 +49,8 @@ interface ExpandableRequestRowProps {
 }
 
 export function ExpandableRequestRow({
-  request,
+  requestAdapted: request,
+  requestFullFromApi,
   expanded,
   onToggle,
   onUpdateStatus,
@@ -82,6 +86,20 @@ export function ExpandableRequestRow({
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleExportPDF = async () => {
+    // Obtener historial de auditoría si el usuario tiene permisos
+    let auditData: AuditLog[] | undefined;
+    if (user?.role_id === 1 || user?.role_id === 2) {
+      try {
+        const audit = await fetchRequestAudit(request.id);
+        auditData = audit.general_changes;
+      } catch (error) {
+        console.error("Error al obtener auditoría:", error);
+      }
+    }
+    generateSingleRequestPDF(requestFullFromApi, auditData);
   };
 
   const beneficiaryName =
@@ -231,6 +249,17 @@ export function ExpandableRequestRow({
                 }}
                 transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
               >
+                <div className="mb-3 flex justify-end">
+                  <Button
+                    onClick={handleExportPDF}
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <FileDown size={16} />
+                    Exportar Solicitud a PDF
+                  </Button>
+                </div>
                 <ContentRequestRow request={request} />
               </motion.div>
             </TableCell>

@@ -2,14 +2,17 @@
 
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, FileDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
 import  ContentEquipmentRow  from "./ContentEquipmentRow";
-import { EquipmentAdapted } from "@/lib/types";
+import { EquipmentAdapted, AuditLog, EquipmentResponse } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";
+import { generateSingleEquipmentPDF } from "@/lib/pdfUtils";
+import { fetchEquipmentAudit, fetchEquipmentById } from "@/api/api";
+import { useUserStore } from "@/hooks/useUserStore";
 
 interface ExpandableEquipmentRowProps {
   equipment: EquipmentAdapted;
@@ -28,7 +31,7 @@ export function ExpandableEquipmentRow({
   getStatusColor,
   equipmentStatuses,
 }: ExpandableEquipmentRowProps) {
-
+  const user = useUserStore((state) => state.user);
 
   const [assigned_user_name, setAssigned_user_name] = useState(
       equipment.assigned_to || "No asignado"
@@ -41,6 +44,28 @@ export function ExpandableEquipmentRow({
     );
     if (selectedStatus) {
       onUpdateStatus(equipment.id, selectedStatus.id, selectedStatus.name);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      // Obtener datos completos del equipo (EquipmentResponse con especificaciones)
+      const fullEquipment = await fetchEquipmentById(equipment.id);
+      
+      // Obtener historial de auditoría si el usuario tiene permisos
+      let auditData: AuditLog[] | undefined;
+      if (user?.role_id === 1 || user?.role_id === 2) {
+        try {
+          const audit = await fetchEquipmentAudit(equipment.id);
+          auditData = audit.general_changes;
+        } catch (error) {
+          console.error("Error al obtener auditoría:", error);
+        }
+      }
+
+      generateSingleEquipmentPDF(fullEquipment, auditData);
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
     }
   };
 
@@ -120,6 +145,17 @@ export function ExpandableEquipmentRow({
                 }}
                 transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
               >
+                <div className="mb-3 flex justify-end">
+                  <Button
+                    onClick={handleExportPDF}
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <FileDown size={16} />
+                    Exportar Equipo a PDF
+                  </Button>
+                </div>
                 <ContentEquipmentRow equipment={equipment} assigned_user_name={assigned_user_name} setAssigned_user_name={setAssigned_user_name} />
               </motion.div>
             </TableCell>

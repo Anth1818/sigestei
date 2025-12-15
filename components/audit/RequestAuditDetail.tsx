@@ -55,10 +55,10 @@ export default function RequestAuditDetail({
                           {getFieldName(change.field_name)}
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-muted-foreground break-all">
-                          <span className="break-all">{formatValue(change.field_name, change.old_value)}</span>
+                          <span className="break-all">{formatValue(change.field_name, change.old_value, true)}</span>
                           <ArrowRight className="h-4 w-4 flex-shrink-0" />
                           <span className="font-medium text-foreground break-all">
-                            {formatValue(change.field_name, change.new_value)}
+                            {formatValue(change.field_name, change.new_value, true)}
                           </span>
                         </div>
                         {change.comments && (
