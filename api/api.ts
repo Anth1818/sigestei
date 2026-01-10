@@ -305,6 +305,45 @@ export const fetchAllUsersByDepartment = async (departmentId: number) => {
   }
 };
 
+// Obtener todos los técnicos (usuarios con rol de técnico)
+export const fetchAllTechnicians = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/users/technicians`, {
+      withCredentials: true,
+    });
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener técnicos",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener técnicos";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener técnicos",
+    };
+  }
+};
+
 // REQUESTS
 
 export const createRequest = async (data: CreateRequestPayload) => {
@@ -456,6 +495,101 @@ export const fetchRequests = async () => {
 
     throw {
       message: "Error inesperado al obtener solicitudes",
+    };
+  }
+};
+
+// Obtener solicitudes paginadas
+export const fetchRequestsPaginated = async (page: number = 1, limit: number = 10) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/requests/paginated`, {
+      params: { page, limit },
+      withCredentials: true,
+    });
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al obtener solicitudes paginadas",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al obtener solicitudes paginadas";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al obtener solicitudes paginadas",
+    };
+  }
+};
+
+// Obtener solicitudes filtradas con paginación
+export const fetchRequestsFiltered = async (params: {
+  request_id?: string;
+  technician_ids?: string;
+  status_ids?: string;
+  priority_ids?: string;
+  type_ids?: string;
+  date_from?: string;
+  date_to?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  try {
+    // Filtrar parámetros vacíos
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== '' && value !== null)
+    );
+
+    const response = await axios.get(`${API_BASE_URL}/requests/filter`, {
+      params: cleanParams,
+      withCredentials: true,
+    });
+
+    if (response.data && response.data.success === false) {
+      throw {
+        message: response.data.error || response.data.message || "Error al filtrar solicitudes",
+        status: response.status,
+        data: response.data,
+      };
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const serverData = error.response?.data;
+      const status = error.response?.status;
+      const errorMessage = serverData?.error || serverData?.message || error.message || "Error al filtrar solicitudes";
+
+      throw {
+        message: errorMessage,
+        status,
+        data: serverData,
+      };
+    }
+
+    if (error.message) {
+      throw error;
+    }
+
+    throw {
+      message: "Error inesperado al filtrar solicitudes",
     };
   }
 };

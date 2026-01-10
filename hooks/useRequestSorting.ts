@@ -1,11 +1,13 @@
 import { useState, useMemo } from "react";
-import { Request, SortColumnRequest, RequestResponse } from "@/lib/types";
+import { SortColumnRequest, RequestResponse } from "@/lib/types";
 import { getRequesterName, getBeneficiaryName } from "@/lib/requestUtils";
+
+type SortField = keyof RequestResponse | "requestor_name" | "beneficiary_name" | "status" | "priority" | "request_type" | "equipment";
 
 export const useRequestSorting = (requests: RequestResponse[]) => {
   const [currentSort, setCurrentSort] = useState<SortColumnRequest>(null);
 
-  const sortRequests = (field: keyof Request | "requestor_name" | "beneficiary_name") => {
+  const sortRequests = (field: SortField) => {
     const newDirection =
       currentSort?.column === field && currentSort.direction === "asc"
         ? "desc"
@@ -40,6 +42,9 @@ export const useRequestSorting = (requests: RequestResponse[]) => {
       } else if (currentSort.column === "request_type") {
         valueA = a.request_types?.name || "";
         valueB = b.request_types?.name || "";
+      } else if (currentSort.column === "equipment") {
+        valueA = a.equipment?.asset_number || "";
+        valueB = b.equipment?.asset_number || "";
       } else {
         // Fallback para otros campos
         valueA = "";
@@ -58,7 +63,7 @@ export const useRequestSorting = (requests: RequestResponse[]) => {
     return sorted;
   }, [requests, currentSort]);
 
-  const renderSortIcon = (field: keyof Request | "requestor_name" | "beneficiary_name") => {
+  const renderSortIcon = (field: SortField) => {
     if (currentSort?.column !== field) {
       return "ArrowUpDown";
     }

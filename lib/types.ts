@@ -66,7 +66,7 @@ export type CreateRequestPayload = {
 
 
 export type SortColumnRequest = {
-  column: keyof Request | "requestor_name" | "beneficiary_name";
+  column: keyof RequestResponse | "requestor_name" | "beneficiary_name" | "status" | "priority" | "request_type" | "equipment";
   direction: "asc" | "desc";
 } | null;
 
@@ -627,4 +627,31 @@ export interface AuditStatistics {
   equipment_changes: number;
   user_changes: number;
   total_logins: number;
+}
+
+// Tipos para paginación del servidor
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationInfo;
+}
+
+// Tipo para los filtros de solicitudes
+export interface RequestFiltersParams {
+  technician_ids?: string;
+  status_ids?: string;
+  priority_ids?: string;
+  type_ids?: string;
+  date_from?: string;
+  date_to?: string;
+  page?: number;
+  limit?: number;
 }

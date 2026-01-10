@@ -17,9 +17,10 @@ interface DateRangePickerProps {
     to: Date | undefined;
   };
   setDateRange: (range: { from: Date | undefined; to: Date | undefined }) => void;
+  disabled?: boolean;
 }
 
-export function DateRangePicker({ dateRange, setDateRange }: DateRangePickerProps) {
+export function DateRangePicker({ dateRange, setDateRange, disabled = false }: DateRangePickerProps) {
   return (
     <div className="grid gap-2">
       <Popover>
@@ -28,6 +29,7 @@ export function DateRangePicker({ dateRange, setDateRange }: DateRangePickerProp
             id="date"
             variant={"outline"}
             className="h-8 w-full justify-start text-left font-normal"
+            disabled={disabled}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {dateRange?.from ? (

@@ -59,6 +59,8 @@ export const useRequestActions = () => {
     onSuccess: () => {
       // Invalidar queries para forzar refetch
       queryClient.invalidateQueries({ queryKey: ["requests"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
       toast.success("Estado actualizado correctamente");
       setIsStatusDialogOpen(false);
       setPendingStatusUpdate(null);
@@ -75,6 +77,8 @@ export const useRequestActions = () => {
     onSuccess: () => {
       // Invalidar queries para forzar refetch
       queryClient.invalidateQueries({ queryKey: ["requests"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
       toast.success("Prioridad actualizada correctamente");
       setIsPriorityDialogOpen(false);
       setPendingPriorityUpdate(null);
