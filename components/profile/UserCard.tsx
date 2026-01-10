@@ -56,7 +56,7 @@ export const UserCard = ({ userData }: UserCardProps) => {
               <UserCircle className="h-4 w-4" />
               <span className="font-medium">Género</span>
             </div>
-            <p className="text-lg">{userData.role_id === 1 ? "Masculino" : "Femenino"}</p>
+            <p className="text-lg">{userData.gender_id === 1 ? "Masculino" : "Femenino"}</p>
           </div>
 
           {/* Cargo */}

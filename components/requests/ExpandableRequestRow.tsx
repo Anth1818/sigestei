@@ -33,6 +33,7 @@ import { fetchRequestAudit } from "@/api/api";
 import { useUserStore } from "@/hooks/useUserStore";
 import { generateSingleRequestPDF } from "@/lib/pdfUtils";
 import { AuditLog } from "@/lib/types";
+import { en } from "zod/v4/locales";
 
 interface ExpandableRequestRowProps {
   requestFullFromApi: RequestResponse;
@@ -77,6 +78,13 @@ export function ExpandableRequestRow({
   const handlePriorityChange = (newPriority: string) => {
     onUpdatePriority(request.id, newPriority);
   };
+
+  // Ocultar select si el usuario es institucional (role 4) o técnico sin asignación
+  const shouldHideStatusSelect = 
+    user?.role_id === 4 || 
+    (user?.role_id === 3 && request.assigned_to !== user?.full_name);
+
+  const validateToShowStatusSelect = !shouldHideStatusSelect;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-ES", {
@@ -136,7 +144,7 @@ export function ExpandableRequestRow({
         <TableCell className="p-2">
           {formatDate(request.request_date)}
         </TableCell>
-        {(user?.role_id !== 4) && (
+        {validateToShowStatusSelect && (
           <TableCell className="p-2 flex flex-col gap-2 min-w-[140px]">
             <TooltipProvider>
               <Tooltip>
@@ -249,7 +257,8 @@ export function ExpandableRequestRow({
                 }}
                 transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
               >
-                <div className="mb-3 flex justify-end">
+                {(user?.role_id !== 4 && user?.role_id !== 3) &&
+                  <div className="mb-3 flex justify-end">
                   <Button
                     onClick={handleExportPDF}
                     size="sm"
@@ -259,7 +268,7 @@ export function ExpandableRequestRow({
                     <FileDown size={16} />
                     Exportar Solicitud a PDF
                   </Button>
-                </div>
+                </div>}
                 <ContentRequestRow request={request} />
               </motion.div>
             </TableCell>

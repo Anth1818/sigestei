@@ -22,7 +22,7 @@ export default function RequestPage() {
           </div>
         }
       >
-        <RequestTable />
+        {<RequestTable />}
       </Suspense>
     </LayoutSideBar>
   );

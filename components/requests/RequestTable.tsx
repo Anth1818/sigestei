@@ -482,6 +482,7 @@ export default function RequestTable() {
           )}
 
           {/* Botón de exportar PDF */}
+          { (user?.role_id !== 4 && user?.role_id !== 3) &&
           <div className="flex justify-end mb-4">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -510,6 +511,7 @@ export default function RequestTable() {
               )}
             </Tooltip>
           </div>
+          }     
 
           <Table>
             <TableHeader>
@@ -527,7 +529,7 @@ export default function RequestTable() {
               {requests.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
-                    No se encontraron solicitudes
+                    No se encontraron solicitudes {isFiltering ? "con los criterios proporcionados." : "."}
                   </td>
                 </tr>
               ) : (

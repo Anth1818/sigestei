@@ -195,15 +195,14 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                 : "N/A"}
             </p>
           </div>
-
-          {(user?.role_id === 1 || user?.role_id === 2) && (
+              
+            {/* Mostrar tecnico asignado solo si existe */}
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm text-gray-400">
                 Técnico actual:
               </span>
               <p className="text-sm">{assignedTo || "N/A"}</p>
             </div>
-          )}
 
           {/* Asignación/Reasignación de Técnico (no disponible para rol 4 o 3) */}
           {user?.role_id !== 4 && user?.role_id !== 3 && (
