@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -14,8 +14,6 @@ import {
   ChevronRight,
   ChevronLeft,
   FileDown,
-  Search,
-  X,
   Loader2,
 } from "lucide-react";
 import {
@@ -34,7 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ExpandableRequestRow } from "./ExpandableRequestRow";
-import { DateRangePicker } from "./DateRangePicker";
+import { RequestFilters } from "./RequestFilters";
 import {
   fetchRequestsPaginated,
   fetchRequestsFiltered,
@@ -43,6 +41,7 @@ import {
   fecthAllRequestForTechnician,
 } from "@/api/api";
 import { useRequestActions } from "@/hooks/useRequestActions";
+import { useRequestFilters } from "@/hooks/useRequestFilters";
 import {
   adaptRequestData,
   getPriorityColor,
@@ -72,41 +71,16 @@ interface Catalogs {
 
 export default function RequestTable() {
   const user = useUserStore((state) => state.user);
-  const queryClient = useQueryClient();
   const actions = useRequestActions();
 
   // Estado de paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Estado de búsqueda por ID
-  const [searchId, setSearchId] = useState("");
-
-  // Estado de filtros (usando IDs para el servidor)
-  const [technicianFilter, setTechnicianFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: undefined,
-    to: undefined,
+  // Hook de filtros
+  const filters = useRequestFilters({
+    onPageReset: () => setCurrentPage(1),
   });
-
-  // Estado para controlar si se están aplicando filtros
-  const [isFiltering, setIsFiltering] = useState(false);
-  // Estado que guarda los filtros aplicados (solo se actualiza al presionar "Buscar")
-  const [appliedFilters, setAppliedFilters] = useState<{
-    request_id?: string;
-    technician_ids?: string;
-    status_ids?: string;
-    priority_ids?: string;
-    type_ids?: string;
-    date_from?: string;
-    date_to?: string;
-  }>({});
 
   // Verificar si el usuario es técnico o usuario institucional (para ellos se usa el endpoint antiguo)
   const isSpecialRole = user?.role_id === 3 || user?.role_id === 4;
@@ -121,33 +95,20 @@ export default function RequestTable() {
   // Obtener técnicos del catálogo
   const technicians = catalogs?.technicians || [];
 
-  // Verificar si hay filtros activos (incluyendo búsqueda por ID)
-  const hasActiveFilters = useCallback(() => {
-    return (
-      searchId.trim() !== "" ||
-      technicianFilter !== "" ||
-      statusFilter !== "" ||
-      priorityFilter !== "" ||
-      typeFilter !== "" ||
-      dateRange.from !== undefined ||
-      dateRange.to !== undefined
-    );
-  }, [searchId, technicianFilter, statusFilter, priorityFilter, typeFilter, dateRange]);
-
   // Query para solicitudes paginadas (sin filtros) - Para admin y coordinador
   const paginatedQuery = useQuery<PaginatedResponse<RequestResponse>>({
     queryKey: ["requests-paginated", currentPage, rowsPerPage],
     queryFn: () => fetchRequestsPaginated(currentPage, rowsPerPage),
-    enabled: !isSpecialRole && !isFiltering,
+    enabled: !isSpecialRole && !filters.isFiltering,
     staleTime: 30000,
   });
 
   // Query para solicitudes filtradas - Para admin y coordinador
   // Solo se ejecuta cuando isFiltering es true y hay filtros aplicados
   const filteredQuery = useQuery<PaginatedResponse<RequestResponse>>({
-    queryKey: ["requests-filtered", { ...appliedFilters, page: currentPage, limit: rowsPerPage }],
-    queryFn: () => fetchRequestsFiltered({ ...appliedFilters, page: currentPage, limit: rowsPerPage }),
-    enabled: !isSpecialRole && isFiltering,
+    queryKey: ["requests-filtered", { ...filters.appliedFilters, page: currentPage, limit: rowsPerPage }],
+    queryFn: () => fetchRequestsFiltered({ ...filters.appliedFilters, page: currentPage, limit: rowsPerPage }),
+    enabled: !isSpecialRole && filters.isFiltering,
     staleTime: 30000,
   });
 
@@ -179,9 +140,9 @@ export default function RequestTable() {
     let allRequests = specialRoleQuery.data || [];
     
     // Filtrar por ID localmente si hay búsqueda activa (para usuarios especiales)
-    if (searchId.trim()) {
+    if (filters.searchId.trim()) {
       allRequests = allRequests.filter((r) =>
-        r.id.toString().includes(searchId.trim())
+        r.id.toString().includes(filters.searchId.trim())
       );
     }
     
@@ -195,7 +156,7 @@ export default function RequestTable() {
     const startIdx = (currentPage - 1) * rowsPerPage;
     const endIdx = startIdx + rowsPerPage;
     requests = allRequests.slice(startIdx, endIdx);
-  } else if (isFiltering) {
+  } else if (filters.isFiltering) {
     // Para admin/coordinador con filtros (incluyendo búsqueda por ID)
     requests = filteredQuery.data?.data || [];
     total = filteredQuery.data?.pagination?.total || 0;
@@ -212,54 +173,6 @@ export default function RequestTable() {
     isFetching = paginatedQuery.isFetching;
     error = paginatedQuery.error as Error | null;
   }
-
-  // Ejecutar búsqueda con filtros
-  const executeSearch = () => {
-    if (hasActiveFilters()) {
-      // Construir los filtros a aplicar
-      const filters: typeof appliedFilters = {};
-      
-      if (searchId.trim()) {
-        filters.request_id = searchId.trim();
-      }
-      if (technicianFilter) {
-        filters.technician_ids = technicianFilter;
-      }
-      if (statusFilter) {
-        filters.status_ids = statusFilter;
-      }
-      if (priorityFilter) {
-        filters.priority_ids = priorityFilter;
-      }
-      if (typeFilter) {
-        filters.type_ids = typeFilter;
-      }
-      if (dateRange.from) {
-        filters.date_from = dateRange.from.toISOString().split("T")[0];
-      }
-      if (dateRange.to) {
-        filters.date_to = dateRange.to.toISOString().split("T")[0];
-      }
-      
-      setAppliedFilters(filters);
-      setIsFiltering(true);
-      setCurrentPage(1);
-    }
-  };
-
-  // Limpiar filtros
-  const clearFilters = () => {
-    setSearchId("");
-    setTechnicianFilter("");
-    setStatusFilter("");
-    setPriorityFilter("");
-    setTypeFilter("");
-    setDateRange({ from: undefined, to: undefined });
-    setAppliedFilters({});
-    setIsFiltering(false);
-    setCurrentPage(1);
-    queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
-  };
 
   // Cambiar página
   const changePage = (newPage: number) => {
@@ -293,23 +206,27 @@ export default function RequestTable() {
   // Función para generar el PDF
   const handleExportPDF = () => {
     generateRequestsPDF(requests, {
-      status: statusFilter ? catalogs?.request_statuses?.find(s => s.id.toString() === statusFilter)?.name : undefined,
-      priority: priorityFilter ? catalogs?.priority_requests?.find(p => p.id.toString() === priorityFilter)?.name : undefined,
-      type: typeFilter ? catalogs?.request_types?.find(t => t.id.toString() === typeFilter)?.name : undefined,
-      dateRange: dateRange.from || dateRange.to
+      status: filters.statusFilter ? catalogs?.request_statuses?.find(s => s.id.toString() === filters.statusFilter)?.name : undefined,
+      priority: filters.priorityFilter ? catalogs?.priority_requests?.find(p => p.id.toString() === filters.priorityFilter)?.name : undefined,
+      type: filters.typeFilter ? catalogs?.request_types?.find(t => t.id.toString() === filters.typeFilter)?.name : undefined,
+      dateRange: filters.dateRange.from || filters.dateRange.to
         ? {
-            start: dateRange.from,
-            end: dateRange.to,
+            start: filters.dateRange.from,
+            end: filters.dateRange.to,
           }
         : undefined,
     });
   };
 
   const validateDisabledOfButtonDownloadPDF = () => {
-    if (!hasActiveFilters()) {
+    if (!filters.hasActiveFilters()) {
       return true;
     }
-    if (hasActiveFilters() && requests.length === 0) {
+    if(filters.hasActiveFilters() && !filters.hasClickedSearch) {
+      return true;
+    }
+
+    if (filters.hasActiveFilters() && requests.length === 0) {
       return true;
     }
     return false;
@@ -339,138 +256,26 @@ export default function RequestTable() {
         <>
           {/* Filtros - Solo mostrar para admin y coordinador */}
           {!isSpecialRole && (
-            <div className="mb-4 space-y-4">
-              {/* Búsqueda por ID */}
-              <div className="flex items-end gap-2">
-                <div className="w-64">
-                  <label htmlFor="search-id" className="text-sm font-medium block mb-1">
-                    Buscar por ID:
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="search-id"
-                      type="text"
-                      value={searchId}
-                      onChange={(e) => {
-                        setSearchId(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="border rounded px-3 py-1.5 text-sm w-full"
-                      placeholder="ID de solicitud"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Otros filtros */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-                <div>
-                  <label className="text-sm font-medium block mb-1">Técnico:</label>
-                  <Select 
-                    value={technicianFilter} 
-                    onValueChange={setTechnicianFilter}
-                  >
-                    <SelectTrigger className="h-8 w-full">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {technicians.map((technician) => (
-                        <SelectItem key={technician.id} value={technician.id.toString()}>
-                          {technician.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium block mb-1">Estado:</label>
-                  <Select 
-                    value={statusFilter} 
-                    onValueChange={setStatusFilter}
-                  >
-                    <SelectTrigger className="h-8 w-full">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {catalogs?.request_statuses?.map((status) => (
-                        <SelectItem key={status.id} value={status.id.toString()}>
-                          {status.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium block mb-1">Prioridad:</label>
-                  <Select 
-                    value={priorityFilter} 
-                    onValueChange={setPriorityFilter}
-                  >
-                    <SelectTrigger className="h-8 w-full">
-                      <SelectValue placeholder="Todas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {catalogs?.priority_requests?.map((priority) => (
-                        <SelectItem key={priority.id} value={priority.id.toString()}>
-                          {priority.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium block mb-1">Tipo:</label>
-                  <Select 
-                    value={typeFilter} 
-                    onValueChange={setTypeFilter}
-                  >
-                    <SelectTrigger className="h-8 w-full">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {catalogs?.request_types?.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium block mb-1">Rango de Fechas:</label>
-                  <DateRangePicker 
-                    dateRange={dateRange} 
-                    setDateRange={setDateRange}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={executeSearch} 
-                  disabled={isFetching || !hasActiveFilters()} 
-                  className="h-8"
-                >
-                  {isFetching ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="mr-2 h-4 w-4" />
-                  )}
-                  {isFetching ? "Buscando..." : "Buscar"}
-                </Button>
-
-                {hasActiveFilters() && (
-                  <Button variant="outline" onClick={clearFilters} className="h-8">
-                    <X className="mr-2 h-4 w-4" />
-                    Limpiar filtros
-                  </Button>
-                )}
-              </div>
-            </div>
+            <RequestFilters
+              hasClickedSearch={filters.hasClickedSearch}
+              searchId={filters.searchId}
+              technicianFilter={filters.technicianFilter}
+              statusFilter={filters.statusFilter}
+              priorityFilter={filters.priorityFilter}
+              typeFilter={filters.typeFilter}
+              dateRange={filters.dateRange}
+              onSearchIdChange={filters.setSearchId}
+              onTechnicianFilterChange={filters.setTechnicianFilter}
+              onStatusFilterChange={filters.setStatusFilter}
+              onPriorityFilterChange={filters.setPriorityFilter}
+              onTypeFilterChange={filters.setTypeFilter}
+              onDateRangeChange={filters.setDateRange}
+              onSearch={filters.executeSearch}
+              onClearFilters={filters.clearFilters}
+              isFetching={isFetching}
+              hasActiveFilters={filters.hasActiveFilters()}
+              catalogs={catalogs}
+            />
           )}
 
           {/* Indicador de carga durante fetching */}
@@ -529,7 +334,7 @@ export default function RequestTable() {
               {requests.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
-                    No se encontraron solicitudes {isFiltering ? "con los criterios proporcionados." : "."}
+                    No se encontraron solicitudes {filters.isFiltering ? "con los criterios proporcionados." : "."}
                   </td>
                 </tr>
               ) : (

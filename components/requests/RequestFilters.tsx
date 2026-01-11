@@ -1,4 +1,7 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { Search, X, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -7,205 +10,202 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateRangePicker } from "./DateRangePicker";
+import { DateRange } from "@/hooks/useRequestFilters";
+
+interface CatalogItem {
+  id: number;
+  name: string;
+}
+
+interface TechnicianItem {
+  id: number;
+  full_name: string;
+}
+
+interface Catalogs {
+  request_statuses?: CatalogItem[];
+  priority_requests?: CatalogItem[];
+  request_types?: CatalogItem[];
+  technicians?: TechnicianItem[];
+}
 
 interface RequestFiltersProps {
+  // Valores de filtros
+  hasClickedSearch: boolean;
   searchId: string;
-  setSearchId: (value: string) => void;
-  statusFilter: string;
-  setStatusFilter: (value: string) => void;
-  priorityFilter: string;
-  setPriorityFilter: (value: string) => void;
-  typeFilter: string;
-  setTypeFilter: (value: string) => void;
-  dateFilterType: "creation" | "resolution";
-  setDateFilterType: (value: "creation" | "resolution") => void;
-  dateRange: { from: Date | undefined; to: Date | undefined };
-  setDateRange: (range: { from: Date | undefined; to: Date | undefined }) => void;
-  clearFilters: () => void;
-  uniqueStatuses: string[];
-  uniquePriorities: string[];
-  uniqueTypes: string[];
-  uniqueTechnicians: string[];
-  onPageReset: () => void;
   technicianFilter: string;
-  setTechnicianFilter: (value: string) => void;
+  statusFilter: string;
+  priorityFilter: string;
+  typeFilter: string;
+  dateRange: DateRange;
+  
+  // Handlers
+  onSearchIdChange: (value: string) => void;
+  onTechnicianFilterChange: (value: string) => void;
+  onStatusFilterChange: (value: string) => void;
+  onPriorityFilterChange: (value: string) => void;
+  onTypeFilterChange: (value: string) => void;
+  onDateRangeChange: (value: DateRange) => void;
+  onSearch: () => void;
+  onClearFilters: () => void;
+  
+  // Estado
+  isFetching: boolean;
+  hasActiveFilters: boolean;
+  
+  // Datos de catálogos
+  catalogs?: Catalogs;
 }
 
 export function RequestFilters({
   searchId,
-  setSearchId,
-  statusFilter,
-  setStatusFilter,
-  priorityFilter,
-  setPriorityFilter,
-  typeFilter,
-  setTypeFilter,
   technicianFilter,
-  setTechnicianFilter,
-  dateFilterType,
-  setDateFilterType,
+  statusFilter,
+  priorityFilter,
+  typeFilter,
   dateRange,
-  setDateRange,
-  clearFilters,
-  uniqueStatuses,
-  uniquePriorities,
-  uniqueTypes,
-  uniqueTechnicians,
-  onPageReset,
+  onSearchIdChange,
+  onTechnicianFilterChange,
+  onStatusFilterChange,
+  onPriorityFilterChange,
+  onTypeFilterChange,
+  onDateRangeChange,
+  onSearch,
+  onClearFilters,
+  isFetching,
+  hasActiveFilters,
+  catalogs,
 }: RequestFiltersProps) {
+  const technicians = catalogs?.technicians || [];
+
   return (
-    <div className="mb-4 grid grid-cols-1 md:grid-cols-5 gap-2">
-      <div>
-        <label htmlFor="search-id" className="text-sm font-medium block mb-1">
-          Buscar por ID:
-        </label>
-        <input
-          id="search-id"
-          type="text"
-          value={searchId}
-          onChange={(e) => {
-            setSearchId(e.target.value);
-            onPageReset();
-          }}
-          className="border rounded px-2 py-1 text-sm w-full"
-          placeholder="ID de solicitud"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium block mb-1">Técnicos:</label>
-        <Select
-          value={technicianFilter}
-          onValueChange={(value) => {
-            setTechnicianFilter(value);
-            onPageReset();
-          }}
-        >
-          <SelectTrigger className="h-8 w-full">
-            <SelectValue placeholder="Todos" />
-          </SelectTrigger>
-          <SelectContent>
-            {uniqueTechnicians.map((technician) => (
-              <SelectItem key={technician} value={technician}>
-                {technician}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="text-sm font-medium block mb-1">Estado:</label>
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => {
-            setStatusFilter(value);
-            onPageReset();
-          }}
-        >
-          <SelectTrigger className="h-8 w-full">
-            <SelectValue placeholder="Todos" />
-          </SelectTrigger>
-          <SelectContent>
-            {uniqueStatuses.map((status) => (
-              <SelectItem key={status} value={status}>
-                {status}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="text-sm font-medium block mb-1">Prioridad:</label>
-        <Select
-          value={priorityFilter}
-          onValueChange={(value) => {
-            setPriorityFilter(value);
-            onPageReset();
-          }}
-        >
-          <SelectTrigger className="h-8 w-full">
-            <SelectValue placeholder="Todas" />
-          </SelectTrigger>
-          <SelectContent>
-            {uniquePriorities.map((priority) => (
-              <SelectItem key={priority} value={priority}>
-                {priority}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="text-sm font-medium block mb-1">Tipo:</label>
-        <Select
-          value={typeFilter}
-          onValueChange={(value) => {
-            setTypeFilter(value);
-            onPageReset();
-          }}
-        >
-          <SelectTrigger className="h-8 w-full">
-            <SelectValue placeholder="Todos" />
-          </SelectTrigger>
-          <SelectContent>
-            {uniqueTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="text-sm font-medium block mb-1">
-          Filtrar fechas por:
-        </label>
-        <div className="flex gap-4 items-center h-8">
-          <label className="flex items-center gap-2 cursor-pointer text-sm">
-            <input
-              type="radio"
-              name="dateFilterType"
-              value="creation"
-              checked={dateFilterType === "creation"}
-              onChange={() => setDateFilterType("creation")}
-              className="cursor-pointer"
-            />
-            Creación
+    <div className="mb-4 space-y-4">
+      {/* Búsqueda por ID */}
+      <div className="flex items-end gap-2">
+        <div className="w-64">
+          <label htmlFor="search-id" className="text-sm font-medium block mb-1">
+            Buscar por ID:
           </label>
-          <label className="flex items-center gap-2 cursor-pointer text-sm">
+          <div className="relative">
             <input
-              type="radio"
-              name="dateFilterType"
-              value="resolution"
-              checked={dateFilterType === "resolution"}
-              onChange={() => setDateFilterType("resolution")}
-              className="cursor-pointer"
+              id="search-id"
+              type="text"
+              value={searchId}
+              onChange={(e) => onSearchIdChange(e.target.value)}
+              className="border rounded px-3 py-1.5 text-sm w-full"
+              placeholder="ID de solicitud"
             />
-            Resolución
-          </label>
+          </div>
         </div>
       </div>
 
-      <div>
-        <label className="text-sm font-medium block mb-1">Rango de Fechas:</label>
-        <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+      {/* Otros filtros */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+        <div>
+          <label className="text-sm font-medium block mb-1">Técnico:</label>
+          <Select 
+            value={technicianFilter} 
+            onValueChange={onTechnicianFilterChange}
+          >
+            <SelectTrigger className="h-8 w-full">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              {technicians.map((technician) => (
+                <SelectItem key={technician.id} value={technician.id.toString()}>
+                  {technician.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Estado:</label>
+          <Select 
+            value={statusFilter} 
+            onValueChange={onStatusFilterChange}
+          >
+            <SelectTrigger className="h-8 w-full">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              {catalogs?.request_statuses?.map((status) => (
+                <SelectItem key={status.id} value={status.id.toString()}>
+                  {status.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Prioridad:</label>
+          <Select 
+            value={priorityFilter} 
+            onValueChange={onPriorityFilterChange}
+          >
+            <SelectTrigger className="h-8 w-full">
+              <SelectValue placeholder="Todas" />
+            </SelectTrigger>
+            <SelectContent>
+              {catalogs?.priority_requests?.map((priority) => (
+                <SelectItem key={priority.id} value={priority.id.toString()}>
+                  {priority.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Tipo:</label>
+          <Select 
+            value={typeFilter} 
+            onValueChange={onTypeFilterChange}
+          >
+            <SelectTrigger className="h-8 w-full">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              {catalogs?.request_types?.map((type) => (
+                <SelectItem key={type.id} value={type.id.toString()}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Rango de Fechas:</label>
+          <DateRangePicker 
+            dateRange={dateRange} 
+            setDateRange={onDateRangeChange}
+          />
+        </div>
       </div>
 
-      <div className="flex items-end">
-        <Button
-          variant="outline"
-          onClick={() => {
-            clearFilters();
-            onPageReset();
-          }}
+      <div className="flex items-center gap-2">
+        <Button 
+          onClick={onSearch} 
+          disabled={isFetching || !hasActiveFilters} 
           className="h-8"
         >
-          Limpiar filtros
+          {isFetching ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Search className="mr-2 h-4 w-4" />
+          )}
+          {isFetching ? "Buscando..." : "Buscar"}
         </Button>
+
+        {hasActiveFilters && (
+          <Button variant="outline" onClick={onClearFilters} className="h-8">
+            <X className="mr-2 h-4 w-4" />
+            Limpiar filtros
+          </Button>
+        )}
       </div>
     </div>
   );
