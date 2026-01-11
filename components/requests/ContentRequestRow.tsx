@@ -89,6 +89,9 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
       updateRequest(id, { comments_technician: comments }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-special"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
       toast.success("Comentarios guardados correctamente");
     },
     onError: (error: any) => {

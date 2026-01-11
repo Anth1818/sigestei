@@ -40,7 +40,7 @@ interface ExpandableRequestRowProps {
   requestAdapted: RequestAdapted;
   expanded: boolean;
   onToggle: () => void;
-  onUpdateStatus: (id: number, status: string) => void;
+  onUpdateStatus: (id: number, status: string, currentStatus?: string) => void;
   onUpdatePriority: (id: number, priority: string) => void;
   getPriorityColor: (priority: string) => string;
   getStatusColor: (status: string) => string;
@@ -72,7 +72,7 @@ export function ExpandableRequestRow({
 
   // Handlers que llaman a los callbacks del padre (que abrirán los diálogos)
   const handleStatusChange = (newStatus: string) => {
-    onUpdateStatus(request.id, newStatus);
+    onUpdateStatus(request.id, newStatus, request.status);
   };
 
   const handlePriorityChange = (newPriority: string) => {

@@ -3,8 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateRequest } from "@/api/api";
 import { toast } from "sonner";
 import { RequestResponse } from "@/lib/types";
+import { useUserStore } from "@/hooks/useUserStore";
 
 export const useRequestActions = () => {
+  const user = useUserStore((state) => state.user);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isPriorityDialogOpen, setIsPriorityDialogOpen] = useState(false);
@@ -43,6 +45,18 @@ export const useRequestActions = () => {
     return priorityMap[priorityName] || 2;
   };
 
+  // Validar transición de estado para técnicos
+  const isValidTechnicianTransition = (
+    currentStatusId: number,
+    newStatusId: number
+  ): boolean => {
+    // Técnico solo puede: En proceso (2) -> Completada (3) o En proceso (2) -> Cancelada (4)
+    if (currentStatusId === 2 && (newStatusId === 3 || newStatusId === 4)) {
+      return true;
+    }
+    return false;
+  };
+
   // Mutation para actualizar el estado
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) => {
@@ -59,6 +73,7 @@ export const useRequestActions = () => {
     onSuccess: () => {
       // Invalidar queries para forzar refetch
       queryClient.invalidateQueries({ queryKey: ["requests"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-special"] });
       queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
       queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
       toast.success("Estado actualizado correctamente");
@@ -89,7 +104,22 @@ export const useRequestActions = () => {
   });
 
   // Manejar solicitud de cambio de estado (abre dialog)
-  const handleStatusChange = (requestId: number, newStatus: string) => {
+  const handleStatusChange = (
+    requestId: number,
+    newStatus: string,
+    currentStatus?: string
+  ) => {
+    const newStatusId = getStatusId(newStatus);
+    const currentStatusId = currentStatus ? getStatusId(currentStatus) : 0;
+
+    // Si es técnico (role_id = 3), validar transición permitida
+    if (user?.role_id === 3) {
+      if (!isValidTechnicianTransition(currentStatusId, newStatusId)) {
+        toast.error("Transición de estado no permitida");
+        return;
+      }
+    }
+
     setPendingStatusUpdate({ requestId, newStatus });
     setIsStatusDialogOpen(true);
   };

@@ -58,6 +58,7 @@ interface RequestFiltersProps {
 }
 
 export function RequestFilters({
+  hasClickedSearch,
   searchId,
   technicianFilter,
   statusFilter,
@@ -189,7 +190,7 @@ export function RequestFilters({
       <div className="flex items-center gap-2">
         <Button 
           onClick={onSearch} 
-          disabled={isFetching || !hasActiveFilters} 
+          disabled={isFetching} 
           className="h-8"
         >
           {isFetching ? (
@@ -199,6 +200,8 @@ export function RequestFilters({
           )}
           {isFetching ? "Buscando..." : "Buscar"}
         </Button>
+        {!hasActiveFilters && hasClickedSearch &&
+          <span className="ml-2 text-sm text-red-500">(Debe ingresar al menos un criterio de búsqueda.)</span>} 
 
         {hasActiveFilters && (
           <Button variant="outline" onClick={onClearFilters} className="h-8">
