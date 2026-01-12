@@ -125,7 +125,7 @@ export const parseEquipmentBrand = async (brandId: string | number): Promise<str
 export const parseRequestType = async (typeId: string | number): Promise<string> => {
   const catalogs = await getCatalogs();
   const id = typeof typeId === "string" ? parseInt(typeId) : typeId;
-  const type = catalogs.request_types.find((t) => t.id === id);
+  const type = catalogs.request_statuses.find((t) => t.id === id);
   return type?.name || `Tipo #${typeId}`;
 };
 

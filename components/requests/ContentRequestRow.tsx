@@ -33,6 +33,9 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
   const [comments_technician, setCommentsTechnician] = useState(
     request.comments_technician || ""
   );
+  const [reassignmentReason, setReassignmentReason] = useState("");
+  const [reassignmentReasonError, setReassignmentReasonError] = useState("");
+
   // Estados para el diálogo de confirmación de técnico
   const [isTechnicianDialogOpen, setIsTechnicianDialogOpen] = useState(false);
   const [pendingTechnician, setPendingTechnician] = useState<{
@@ -59,12 +62,14 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
       id,
       technicianId,
       statusId,
+      reassignmentReason,
     }: {
       id: number;
       technicianId: number;
       statusId?: number;
+      reassignmentReason?: string;
     }) => {
-      const updateData: any = { technician_id: technicianId };
+      const updateData: { technician_id: number; reassignment_reason?: string; status_id?: number } = { technician_id: technicianId, reassignment_reason: reassignmentReason };
       if (statusId) {
         updateData.status_id = statusId;
       }
@@ -73,7 +78,11 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
-      const actionText = assignedTo ? "reasignado" : "asignado";
+      queryClient.invalidateQueries({ queryKey: ["requests-special"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
+      const wasAssigned = request.assigned_to && request.assigned_to !== "N/A";
+      const actionText = wasAssigned ? "reasignado" : "asignado";
       const statusText =
         variables.statusId === 2 ? " y el estado cambió a 'En Proceso'" : "";
       toast.success(`Técnico ${actionText} correctamente${statusText}`);
@@ -82,6 +91,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
       toast.error(error?.message || "Error al asignar técnico");
     },
   });
+  console.log(assignedTo);
 
   // Mutation para guardar comentarios del técnico
   const updateCommentsMutation = useMutation({
@@ -119,6 +129,12 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
   // Confirmar asignación/reasignación de técnico
   const confirmTechnicianAssignment = () => {
     if (pendingTechnician) {
+      // Validar motivo de reasignación
+      if (!reassignmentReason.trim()) {
+        setReassignmentReasonError("Debe registrar el motivo de reasignación");
+        return;
+      }
+
       const isPending = request.status === "Pendiente";
 
       // cambio de estado a "en proceso" si esta pending
@@ -128,11 +144,14 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
         id: request.id,
         technicianId: pendingTechnician.id,
         statusId,
+        reassignmentReason: reassignmentReason,
       });
 
       setAssignedTo(pendingTechnician.name);
       setIsTechnicianDialogOpen(false);
       setPendingTechnician(null);
+      setReassignmentReason("");
+      setReassignmentReasonError("");
     }
   };
 
@@ -140,6 +159,8 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
   const cancelTechnicianAssignment = () => {
     setIsTechnicianDialogOpen(false);
     setPendingTechnician(null);
+    setReassignmentReason("");
+    setReassignmentReasonError("");
   };
 
   const isCompletedOrCancelled =
@@ -198,14 +219,14 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                 : "N/A"}
             </p>
           </div>
-              
-            {/* Mostrar tecnico asignado solo si existe */}
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-sm text-gray-400">
-                Técnico actual:
-              </span>
-              <p className="text-sm">{assignedTo || "N/A"}</p>
-            </div>
+
+          {/* Mostrar tecnico asignado solo si existe */}
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm text-gray-400">
+              Técnico actual:
+            </span>
+            <p className="text-sm">{assignedTo || "N/A"}</p>
+          </div>
 
           {/* Asignación/Reasignación de Técnico (no disponible para rol 4 o 3) */}
           {user?.role_id !== 4 && user?.role_id !== 3 && (
@@ -493,6 +514,36 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               )}
             </div>
           )}
+
+          {/* Motivo de reasignación */}
+          <div className="space-y-3">
+            <div>
+              <span className="font-medium text-sm text-gray-400 mb-2 block">
+                Motivo de la reasignación:
+              </span>
+              <textarea
+                className={`w-full h-32 p-3 border rounded-md text-sm resize-none ${
+                  reassignmentReasonError ? "border-red-500" : ""
+                }`}
+                placeholder={
+                  "Escriba el motivo por el cual se reasigna el técnico..."
+                }
+                value={reassignmentReason}
+                onChange={(e) => {
+                  setReassignmentReason(e.target.value);
+                  if (e.target.value.trim()) {
+                    setReassignmentReasonError("");
+                  }
+                }}
+                minLength={20}
+              />
+              {reassignmentReasonError && (
+                <p className="text-red-500 text-xs mt-1">
+                  {reassignmentReasonError}
+                </p>
+              )}
+            </div>
+          </div>
 
           <DialogFooter>
             <Button

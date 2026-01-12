@@ -16,7 +16,7 @@ export const useAuditFormatting = () => {
   /**
    * Formatear valor según el campo y los catálogos
    */
-  const formatValue = (fieldName: string, value: string | null, isRequest?: boolean): string => {
+  const formatValue = (fieldName: string, value: string | null, isRequest?: string): string => {
     if (value === null || value === "null") {
       return "N/A";
     }
@@ -35,7 +35,7 @@ export const useAuditFormatting = () => {
 
     switch (fieldName) {
       case "status_id": {
-        const status = isRequest
+        const status = isRequest === "request"
           ? catalogs.request_statuses.find((s) => s.id === numericValue)
           : catalogs.equipment_statuses.find((s) => s.id === numericValue);
         return status?.name || value;

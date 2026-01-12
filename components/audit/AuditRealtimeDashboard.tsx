@@ -145,10 +145,10 @@ const { formatValue } = useAuditFormatting();
                   {/* Valores */}
                   <div className="text-right text-xs text-muted-foreground max-w-[200px]">
                     <div className="truncate">
-                      <span className="line-through">{formatValue(log.field_name, log.old_value) || "N/A"}</span>
+                      <span className="line-through">{formatValue(log.field_name, log.old_value, log.entity_type) || "N/A"}</span>
                     </div>
                     <div className="font-medium text-foreground truncate">
-                      {formatValue(log.field_name, log.new_value) || "N/A"}
+                      {formatValue(log.field_name, log.new_value, log.entity_type) || "N/A"}
                     </div>
                   </div>
                 </div>

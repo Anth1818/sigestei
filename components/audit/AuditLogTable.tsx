@@ -79,8 +79,8 @@ export default function AuditLogTable({ auditLogs }: AuditLogTableProps) {
                     </span>
                   </TableCell>
                   <TableCell>{getFieldName(log.field_name)}</TableCell>
-                  <TableCell>{formatValue(log.field_name, log.old_value)}</TableCell>
-                  <TableCell>{formatValue(log.field_name, log.new_value)}</TableCell>
+                  <TableCell>{formatValue(log.field_name, log.old_value, log.entity_type)}</TableCell>
+                  <TableCell>{formatValue(log.field_name, log.new_value, log.entity_type)}</TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium">
