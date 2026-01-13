@@ -63,6 +63,7 @@ export function DateRangePicker({ dateRange, setDateRange, disabled = false }: D
             }}
             numberOfMonths={2}
             locale={es}
+            disabled={(date) => date > new Date()}
           />
         </PopoverContent>
       </Popover>

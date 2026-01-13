@@ -227,10 +227,10 @@ export const AddComputerForm = ({ catalogsData, currentUser }: AddComputerFormPr
       brand_id: parseInt(data.brand_id),
       status_id: parseInt(data.status_id),
     };
-    console.log("Equipo a crear:", equipmentData);
+    // console.log("Equipo a crear:", equipmentData);
 
     const response = createMutation.mutate(equipmentData);
-    console.log("Respuesta de la mutación:", response)
+    // console.log("Respuesta de la mutación:", response)
   };
 
   // Extraer catálogos (ahora recibidos como props)

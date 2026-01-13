@@ -33,8 +33,8 @@ import { CreateUserInput } from "@/lib/types";
 
 
 const userSchema = z.object({
-  full_name: z.string().min(3, "El nombre es requerido"),
-  identity_card: z.number().min(1000000, "Cédula inválida"),
+  full_name: z.string().min(3, "El nombre es requerido").regex(/^[a-zA-ZÀ-ÿ\s]+$/, "El nombre solo puede contener letras y espacios").max(100, "El nombre es muy largo"),
+  identity_card: z.number().min(10000000, "Cédula inválida").max(999999999, "Cédula inválida"),
   email: z.string().min(3, "El email es requerido").email("Formato de email inválido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   gender_id: z.number().min(1, "El género es requerido"),

@@ -62,7 +62,7 @@ const ContentEquipmentRow = ({
       return response;
     },
     onSuccess: (response) => {
-      console.log(response);
+      // console.log(response);
       toast.success("Equipo reasignado correctamente");
       setIsDialogOpen(false);
       setSelectedDepartmentId("");

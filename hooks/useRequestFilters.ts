@@ -1,6 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { set } from "zod";
 
 export interface AppliedFilters {
   request_id?: string;
@@ -46,14 +45,18 @@ export interface UseRequestFiltersReturn {
 
 interface UseRequestFiltersOptions {
   onPageReset?: () => void;
+  initialSearchId?: string;
 }
 
 export function useRequestFilters(options?: UseRequestFiltersOptions): UseRequestFiltersReturn {
   const queryClient = useQueryClient();
-  const { onPageReset } = options || {};
+  const { onPageReset, initialSearchId } = options || {};
 
   // Estado de búsqueda por ID
-  const [searchId, setSearchId] = useState("");
+  const [searchId, setSearchId] = useState(initialSearchId || "");
+  
+  // Flag para controlar si ya se ejecutó la búsqueda inicial
+  const [initialSearchExecuted, setInitialSearchExecuted] = useState(false);
 
   // Estado de filtros (usando IDs para el servidor)
   const [hasClickedSearch, setHadClickedSearch] = useState(false);
@@ -133,6 +136,18 @@ export function useRequestFilters(options?: UseRequestFiltersOptions): UseReques
     dateRange,
     resetPage,
   ]);
+
+  // Ejecutar búsqueda automática si hay initialSearchId
+  useEffect(() => {
+    if (initialSearchId && !initialSearchExecuted) {
+      setInitialSearchExecuted(true);
+      // Ejecutar la búsqueda automáticamente
+      const filters: AppliedFilters = { request_id: initialSearchId };
+      setAppliedFilters(filters);
+      setIsFiltering(true);
+      setHadClickedSearch(true);
+    }
+  }, [initialSearchId, initialSearchExecuted]);
 
   // Limpiar filtros
   const clearFilters = useCallback(() => {

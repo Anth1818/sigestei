@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -72,14 +73,19 @@ interface Catalogs {
 export default function RequestTable() {
   const user = useUserStore((state) => state.user);
   const actions = useRequestActions();
+  const searchParams = useSearchParams();
+  
+  // Obtener el ID de la URL si existe
+  const initialRequestId = searchParams.get("id") || undefined;
 
   // Estado de paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Hook de filtros
+  // Hook de filtros con ID inicial desde URL
   const filters = useRequestFilters({
     onPageReset: () => setCurrentPage(1),
+    initialSearchId: initialRequestId,
   });
 
   // Verificar si el usuario es técnico o usuario institucional (para ellos se usa el endpoint antiguo)

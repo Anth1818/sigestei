@@ -6,6 +6,7 @@ import { createUser } from "@/api/api";
 import { CreateUserInput } from "@/lib/types";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { colorForSoonerError } from "@/lib/utils";
 
 export const useAddUser = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,7 +27,7 @@ export const useAddUser = () => {
     },
     onError: (error: any) => {
       const errorMessage = error?.message || "Error al crear el usuario";
-      toast.error(errorMessage);
+      toast.error(errorMessage,{style: colorForSoonerError});
       setIsDialogOpen(false);
       setPendingUserData(null);
     },

@@ -91,7 +91,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
       toast.error(error?.message || "Error al asignar técnico");
     },
   });
-  console.log(assignedTo);
+  // console.log(assignedTo);
 
   // Mutation para guardar comentarios del técnico
   const updateCommentsMutation = useMutation({

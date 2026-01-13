@@ -16,7 +16,7 @@ export const useAuditFormatting = () => {
   /**
    * Formatear valor según el campo y los catálogos
    */
-  const formatValue = (fieldName: string, value: string | null, isRequest?: string): string => {
+  const formatValue = (fieldName: string, value: string | null, isRequest?: string | boolean): string => {
     if (value === null || value === "null") {
       return "N/A";
     }

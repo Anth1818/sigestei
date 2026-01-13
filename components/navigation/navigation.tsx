@@ -29,7 +29,7 @@ export function Navigation({
   const { isMobile } = useSidebar();
   const pathname = usePathname();
   const user = useUserStore((state) => state.user);
-  console.log(user)
+  // console.log(user)
 
   // Filtra los enlaces según el role_id del usuario
   const filteredNavigation = user
