@@ -148,6 +148,7 @@ export type DashboardData = {
   };
   requestsCreatedAndResolvedByMonth: {
     created: {
+      previous_december: number;
       january: number;
       february: number;
       march: number;
@@ -163,6 +164,7 @@ export type DashboardData = {
       [key: string]: number;
     };
     resolved: {
+      previous_december: number;
       january: number;
       february: number;
       march: number;
@@ -253,6 +255,7 @@ export type Equipment = {
   assigned_user_id: number;
   type_id: number;
   brand_id: number;
+  brand_name?: string;
   status_id: number;
 };
 

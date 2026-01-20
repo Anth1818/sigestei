@@ -692,9 +692,9 @@ export const createEquipment = async (data: CreateEquipmentInput) => {
 };
 
 // Obtener todos los equipos
-export const fetchAllEquipment = async () => {
+export const fetchAllEquipment = async (type:number) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/equipment`, {
+    const response = await axios.get(`${API_BASE_URL}/equipment?type=${type}`, {
       withCredentials: true,
     });
 

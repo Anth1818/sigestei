@@ -32,6 +32,7 @@ import { useEffect, useState, useMemo } from "react";
 import { CreateRequestPayload } from "@/lib/types";
 import { toast } from "sonner";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
+import { Equipment } from "@/lib/types";
 
 const requestSchema = z
   .object({
@@ -110,6 +111,9 @@ export default function AddRequestForm() {
   // Determinar si es una impresora (type_id = 3)
   const isPrinter = equipmentType === "3";
 
+  // Verificar si el usuario tiene equipo asignado
+  const userHasEquipment = Boolean(user?.equipment_id);
+
   // Obtener catálogos (incluye categorías)
   const { data: catalogs, isLoading: catalogsLoading } = useQuery({
     queryKey: ["catalogs"],
@@ -119,37 +123,49 @@ export default function AddRequestForm() {
   const categories = catalogs?.request_types || [];
   const equipmentTypes = catalogs?.equipment_types || [];
 
-  // Obtener todos los equipos para filtrar las impresoras
-  const { data: allEquipment, isLoading: equipmentLoading } = useQuery({
-    queryKey: ["equipment"],
-    queryFn: fetchAllEquipment,
+  // Obtener todas las impresoras
+  const { data: allPrinters, isLoading: equipmentLoading } = useQuery({
+    queryKey: ["printers"],
+    queryFn: () => fetchAllEquipment(3), // 3 = tipo impresora
     enabled: isPrinter, // Solo cargar cuando sea impresora
   });
 
   // Filtrar impresoras según el rol del usuario
   const printers = useMemo(() => {
-    if (!allEquipment || !user) return [];
+    if (!allPrinters || !user) return [];
 
-    // Filtrar solo impresoras (type_id = 3)
-    const allPrinters = allEquipment.filter(
-      (equipment: any) => equipment.type_id === 3
-    );
+    // // Filtrar solo impresoras (type_id = 3)
+    // const allPrinters = allEquipment.filter(
+    //   (equipment: Equipment) => equipment.type_id === 3
+    // );
 
     // Si es usuario normal (role_id = 4), filtrar por departamento
     // Si es admin (role_id = 1) coordinator (role_id = 2) o técnico (role_id = 3), mostrar todas
     if (user.role_id === 4) {
+      const userDept = user.department_name?.toLowerCase();
       return allPrinters.filter(
-        (printer: any) =>
-          printer.department_name?.toLowerCase() ===
-            user.department_name?.toLowerCase() ||
-          printer.location?.toLowerCase() ===
-            user.department_name?.toLowerCase()
+        (printer: Equipment) => printer.location?.toLowerCase() === userDept
       );
     }
 
     // Admin, coordinator o técnico: mostrar todas las impresoras
     return allPrinters;
-  }, [allEquipment, user]);
+  }, [allPrinters, user]);
+
+  // Determinar si el formulario debe estar bloqueado
+  // Caso 1: No es impresora, solicitud para sí mismo, pero no tiene equipo asignado
+  // Caso 2: Es impresora pero no hay impresoras disponibles en su departamento
+  const shouldBlockForm = useMemo(() => {
+    // Si es impresora, verificar si hay impresoras disponibles
+    if (isPrinter) {
+      return !equipmentLoading && printers.length === 0;
+    }
+    // Si no es impresora y es para sí mismo, verificar si tiene equipo
+    if (!isForThirdParty && !userHasEquipment) {
+      return true;
+    }
+    return false;
+  }, [isPrinter, isForThirdParty, userHasEquipment, equipmentLoading, printers.length]);
 
   // Sincronizar estados externos con el formulario
   useEffect(() => {
@@ -316,6 +332,14 @@ export default function AddRequestForm() {
                   Para un tercero
                 </label>
               </div>
+              
+              {/* Mensaje de advertencia si el usuario no tiene equipo y selecciona "Para mí" */}
+              {!isForThirdParty && !userHasEquipment && (
+                <p className="text-sm text-amber-700 dark:text-amber-400 mt-2 p-2 bg-amber-50 dark:bg-amber-950 rounded-md border border-amber-200 dark:border-amber-800 theme-blue:text-amber-400 theme-blue:bg-amber-950 theme-blue:border-amber-800 theme-violet:text-amber-400 theme-violet:bg-amber-950 theme-violet:border-amber-800 theme-orange:text-amber-400 theme-orange:bg-amber-950 theme-orange:border-amber-800">
+                  No tienes un equipo asignado. Para crear una solicitud para ti mismo, primero debes tener un equipo asignado. 
+                  Puedes seleccionar &quot;Para un tercero&quot; si deseas crear una solicitud para otra persona.
+                </p>
+              )}
             </div>
           )}
 
@@ -351,14 +375,6 @@ export default function AddRequestForm() {
                   Selecciona la impresora
                 </Label>
 
-                {/* Mensaje informativo para usuarios normales */}
-                {user?.role_id === 3 && (
-                  <p className="text-sm text-gray-600 mb-2">
-                    Solo se muestran las impresoras de tu departamento (
-                    {user.department_name})
-                  </p>
-                )}
-
                 <Controller
                   name="selectedEquipmentId"
                   control={control}
@@ -381,18 +397,18 @@ export default function AddRequestForm() {
                           </SelectItem>
                         ) : printers.length === 0 ? (
                           <SelectItem value="not-found" disabled>
-                            {user?.role_id === 3
-                              ? `No hay impresoras disponibles en tu departamento (${user.department_name})`
+                            {user?.role_id === 4
+                              ? `No hay impresoras disponibles en tu departamento`
                               : "No hay impresoras disponibles en el sistema"}
                           </SelectItem>
                         ) : (
-                          printers.map((printer: any) => (
+                          printers.map((printer: Equipment) => (
                             <SelectItem
-                              key={printer.id}
-                              value={printer.id.toString()}
+                              key={printer?.id}
+                              value={printer?.id?.toString()}
                             >
-                              {printer.brand_name} {printer.model} -{" "}
-                              {printer.location}
+                              {printer?.brand_name} {printer?.model} - {" "}
+                              {printer?.location}
                             </SelectItem>
                           ))
                         )}
@@ -404,8 +420,8 @@ export default function AddRequestForm() {
                 {/* Mensaje de error si no hay impresoras disponibles */}
                 {!equipmentLoading && printers.length === 0 && (
                   <p className="text-sm text-red-600 mt-2">
-                    {user?.role_id === 3
-                      ? "No puedes crear una solicitud para impresora porque no hay impresoras registradas en tu departamento. Contacta al administrador."
+                    {user?.role_id === 4
+                      ? "No puedes crear una solicitud para impresora porque no hay impresoras registradas en tu departamento."
                       : "No hay impresoras registradas en el sistema. Registra una impresora primero."}
                   </p>
                 )}
@@ -449,7 +465,11 @@ export default function AddRequestForm() {
                 name="request_category"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select 
+                    value={field.value} 
+                    onValueChange={field.onChange}
+                    disabled={shouldBlockForm}
+                  >
                     <SelectTrigger id="request_category" className="w-full">
                       <SelectValue placeholder="Selecciona una categoría" />
                     </SelectTrigger>
@@ -505,8 +525,9 @@ export default function AddRequestForm() {
                   <textarea
                     {...field}
                     id="description"
-                    className="w-full p-2 border rounded-md min-h-[100px] resize-y"
+                    className="w-full p-2 border rounded-md min-h-[100px] resize-y disabled:bg-muted disabled:cursor-not-allowed"
                     placeholder="Describe el problema o solicitud..."
+                    disabled={shouldBlockForm}
                   />
                 )}
               />
@@ -528,7 +549,7 @@ export default function AddRequestForm() {
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting || createRequestMutation.isPending}
+                disabled={isSubmitting || createRequestMutation.isPending || shouldBlockForm}
               >
                 {createRequestMutation.isPending
                   ? "Enviando..."

@@ -438,9 +438,10 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                   : "bg-gray-100 border-gray-200 cursor-not-allowed text-black"
               }`}
               placeholder={
-                isCompletedOrCancelled
-                  ? "Escriba los comentarios del técnico..."
+                user?.role_id !== 4 ?
+                isCompletedOrCancelled ? "Escriba los comentarios del técnico..."
                   : "Los comentarios solo pueden editarse cuando el estado sea 'Completada' o 'Cancelada'"
+                  : ""
               }
               value={comments_technician}
               onChange={(e) => setCommentsTechnician(e.target.value)}
