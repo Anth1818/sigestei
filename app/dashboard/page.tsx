@@ -17,12 +17,9 @@ export default function DashboardPage() {
   const [selectUserByRole, setSelectUserByRole] = useState("user");
   const [selectComputerStatus, setSelectComputerStatus] = useState("operational");
   const [selectRequestStatus, setSelectRequestStatus] = useState("resolved");
-  const { data, isLoading, error } = useQuery<DashboardData>({
+  const { data, isLoading, error } = useQuery<{ data: DashboardData }>({
     queryKey: ["dashboard-metrics"],
-    queryFn: async () => {
-      const res = await fetchDataForDashboard();
-      return res.data;
-    },
+    queryFn: fetchDataForDashboard,
   });
 
   if (isLoading) return <LayoutSideBar><main className="p-4">Cargando dashboard...</main></LayoutSideBar>;
@@ -36,7 +33,7 @@ export default function DashboardPage() {
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <CardDashboard
               title="Buscar solicitudes por:"
-              content={`${data?.requestByStatusCurrentMonth[selectRequestStatus] || "0"} ${TEXTREQUESTBYSTATUS[selectRequestStatus] || ''}`}
+              content={`${data?.data?.requestByStatusCurrentMonth?.[selectRequestStatus] || "0"} ${TEXTREQUESTBYSTATUS[selectRequestStatus] || ''}`}
               footer={`Cantidad por mes`}
               Icon={FileCheck}
             >
@@ -44,16 +41,16 @@ export default function DashboardPage() {
             </CardDashboard>
             <CardDashboard
               title="Buscar equipos por:"
-              content={`${data?.equipment.byStatus[selectComputerStatus]} ${TEXTCOMPUTERBYSTATUS[selectComputerStatus] || ''}`}
-              footer={`Total de equipos: ${data?.equipment.total}`}
+              content={`${data?.data?.equipment?.byStatus?.[selectComputerStatus] || "0"} ${TEXTCOMPUTERBYSTATUS[selectComputerStatus] || ''}`}
+              footer={`Total de equipos: ${data?.data?.equipment?.total || "0"}`}
               Icon={ComputerIcon}
             >
               <SelectComputerStatus onChange={setSelectComputerStatus} status={selectComputerStatus}/>
             </CardDashboard>
             <CardDashboard
               title="Buscar usuarios por:"
-              content={`${data?.users.byRoles[selectUserByRole]} ${TEXTUSERBYROLE[selectUserByRole] || ''}`}
-              footer={`Total de usuarios: ${data?.users.totalUsers}`}
+              content={`${data?.data?.users?.byRoles?.[selectUserByRole] || "0"} ${TEXTUSERBYROLE[selectUserByRole] || ''}`}
+              footer={`Total de usuarios: ${data?.data?.users?.totalUsers || "0"}`}
               Icon={UserCheck2Icon}
               
             >

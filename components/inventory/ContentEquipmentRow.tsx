@@ -67,7 +67,7 @@ const ContentEquipmentRow = ({
       setIsDialogOpen(false);
       setSelectedDepartmentId("");
       setSelectedUserId("");
-      setAssigned_user_name(response.data.assigned_user_name || "No asignado");
+      setAssigned_user_name(response.assigned_user_name || "No asignado");
     },
     onError: (error: any) => {
       toast.error(error?.message, { style: colorForSoonerError });

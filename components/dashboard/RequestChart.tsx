@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { fetchDataForDashboard } from "@/api/api"
+import type { DashboardData } from "@/lib/types"
 
 // Mapeo de meses en inglés a español
 const MONTH_NAMES = {
@@ -59,12 +60,9 @@ export default function RequestChart() {
   
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth)
   
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<{ data: DashboardData }>({
     queryKey: ["dashboard-metrics"],
-    queryFn: async () => {
-      const res = await fetchDataForDashboard();
-      return res.data;
-    },
+    queryFn: fetchDataForDashboard,
   });
 
   if (isLoading) return <div>Cargando gráfica...</div>;
@@ -74,8 +72,8 @@ export default function RequestChart() {
   const chartData = Object.keys(MONTH_NAMES).map((monthKey) => ({
     month: MONTH_NAMES[monthKey as keyof typeof MONTH_NAMES],
     monthKey,
-    createdRequests: data?.requestsCreatedAndResolvedByMonth.created[monthKey as keyof typeof data.requestsCreatedAndResolvedByMonth.created] || 0,
-    resolvedRequests: data?.requestsCreatedAndResolvedByMonth.resolved[monthKey as keyof typeof data.requestsCreatedAndResolvedByMonth.resolved] || 0,
+    createdRequests: data?.data?.requestsCreatedAndResolvedByMonth?.created?.[monthKey as keyof typeof data.data.requestsCreatedAndResolvedByMonth.created] || 0,
+    resolvedRequests: data?.data?.requestsCreatedAndResolvedByMonth?.resolved?.[monthKey as keyof typeof data.data.requestsCreatedAndResolvedByMonth.resolved] || 0,
     isCurrent: monthKey === currentMonthKey,
   }));
 

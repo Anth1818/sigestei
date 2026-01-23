@@ -452,6 +452,7 @@ export interface EquipmentResponse {
   assigned_user_email: string | null;
   assigned_user_identity_card: number | null;
   requests_linked?: number[];
+  message?: string;
 }
 
 export interface CreateEquipmentInput {

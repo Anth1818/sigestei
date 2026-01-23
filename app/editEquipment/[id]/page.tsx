@@ -37,13 +37,15 @@ export default function EditEquipmentPage() {
     );
   }
 
-  // Mostrar error si no se encuentra el equipo
-  if (!equipmentData) {
+  // Mostrar error si no se encuentra el equipo o los catálogos
+  if (!equipmentData || !catalogsData) {
     return (
       <LayoutSideBar>
         <div className="container mx-auto p-6">
           <div className="flex justify-center items-center py-8">
-            <div className="text-lg text-red-600">No se encontró el equipo</div>
+            <div className="text-lg text-red-600">
+              {!equipmentData ? "No se encontró el equipo" : "Error al cargar los catálogos"}
+            </div>
           </div>
         </div>
       </LayoutSideBar>

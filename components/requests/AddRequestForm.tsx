@@ -26,13 +26,12 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchCatalogs, createRequest, fetchAllEquipment } from "@/api/api";
+import { fetchCatalogs, createRequest, fetchAllPrinters } from "@/api/api";
 import { useUserStore } from "@/hooks/useUserStore";
 import { useEffect, useState, useMemo } from "react";
-import { CreateRequestPayload } from "@/lib/types";
+import { CreateRequestPayload, EquipmentResponse } from "@/lib/types";
 import { toast } from "sonner";
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
-import { Equipment } from "@/lib/types";
 
 const requestSchema = z
   .object({
@@ -126,7 +125,7 @@ export default function AddRequestForm() {
   // Obtener todas las impresoras
   const { data: allPrinters, isLoading: equipmentLoading } = useQuery({
     queryKey: ["printers"],
-    queryFn: () => fetchAllEquipment(3), // 3 = tipo impresora
+    queryFn: () => fetchAllPrinters(3), // 3 = tipo impresora
     enabled: isPrinter, // Solo cargar cuando sea impresora
   });
 
@@ -144,7 +143,7 @@ export default function AddRequestForm() {
     if (user.role_id === 4) {
       const userDept = user.department_name?.toLowerCase();
       return allPrinters.filter(
-        (printer: Equipment) => printer.location?.toLowerCase() === userDept
+        (printer: EquipmentResponse) => printer.location?.toLowerCase() === userDept
       );
     }
 
@@ -402,7 +401,7 @@ export default function AddRequestForm() {
                               : "No hay impresoras disponibles en el sistema"}
                           </SelectItem>
                         ) : (
-                          printers.map((printer: Equipment) => (
+                          printers.map((printer: EquipmentResponse) => (
                             <SelectItem
                               key={printer?.id}
                               value={printer?.id?.toString()}

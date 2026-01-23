@@ -120,7 +120,7 @@ const computerSchema = z.object({
 type ComputerFormData = z.infer<typeof computerSchema>;
 
 interface AddComputerFormProps {
-  catalogsData: CatalogData;
+  catalogsData: CatalogData | undefined;
   currentUser: UserData | null;
 }
 
