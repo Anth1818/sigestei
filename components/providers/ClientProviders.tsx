@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ReactNode } from "react";
 import { UserStoreInitializer } from "./UserStoreInitializer";
+import { SessionExpirationAlert } from "@/components/shared/SessionExpirationAlert";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ export function ClientProviders({ children }: { children: ReactNode }) {
         themes={["light", "dark", "theme-blue", "theme-violet", "theme-orange"]}
       >
         {children}
+        <SessionExpirationAlert />
       </ThemeProvider>
     </QueryClientProvider>
   );

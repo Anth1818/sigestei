@@ -45,12 +45,12 @@ const { formatValue } = useAuditFormatting();
       {/* Header */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex-col md:flex-row flex justify-between align-middle gap-4">
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-green-600 animate-pulse" />
               <CardTitle>Dashboard en Tiempo Real</CardTitle>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="items-center gap-4">
               <span className="text-sm text-muted-foreground">
                 Actualización automática cada 30 segundos
               </span>

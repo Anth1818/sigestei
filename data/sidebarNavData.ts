@@ -4,7 +4,7 @@ export const dataNav = {
   navigation: [
     {
       role_access: [1, 2],
-      name: "Dashboard",
+      name: "Métricas",
       url: "/dashboard",
       icon: Home,
     },
