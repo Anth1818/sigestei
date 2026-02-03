@@ -35,7 +35,7 @@ export const useAuditFormatting = () => {
 
     switch (fieldName) {
       case "status_id": {
-        const status = isRequest === "request"
+        const status = isRequest === "request" || isRequest === true
           ? catalogs.request_statuses.find((s) => s.id === numericValue)
           : catalogs.equipment_statuses.find((s) => s.id === numericValue);
         return status?.name || value;

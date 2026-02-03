@@ -130,7 +130,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
   const confirmTechnicianAssignment = () => {
     if (pendingTechnician) {
       // Validar motivo de reasignación
-      if (!reassignmentReason.trim()) {
+      if (!reassignmentReason.trim() && assignedTo) {
         setReassignmentReasonError("Debe registrar el motivo de reasignación");
         return;
       }
@@ -517,6 +517,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
           )}
 
           {/* Motivo de reasignación */}
+          {assignedTo && (
           <div className="space-y-3">
             <div>
               <span className="font-medium text-sm text-gray-400 mb-2 block">
@@ -545,6 +546,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               )}
             </div>
           </div>
+          )}
 
           <DialogFooter>
             <Button
@@ -568,6 +570,7 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
         </DialogContent>
       </Dialog>
     </div>
+                
   );
 };
 export default ContentRequestRow;

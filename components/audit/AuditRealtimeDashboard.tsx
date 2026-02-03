@@ -50,7 +50,7 @@ const { formatValue } = useAuditFormatting();
               <Activity className="h-5 w-5 text-green-600 animate-pulse" />
               <CardTitle>Dashboard en Tiempo Real</CardTitle>
             </div>
-            <div className="items-center gap-4">
+            <div className="items-center gap-4 flex">
               <span className="text-sm text-muted-foreground">
                 Actualización automática cada 30 segundos
               </span>
