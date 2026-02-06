@@ -20,6 +20,10 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 
+# ⚠️ CRÍTICO: Declarar el ARG y convertirlo a ENV antes del build
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
@@ -30,7 +34,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_OUTPUT=standalone
 
-# Build the application
+# Build the application (Next.js incluirá NEXT_PUBLIC_API_BASE_URL aquí)
 RUN pnpm build
 
 # Runner stage
