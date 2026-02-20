@@ -42,11 +42,13 @@ import { useUserActions } from "@/hooks/useUserActions";
 import { usePagination } from "@/hooks/usePagination";
 import { ContentUserRow } from "./ContentUserRow";
 
-
-
 export default function UserTable() {
   // React Query para obtener los usuarios
-  const { data: usersData, isLoading, error } = useQuery<UserData[]>({
+  const {
+    data: usersData,
+    isLoading,
+    error,
+  } = useQuery<UserData[]>({
     queryKey: ["users"],
     queryFn: fetchAllUsers,
   });
@@ -61,11 +63,15 @@ export default function UserTable() {
 
   // Opciones únicas para los filtros
   const uniqueRoles = useMemo(() => {
-    return [...new Set(users.map((u) => u.role_name).filter(Boolean))] as string[];
+    return [
+      ...new Set(users.map((u) => u.role_name).filter(Boolean)),
+    ] as string[];
   }, [users]);
 
   const uniqueDepartments = useMemo(() => {
-    return [...new Set(users.map((u) => u.department_name).filter(Boolean))] as string[];
+    return [
+      ...new Set(users.map((u) => u.department_name).filter(Boolean)),
+    ] as string[];
   }, [users]);
 
   // Columnas de la tabla
@@ -97,12 +103,15 @@ export default function UserTable() {
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <div className="flex flex-wrap gap-4 items-center">
+      <div className="flex flex-wrap gap-6 items-end">
         {/* Búsqueda por cédula */}
         <div className="flex-1 min-w-[200px]">
+          <label className="block text-sm font-medium mb-1">
+            Buscar por cédula
+          </label>
           <input
             type="text"
-            placeholder="Buscar por cédula..."
+            placeholder="Ingrese cédula"
             className="w-full p-2 border rounded"
             value={filters.searchId}
             onChange={(e) => filters.setSearchId(e.target.value)}
@@ -110,60 +119,77 @@ export default function UserTable() {
         </div>
 
         {/* Filtro por rol */}
-        <Select
-          value={filters.roleFilter}
-          onValueChange={filters.setRoleFilter}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por rol" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los roles</SelectItem>
-            {uniqueRoles.map((role) => (
-              <SelectItem key={role} value={role}>
-                {role}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Rol:
+            </label>
+            <Select
+              value={filters.roleFilter}
+              onValueChange={filters.setRoleFilter}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por rol" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los roles</SelectItem>
+                {uniqueRoles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Filtro por departamento */}
-        <Select
-          value={filters.departmentFilter}
-          onValueChange={filters.setDepartmentFilter}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por departamento" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los departamentos</SelectItem>
-            {uniqueDepartments.map((dept) => (
-              <SelectItem key={dept} value={dept}>
-                {dept}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {/* Filtro por departamento */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Departamento:
+            </label>
+            <Select
+              value={filters.departmentFilter}
+              onValueChange={filters.setDepartmentFilter}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los departamentos</SelectItem>
+                {uniqueDepartments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Filtro por estado */}
-        <Select
-          value={filters.statusFilter}
-          onValueChange={filters.setStatusFilter}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Activos</SelectItem>
-            <SelectItem value="inactive">Inactivos</SelectItem>
-          </SelectContent>
-        </Select>
+          {/* Filtro por estado */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Estado:
+            </label>
+            <Select
+              value={filters.statusFilter}
+              onValueChange={filters.setStatusFilter}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Activos</SelectItem>
+                <SelectItem value="inactive">Inactivos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Botón limpiar filtros */}
-        <Button variant="outline" onClick={filters.clearFilters}>
-          Limpiar filtros
-        </Button>
+          {/* Botón limpiar filtros */}
+          <Button variant="outline" onClick={filters.clearFilters}>
+            Limpiar filtros
+          </Button>
+        </div>
       </div>
 
       {/* Tabla */}
@@ -198,7 +224,10 @@ export default function UserTable() {
           <TableBody>
             {pagination.paginatedItems.length === 0 ? (
               <TableRow>
-                <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
+                <td
+                  colSpan={columns.length + 2}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No se encontraron usuarios
                 </td>
               </TableRow>
@@ -209,7 +238,9 @@ export default function UserTable() {
                   user={user}
                   expanded={actions.expanded === user.id}
                   onToggle={() => actions.toggleExpansion(user.id)}
-                  onToggleActive={(identityCard) => actions.handleStatusChange(identityCard)}
+                  onToggleActive={(identityCard) =>
+                    actions.handleStatusChange(identityCard)
+                  }
                 >
                   <ContentUserRow user={user} />
                 </ExpandableRow>
@@ -225,7 +256,9 @@ export default function UserTable() {
           <p className="text-sm font-medium">Filas por página</p>
           <Select
             value={pagination.rowsPerPage.toString()}
-            onValueChange={(value) => pagination.changeRowsPerPage(Number(value))}
+            onValueChange={(value) =>
+              pagination.changeRowsPerPage(Number(value))
+            }
           >
             <SelectTrigger className="h-8 w-[70px]">
               <SelectValue placeholder={pagination.rowsPerPage.toString()} />
@@ -243,7 +276,9 @@ export default function UserTable() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => pagination.setCurrentPage(pagination.currentPage - 1)}
+            onClick={() =>
+              pagination.setCurrentPage(pagination.currentPage - 1)
+            }
             disabled={pagination.currentPage === 1}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -255,7 +290,9 @@ export default function UserTable() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => pagination.setCurrentPage(pagination.currentPage + 1)}
+            onClick={() =>
+              pagination.setCurrentPage(pagination.currentPage + 1)
+            }
             disabled={pagination.currentPage === pagination.totalPages}
           >
             <ChevronRight className="h-4 w-4" />

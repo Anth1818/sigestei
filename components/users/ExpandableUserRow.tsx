@@ -6,7 +6,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { UserData, AuditLog, LoginHistory } from "@/lib/types";
 import { Button } from "../ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, History } from "lucide-react";
+import { ChevronDown, ChevronRight, History } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -84,6 +84,14 @@ export const ExpandableRow = ({
             >
               {user.is_active ? "Desactivar" : "Activar"}
             </Button>
+            <Button
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <Link href={`/editUser/${user.identity_card}`}>Editar</Link>
+            </Button>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -103,18 +111,32 @@ export const ExpandableRow = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <Button
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <Link href={`/editUser/${user.identity_card}`}>Editar</Link>
-            </Button>
           </div>
         </TableCell>
         <TableCell className="w-[50px]">
-          {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          {expanded ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={onToggle} >
+                    <ChevronDown className="h-4 w-4 " />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Contraer</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={onToggle}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Expandir</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </TableCell>
       </TableRow>
       <AnimatePresence initial={false}>

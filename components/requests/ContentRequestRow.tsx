@@ -45,6 +45,8 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
 
   const user = useUserStore((state) => state.user);
 
+  const unBlockCommentsAndBtnToSave = (request.status === "Completada" || request.status === "Cancelada") && user?.role_id !== 4 && user?.full_name === assignedTo; 
+
   // Obtener catálogos que incluyen técnicos
   const { data: catalogs, isLoading: catalogsLoading } = useQuery({
     queryKey: ["catalogs"],
@@ -445,13 +447,12 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
               }
               value={comments_technician}
               onChange={(e) => setCommentsTechnician(e.target.value)}
-              disabled={!isCompletedOrCancelled || user?.role_id === 4}
+              disabled={!isCompletedOrCancelled || user?.role_id === 4 || user?.full_name !== assignedTo}
             />
           </div>
 
-          {isCompletedOrCancelled && (
+          {unBlockCommentsAndBtnToSave && (
             <div className="flex justify-end gap-2">
-              {user?.role_id !== 4 && (
                 <>
                   <Button onClick={restoreComments} size="sm">
                     Reestablecer Comentarios
@@ -467,7 +468,6 @@ const ContentRequestRow = ({ request }: ContentRequestRowProps) => {
                       : "Guardar Comentarios"}
                   </Button>
                 </>
-              )}
             </div>
           )}
         </div>

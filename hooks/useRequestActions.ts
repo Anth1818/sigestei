@@ -70,17 +70,18 @@ export const useRequestActions = () => {
       }
       return updateRequest(id, updateData);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidar queries para forzar refetch
-      queryClient.invalidateQueries({ queryKey: ["requests"] });
-      queryClient.invalidateQueries({ queryKey: ["requests-special"] });
-      queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests-special"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
       toast.success("Estado actualizado correctamente");
       setIsStatusDialogOpen(false);
       setPendingStatusUpdate(null);
     },
     onError: (error: any) => {
+      console.error("Error al actualizar el estado:", error);
       toast.error(error?.message || "Error al actualizar el estado");
     },
   });
@@ -89,11 +90,11 @@ export const useRequestActions = () => {
   const updatePriorityMutation = useMutation({
     mutationFn: ({ id, priority }: { id: number; priority: string }) =>
       updateRequest(id, { priority_id: getPriorityId(priority) }),
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidar queries para forzar refetch
-      queryClient.invalidateQueries({ queryKey: ["requests"] });
-      queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
       toast.success("Prioridad actualizada correctamente");
       setIsPriorityDialogOpen(false);
       setPendingPriorityUpdate(null);

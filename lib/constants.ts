@@ -6,10 +6,10 @@ export const TEXTREQUESTBYSTATUS: Record<string, string> = {
 };
 
 export const TEXTCOMPUTERBYSTATUS: Record<string, string> = {
-  operational: "Equipos Operativos",
-  under_review: "Equipos En revisión",
-  damaged: "Equipos Averiados",
-  withdrawn: "Equipos Retirados",
+  operational: "Equipos activos",
+  under_review: "Equipos en mantenimiento",
+  damaged: "Equipos defectuosos",
+  withdrawn: "Equipos inactivos",
 };
 
 export const TEXTUSERBYROLE: Record<string, string> = {

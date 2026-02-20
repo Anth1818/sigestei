@@ -16,16 +16,17 @@ export const useAddUser = () => {
 
   const createUserMutation = useMutation({
     mutationFn: (data: CreateUserInput) => createUser(data),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       const successMessage = data?.message || "Usuario creado exitosamente";
       toast.success(successMessage);
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
       setIsDialogOpen(false);
       setPendingUserData(null);
       // Redirigir a la vista de usuarios después de crear
       router.push("/viewUsers");
     },
     onError: (error: any) => {
+      console.error("Error al crear el usuario:", error);
       const errorMessage = error?.message || "Error al crear el usuario";
       toast.error(errorMessage,{style: colorForSoonerError});
       setIsDialogOpen(false);

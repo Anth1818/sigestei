@@ -23,14 +23,15 @@ export function useUserActions() {
     mutationFn: async ({ identityCard }: { identityCard: number }) => {
       return toggleActiveUser(identityCard);
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
       const successMessage = data?.message || "Estado del usuario actualizado correctamente";
       toast.success(successMessage);
       setIsStatusDialogOpen(false);
       setPendingStatusUpdate(null);
     },
     onError: (error: any) => {
+      console.error("Error al actualizar el estado del usuario:", error);
       const errorMessage = error?.message || "Error al actualizar el estado del usuario";
       toast.error(errorMessage);
     },

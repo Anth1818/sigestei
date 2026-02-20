@@ -1,6 +1,7 @@
 import { FileText, User, ListChecks, Users, History } from "lucide-react";
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
+
 import { DepartmentUserSelector } from "@/components/shared/DepartmentUserSelector";
 import { useUserStore } from "@/hooks/useUserStore";
 import Link from "next/link";
@@ -38,6 +39,9 @@ const ContentEquipmentRow = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUnlinkDialogOpen, setIsUnlinkDialogOpen] = useState(false);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const labelToSelectUser = assigned_user_name !== "No asignado" ? "Reasignar a" : "Asignar a";
+  const labelToBtnConfirmAssigmentOrReassigment = assigned_user_name !== "No asignado" ? "Reasignar equipo" : "Asignar equipo";
 
   // Query para obtener el historial de auditoría
   const { data: auditHistory, isLoading: isLoadingAudit } =
@@ -53,7 +57,7 @@ const ContentEquipmentRow = ({
   // Extraer los IDs de requests asociados
   const associatedRequests = equipment.requests_linked || [];
 
-  // Mutation para actualizar el equipo (reasignar)
+  // Mutation para actualizar el equipo (reasignar o asignar)
   const updateEquipmentMutation = useMutation({
     mutationFn: async (newUserId: number) => {
       const response = await updateEquipmentData(equipment.id, {
@@ -61,16 +65,17 @@ const ContentEquipmentRow = ({
       });
       return response;
     },
-    onSuccess: (response) => {
-      // console.log(response);
-      toast.success("Equipo reasignado correctamente");
+    onSuccess: async (response) => {
+      await queryClient.invalidateQueries({ queryKey: ["equipments"] });
+      toast.success(`Equipo ${assigned_user_name !== "No asignado" ? "reasignado" : "asignado"} correctamente`);
       setIsDialogOpen(false);
       setSelectedDepartmentId("");
       setSelectedUserId("");
       setAssigned_user_name(response.assigned_user_name || "No asignado");
     },
     onError: (error: any) => {
-      toast.error(error?.message, { style: colorForSoonerError });
+      console.error("Error al reasignar equipo:", error);
+      toast.error(error?.message || "Error al reasignar el equipo", { style: colorForSoonerError });
     },
   });
 
@@ -82,13 +87,15 @@ const ContentEquipmentRow = ({
       });
       return response;
     },
-    onSuccess: () => {
+    onSuccess: async (response) => {
+      await queryClient.invalidateQueries({ queryKey: ["equipments"] });
       toast.success("Usuario desvinculado correctamente");
       setIsUnlinkDialogOpen(false);
       setAssigned_user_name("No asignado");
     },
     onError: (error: any) => {
-      toast.error(error?.message, { style: colorForSoonerError });
+      console.error("Error al desvincular usuario:", error);
+      toast.error(error?.message || "Error al desvincular el usuario", { style: colorForSoonerError });
     },
   });
 
@@ -163,7 +170,7 @@ const ContentEquipmentRow = ({
                   {assigned_user_name || "No asignado"}
                 </span>
               </p>
-              {assigned_user_name && (
+              {assigned_user_name !== "No asignado" && (
                 <Button
                   variant="destructive"
                   size="sm"
@@ -180,7 +187,7 @@ const ContentEquipmentRow = ({
 
             <div className="flex items-center gap-2 mb-3">
               <Users className="h-5 w-5 text-blue-600" />
-              <h4 className="font-semibold text-lg">Reasignación de equipo</h4>
+              <h4 className="font-semibold text-lg">{assigned_user_name !== "No asignado" ? "Reasignación de equipo" : "Asignación de equipo"}</h4>
             </div>
 
             <DepartmentUserSelector
@@ -193,12 +200,12 @@ const ContentEquipmentRow = ({
               onUserChange={setSelectedUserId}
               filterCurrentUser={false}
               departmentLabel="Departamento"
-              userLabel="Asignado a"
+              userLabel={labelToSelectUser}
               departmentPlaceholder="Selecciona un departamento"
               userPlaceholder="Selecciona un usuario"
             />
 
-            {/* Botón para confirmar reasignación */}
+            {/* Botón para confirmar reasignación o asignación */}
             {selectedDepartmentId && selectedUserId && (
               <Button
                 onClick={handleReassign}
@@ -207,7 +214,7 @@ const ContentEquipmentRow = ({
               >
                 {updateEquipmentMutation.isPending
                   ? "Procesando..."
-                  : "Reasignar equipo"}
+                  : labelToBtnConfirmAssigmentOrReassigment}
               </Button>
             )}
 
@@ -216,7 +223,7 @@ const ContentEquipmentRow = ({
               <Button
                 onClick={() => setIsAuditOpen(true)}
                 variant="outline"
-                className="w-full mt-2 gap-2"
+                className="w-full flex mt-2 gap-2"
               >
                 <History className="h-4 w-4" />
                 Ver historial de cambios
@@ -319,9 +326,9 @@ const ContentEquipmentRow = ({
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Confirmar reasignación de equipo</DialogTitle>
+                <DialogTitle>Confirmar {assigned_user_name !== "No asignado" ? "reasignación" : "asignación"} de equipo</DialogTitle>
                 <DialogDescription>
-                  ¿Estás seguro de que deseas reasignar este equipo al usuario
+                  ¿Estás seguro de que deseas {assigned_user_name !== "No asignado" ? "reasignar" : "asignar"} este equipo al usuario
                   seleccionado? Esta acción actualizará el registro de
                   asignación.
                 </DialogDescription>
@@ -354,7 +361,7 @@ const ContentEquipmentRow = ({
                 >
                   {updateEquipmentMutation.isPending
                     ? "Procesando..."
-                    : "Confirmar reasignación"}
+                    : labelToBtnConfirmAssigmentOrReassigment}
                 </Button>
               </DialogFooter>
             </DialogContent>

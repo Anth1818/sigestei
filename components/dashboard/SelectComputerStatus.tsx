@@ -14,10 +14,10 @@ export default function SelectTechinalRequestStatus({onChange, status}: SelectCo
                 <SelectValue placeholder="Estatus" />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="operational">Operativos</SelectItem>
-                <SelectItem value="under_review">En revision</SelectItem>
-                <SelectItem value="damaged">Averiados</SelectItem>
-                <SelectItem value="withdrawn">Retirados</SelectItem>
+                <SelectItem value="operational">Activos</SelectItem>
+                <SelectItem value="under_review">En mantenimiento</SelectItem>
+                <SelectItem value="damaged">Defectuosos</SelectItem>
+                <SelectItem value="withdrawn">Inactivos</SelectItem>
             </SelectContent>
         </Select>
     )

@@ -18,15 +18,16 @@ export function useEditUser(identityCard: number) {
       // Usamos la cédula original (identityCard) para identificar al usuario
       return updateUser(identityCard, data);
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["user", identityCard] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ["user", identityCard] });
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
       const successMessage = data?.message || "Usuario actualizado correctamente";
       toast.success(successMessage);
       setIsUpdateDialogOpen(false);
       setPendingUpdateData(null);
     },
     onError: (error: any) => {
+      console.error("Error al actualizar el usuario:", error);
       const errorMessage = error?.message || "Error al actualizar el usuario";
       toast.error(errorMessage);
     },
@@ -43,6 +44,7 @@ export function useEditUser(identityCard: number) {
       setIsResetPasswordDialogOpen(false);
     },
     onError: (error: any) => {
+      console.error("Error al resetear la contraseña:", error);
       const errorMessage = error?.message || "Error al resetear la contraseña";
       toast.error(errorMessage);
     },

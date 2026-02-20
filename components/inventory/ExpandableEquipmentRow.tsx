@@ -121,13 +121,29 @@ export function ExpandableEquipmentRow({
           </Button>
         </TableCell>
         <TableCell className="p-2">
-          <Button variant="ghost" size="sm" onClick={onToggle}>
             {expanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={onToggle} >
+                    <ChevronDown className="h-4 w-4 " />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Contraer</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={onToggle}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Expandir</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </TableCell>
       </TableRow>
 

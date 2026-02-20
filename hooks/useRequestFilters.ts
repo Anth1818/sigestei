@@ -150,7 +150,7 @@ export function useRequestFilters(options?: UseRequestFiltersOptions): UseReques
   }, [initialSearchId, initialSearchExecuted]);
 
   // Limpiar filtros
-  const clearFilters = useCallback(() => {
+  const clearFilters = useCallback(async () => {
     setHadClickedSearch(false);
     setSearchId("");
     setTechnicianFilter("");
@@ -161,7 +161,7 @@ export function useRequestFilters(options?: UseRequestFiltersOptions): UseReques
     setAppliedFilters({});
     setIsFiltering(false);
     resetPage();
-    queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+    await queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
   }, [queryClient, resetPage]);
 
   return {

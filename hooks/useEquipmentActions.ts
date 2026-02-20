@@ -22,13 +22,14 @@ export const useEquipmentActions = () => {
   const updateStatusMutation = useMutation({
     mutationFn: ({ equipmentId, statusId }: { equipmentId: number; statusId: number }) =>
       updateEquipmentData(equipmentId, { status_id: statusId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["equipments"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["equipments"] });
       toast.success("Estado del equipo actualizado correctamente");
       setIsStatusDialogOpen(false);
       setPendingStatusUpdate(null);
     },
     onError: (error: any) => {
+      console.error("Error al actualizar el estado:", error);
       toast.error(
         error?.response?.data?.message ||
           "Error al actualizar el estado. Intenta nuevamente."

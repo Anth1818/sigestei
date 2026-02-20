@@ -168,21 +168,21 @@ export const usePaginatedRequests = (initialLimit: number = 10) => {
   }, [hasActiveFilters]);
 
   // Limpiar filtros y volver a paginación normal
-  const clearFilters = useCallback(() => {
+  const clearFilters = useCallback(async () => {
     setFilters(initialFilterState);
     setIsFiltering(false);
     setCurrentPage(1);
     setSearchTrigger(0);
     // Invalidar queries filtradas
-    queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+    await queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
   }, [queryClient]);
 
   // Refrescar datos
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     if (isFiltering) {
-      queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests-filtered"] });
     } else {
-      queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
+      await queryClient.invalidateQueries({ queryKey: ["requests-paginated"] });
     }
   }, [isFiltering, queryClient]);
 
